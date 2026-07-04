@@ -1,0 +1,64 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # 3.9 ist die Laufzeit-Mindestversion und zugleich die
+        # Standard-Python-Version unter Red Hat Linux 8.
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: python -m pip install -U pip
+      - run: python -m pip install -e ".[dev]"
+      - name: Tests
+        run: python -m pytest -q
+      - name: Compileall
+        run: python -m compileall -q aci tests
+      - name: Ruff
+        run: python -m ruff check .
+
+  mypy:
+    # mypy ist ein verpflichtendes CI-Gate. Es laeuft auf einer aktuellen
+    # Python-Version; die Laufzeit-Mindestversion 3.9 wird durch die
+    # test-Matrix plus ruff (target-version py39) abgesichert.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -U pip
+      - run: python -m pip install -e ".[dev]"
+      - name: Mypy
+        run: python -m mypy aci
+
+  sdist-test:
+    # Stellt sicher, dass das Source-Archiv vollstaendig ist: Build,
+    # Entpacken und Tests/Compileall im entpackten sdist.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -U pip build
+      - name: Build sdist
+        run: python -m build --sdist
+      - name: Test inside extracted sdist
+        run: |
+          mkdir /tmp/aci-sdist
+          tar -xzf dist/*.tar.gz -C /tmp/aci-sdist
+          cd /tmp/aci-sdist/*
+          python -m pip install -e ".[dev]"
+          python -m pytest -q
+          python -m compileall -q aci tests

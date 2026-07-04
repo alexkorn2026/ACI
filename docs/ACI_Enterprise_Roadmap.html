@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ACI - Enterprise-Adoptions-Roadmap</title>
+<style>
+  :root {
+    --blocker:#7f1d1d; --critical:#b91c1c; --high:#c2410c;
+    --major:#b45309; --warning:#a16207; --minor:#0e7490; --info:#6b7280;
+    --bg:#f4f5f7; --card:#fff; --ink:#1f2933; --muted:#6b7280;
+    --border:#e3e6ea; --accent:#2563eb; --code-bg:#1f2933;
+    --p1:#2563eb; --p2:#0e7490; --p3:#15803d; --p4:#7c3aed;
+  }
+  * { box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+  body { margin:0; background:var(--bg); color:var(--ink);
+    font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-size:15px; line-height:1.65; }
+  header { background:#111827; color:#fff; padding:34px 40px; }
+  header h1 { margin:0 0 6px; font-size:25px; }
+  header .sub { color:#9ca3af; font-size:14px; }
+  .layout { display:flex; max-width:1180px; margin:0 auto; }
+  nav { width:250px; flex-shrink:0; padding:30px 16px 60px;
+    position:sticky; top:0; align-self:flex-start; height:100vh;
+    overflow-y:auto; }
+  nav a { display:block; color:var(--muted); text-decoration:none;
+    padding:5px 10px; border-radius:6px; font-size:13.5px; }
+  nav a:hover { background:#e8eaed; color:var(--ink); }
+  nav .group { font-size:11px; text-transform:uppercase; letter-spacing:.06em;
+    color:#9ca3af; margin:16px 10px 4px; font-weight:700; }
+  main { flex:1; min-width:0; padding:30px 40px 80px; }
+  section { background:var(--card); border:1px solid var(--border);
+    border-radius:12px; padding:24px 30px; margin-bottom:22px; }
+  h2 { font-size:20px; margin:4px 0 14px; padding-bottom:8px;
+    border-bottom:2px solid var(--border); }
+  h3 { font-size:16px; margin:22px 0 8px; }
+  h4 { font-size:14px; margin:16px 0 6px; color:var(--accent); }
+  p { margin:8px 0; }
+  code { background:#eef2f7; color:#b91c5b; padding:1px 5px;
+    border-radius:4px; font-family:ui-monospace,"SF Mono",Menlo,monospace;
+    font-size:13px; }
+  pre { background:var(--code-bg); color:#e5e7eb; padding:14px 16px;
+    border-radius:8px; overflow-x:auto; font-size:13px; line-height:1.5;
+    font-family:ui-monospace,"SF Mono",Menlo,monospace; }
+  pre code { background:none; color:inherit; padding:0; font-size:13px; }
+  table { width:100%; border-collapse:collapse; margin:12px 0; font-size:14px; }
+  th { text-align:left; background:#f9fafb; padding:9px 12px;
+    border-bottom:2px solid var(--border); font-size:12px;
+    text-transform:uppercase; letter-spacing:.04em; color:var(--muted); }
+  td { padding:9px 12px; border-bottom:1px solid var(--border);
+    vertical-align:top; }
+  .badge { display:inline-block; padding:2px 9px; border-radius:999px;
+    color:#fff; font-size:11px; font-weight:700; text-transform:uppercase; }
+  .badge.critical { background:var(--critical); }
+  .badge.high { background:var(--high); }
+  .badge.major { background:var(--major); }
+  .badge.warning { background:var(--warning); }
+  .badge.minor { background:var(--minor); }
+  .badge.info { background:var(--info); }
+  .phasetag { display:inline-block; padding:2px 10px; border-radius:999px;
+    color:#fff; font-size:11px; font-weight:700; letter-spacing:.03em;
+    margin-bottom:6px; }
+  .p1 { background:var(--p1); } .p2 { background:var(--p2); }
+  .p3 { background:var(--p3); } .p4 { background:var(--p4); }
+  .months { color:var(--muted); font-size:13px; font-weight:600; }
+  .note { background:#eff6ff; border-left:4px solid var(--accent);
+    padding:10px 16px; border-radius:6px; margin:14px 0; font-size:14px; }
+  .note strong { color:var(--accent); }
+  .warn { background:#fffbeb; border-left:4px solid var(--warning);
+    padding:10px 16px; border-radius:6px; margin:14px 0; font-size:14px; }
+  .goal { background:#f0fdf4; border-left:4px solid var(--p3);
+    padding:10px 16px; border-radius:6px; margin:12px 0; font-size:14px; }
+  figure { margin:18px 0; }
+  figure svg { display:block; width:100%; height:auto;
+    border:1px solid var(--border); border-radius:10px;
+    background:var(--card); padding:8px; }
+  figcaption { color:var(--muted); font-size:12.5px; margin-top:7px;
+    text-align:center; }
+  ul,ol { margin:8px 0; padding-left:24px; }
+  li { margin:4px 0; }
+  footer { text-align:center; color:var(--muted); font-size:12px;
+    padding:30px; }
+  @media (max-width:820px){ nav{display:none;} main{padding:24px 20px 60px;} }
+</style>
+</head>
+<body>
+<header>
+  <h1>ACI &ndash; Enterprise-Adoptions-Roadmap</h1>
+  <div class="sub">Vom Tool zum etablierten Security-Gate &middot; 12-Monats-Plan
+    f&uuml;r ACI 2.20 &middot; priorisiert nach Impact vs. Aufwand</div>
+</header>
+
+<div class="layout">
+<nav>
+  <div class="group">Roadmap</div>
+  <a href="#ueberblick">&Uuml;berblick &amp; Ziel</a>
+  <a href="#timeline">Phasen im Zeitstrahl</a>
+  <div class="group">Phasen</div>
+  <a href="#phase1">Phase 1 &middot; Foundation</a>
+  <a href="#phase2">Phase 2 &middot; Pilot &amp; H&auml;rtung</a>
+  <a href="#phase3">Phase 3 &middot; Skalierung</a>
+  <a href="#phase4">Phase 4 &middot; Nachhaltigkeit</a>
+  <div class="group">Steuerung</div>
+  <a href="#prioritaeten">Top-8-Priorisierung</a>
+  <a href="#risiken">Risiken &amp; Gegenma&szlig;nahmen</a>
+  <a href="#fazit">Zusammenfassung</a>
+</nav>
+
+<main>
+
+<section id="ueberblick">
+  <h2>&Uuml;berblick &amp; Ziel</h2>
+  <p><strong>Ziel:</strong> ACI (Stand 2.20) innerhalb von <strong>12&nbsp;Monaten</strong>
+  so weit zu bringen, dass es in einem mittelgro&szlig;en bis gro&szlig;en
+  Unternehmen produktiv und nachhaltig im Security-Gate-Bereich eingesetzt
+  werden kann.</p>
+  <p>Die Roadmap ist in <strong>vier Phasen</strong> unterteilt und priorisiert
+  nach <strong>Impact vs. Aufwand</strong> sowie nach typischen
+  Enterprise-Bed&uuml;rfnissen: Governance, Skalierbarkeit, Risikominimierung.</p>
+  <div class="note"><strong>Kernbotschaft:</strong> Die gr&ouml;&szlig;ten
+  Erfolgsfaktoren sind <em>nicht</em> prim&auml;r technische Features von ACI,
+  sondern <strong>Scope-Disziplin, klare Prozesse und internes Ownership</strong>.
+  ACI ist heute am st&auml;rksten bei Deployment-, Migrations- und
+  Installationsskripten sowie Oracle-/EPAS-Packages &ndash; dort beginnt der
+  Rollout.</div>
+  <table>
+    <tr><th>Phase</th><th>Zeitraum</th><th>Schwerpunkt</th></tr>
+    <tr><td><span class="phasetag p1">Phase 1</span> Foundation</td>
+      <td class="months">Monat 0&ndash;2</td>
+      <td>Scope, Team, erstes hartes Gate</td></tr>
+    <tr><td><span class="phasetag p2">Phase 2</span> Pilot &amp; H&auml;rtung</td>
+      <td class="months">Monat 2&ndash;5</td>
+      <td>Governance, Reporting, Akzeptanz</td></tr>
+    <tr><td><span class="phasetag p3">Phase 3</span> Skalierung</td>
+      <td class="months">Monat 5&ndash;9</td>
+      <td>Breiter Rollout, Toolchain-Integration</td></tr>
+    <tr><td><span class="phasetag p4">Phase 4</span> Nachhaltigkeit</td>
+      <td class="months">Monat 9&ndash;12+</td>
+      <td>Plattform, Ownership, Reifegrad</td></tr>
+  </table>
+</section>
+
+<section id="timeline">
+  <h2>Phasen im Zeitstrahl</h2>
+  <figure>
+    <svg viewBox="0 0 920 150" xmlns="http://www.w3.org/2000/svg"
+         font-family="-apple-system,Segoe UI,Roboto,Arial,sans-serif">
+      <line x1="20" y1="58" x2="900" y2="58" stroke="#d1d5db" stroke-width="2"/>
+      <!-- Phase blocks -->
+      <rect x="20"  y="40" width="190" height="36" rx="8" fill="#2563eb"/>
+      <rect x="225" y="40" width="220" height="36" rx="8" fill="#0e7490"/>
+      <rect x="460" y="40" width="250" height="36" rx="8" fill="#15803d"/>
+      <rect x="725" y="40" width="175" height="36" rx="8" fill="#7c3aed"/>
+      <text x="115" y="63" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">Phase 1 &#183; Foundation</text>
+      <text x="335" y="63" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">Phase 2 &#183; Pilot</text>
+      <text x="585" y="63" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">Phase 3 &#183; Skalierung</text>
+      <text x="812" y="63" text-anchor="middle" fill="#fff" font-size="13" font-weight="700">Phase 4 &#183; Betrieb</text>
+      <!-- month markers -->
+      <text x="20"  y="100" text-anchor="middle" fill="#6b7280" font-size="12">Monat 0</text>
+      <text x="225" y="100" text-anchor="middle" fill="#6b7280" font-size="12">2</text>
+      <text x="460" y="100" text-anchor="middle" fill="#6b7280" font-size="12">5</text>
+      <text x="725" y="100" text-anchor="middle" fill="#6b7280" font-size="12">9</text>
+      <text x="900" y="100" text-anchor="middle" fill="#6b7280" font-size="12">12+</text>
+      <!-- outcome labels -->
+      <text x="115" y="125" text-anchor="middle" fill="#374151" font-size="11">1&ndash;2 Repos, hartes Gate</text>
+      <text x="335" y="125" text-anchor="middle" fill="#374151" font-size="11">5&ndash;10 Repos, Reporting</text>
+      <text x="585" y="125" text-anchor="middle" fill="#374151" font-size="11">&gt;50% Repos, integriert</text>
+      <text x="812" y="125" text-anchor="middle" fill="#374151" font-size="11">Plattform &amp; Reifegrade</text>
+    </svg>
+    <figcaption>Vom fokussierten Start zum etablierten, skalierten
+      Security-Gate &ndash; jede Phase baut auf den Ergebnissen der vorigen auf.</figcaption>
+  </figure>
+</section>
+
+<section id="phase1">
+  <span class="phasetag p1">Phase 1</span> <span class="months">Monat 0&ndash;2</span>
+  <h2>Foundation</h2>
+  <div class="goal"><strong>Ziel:</strong> Klare Basis schaffen und ein erstes
+  produktives Gate etablieren, ohne das ganze Unternehmen zu belasten.</div>
+
+  <h3>Wichtige Ma&szlig;nahmen</h3>
+  <h4>1. Scope klar definieren <span class="badge critical">sehr wichtig</span></h4>
+  <ul>
+    <li>Fokus auf <strong>Deployment-, Migrations- und Installationsskripte</strong>
+      sowie Packages/Prozeduren.</li>
+    <li>APEX zun&auml;chst bewusst ausklammern oder nur mit reduziertem Regelset
+      betreiben.</li>
+    <li>Entscheidung dokumentieren: &bdquo;Wir starten mit dem Bereich, in dem
+      ACI heute am st&auml;rksten ist.&ldquo;</li>
+  </ul>
+  <h4>2. Kleines, dediziertes Team aufbauen</h4>
+  <ul>
+    <li>1&ndash;2 Security Engineers + 1&ndash;2 Plattform-/DevOps-Personen.</li>
+    <li>Klare Rollen: <strong>Rule Owner</strong>, <strong>Waiver Approver</strong>,
+      <strong>Tool Owner</strong>.</li>
+  </ul>
+  <h4>3. Erstes produktives CI-Gate aufbauen</h4>
+  <ul>
+    <li>Nur <strong>Critical + High</strong> Regeln aktivieren (besonders die
+      neuen Remote-Script-Regeln).</li>
+    <li><code>--profile ci</code> oder ein eigenes hartes Profil verwenden.</li>
+    <li>Ruleset-SHA-Pinning aktivieren (<code>--expected-ruleset-sha256</code>
+      bzw. <code>--ruleset-lock</code>).</li>
+    <li>Erste Waiver-Prozesse definieren (auch wenn noch manuell).</li>
+  </ul>
+  <h4>4. Interne Dokumentation &amp; Onboarding starten</h4>
+  <ul>
+    <li>&bdquo;ACI in unserem Unternehmen&ldquo;-Wiki-Seite anlegen.</li>
+    <li>Erste Beispiele f&uuml;r gute und schlechte Findings dokumentieren.</li>
+    <li>Grundlegenden Waiver-Prozess aufschreiben.</li>
+  </ul>
+  <h4>5. Erste Metriken erfassen</h4>
+  <ul>
+    <li>Wie viele Repos werden aktuell gescannt?</li>
+    <li>Wie viele Findings pro Monat (nach Schweregrad)?</li>
+    <li>Wie viele Waivers werden beantragt?</li>
+  </ul>
+
+  <div class="note"><strong>Erfolgskriterien Phase 1</strong>
+    <ul>
+      <li>Mindestens 1&ndash;2 Repositories laufen mit einem harten,
+        nicht-umgehbaren Critical-Gate.</li>
+      <li>Es existiert ein dokumentierter Scope und ein kleines verantwortliches
+        Team.</li>
+      <li>Erste Erfahrungen mit Waivers und False Positives wurden gesammelt.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="phase2">
+  <span class="phasetag p2">Phase 2</span> <span class="months">Monat 2&ndash;5</span>
+  <h2>Pilot &amp; Prozess-H&auml;rtung</h2>
+  <div class="goal"><strong>Ziel:</strong> Den Prozess stabilisieren und die
+  Akzeptanz im Pilot-Bereich erreichen.</div>
+
+  <h3>Wichtige Ma&szlig;nahmen</h3>
+  <h4>1. Interne Governance etablieren</h4>
+  <ul>
+    <li>Rule-Review-Prozess (z.&nbsp;B. quartalsweise).</li>
+    <li>Waiver-Board oder -Prozess mit Fristen und Eskalation.</li>
+    <li>Policy: Wann darf eine Regel deaktiviert oder heruntergestuft werden?</li>
+  </ul>
+  <h4>2. Reporting &amp; Observability aufbauen</h4>
+  <ul>
+    <li>JSON-/SARIF-Reports zentral sammeln (z.&nbsp;B. in S3, Artifactory oder
+      DefectDojo).</li>
+    <li>Einfache Dashboards bauen (z.&nbsp;B. mit Grafana oder GitHub Pages):
+      Trend der Critical-/High-Findings, Top-10-Repos mit den meisten Findings,
+      Waiver-Statistiken.</li>
+  </ul>
+  <h4>3. Schnelle L&uuml;cken schlie&szlig;en (intern)</h4>
+  <ul>
+    <li>Erste eigene Regeln/Heuristiken f&uuml;r besonders relevante Bereiche
+      (z.&nbsp;B. Remote-Skripte in Kombination mit <code>ACCEPT</code>, oder
+      spezifische Migrationsmuster).</li>
+    <li>Erste Anpassungen an <code>psql_meta.py</code> oder zus&auml;tzliche
+      Client-Script-Regeln, falls Bedarf besteht.</li>
+  </ul>
+  <h4>4. Dokumentation und Enablement ausbauen</h4>
+  <ul>
+    <li>&bdquo;ACI Best Practices&ldquo;-Seite intern.</li>
+    <li>Schulung / Brown Bag f&uuml;r betroffene Teams.</li>
+    <li>Vorlage f&uuml;r neue Repositories (&bdquo;So bindest du ACI korrekt
+      ein&ldquo;).</li>
+  </ul>
+  <h4>5. Performance &amp; Skalierung pr&uuml;fen</h4>
+  <ul>
+    <li>Erste Messungen: Wie lange dauert ein Scan bei 500+ Dateien?</li>
+    <li>Erste Ideen f&uuml;r Parallelisierung oder Caching sammeln (auch wenn
+      noch nicht umgesetzt).</li>
+  </ul>
+
+  <div class="note"><strong>Erfolgskriterien Phase 2</strong>
+    <ul>
+      <li>Der Waiver-Prozess l&auml;uft stabil und wird von den Teams akzeptiert.</li>
+      <li>Es gibt ein zentrales (auch wenn einfaches) Reporting.</li>
+      <li>Mindestens 5&ndash;10 Repositories nutzen ACI produktiv mit einem
+        definierten Gate.</li>
+      <li>Die Anzahl der &bdquo;&Uuml;berraschungs-Findings&ldquo; sinkt sp&uuml;rbar.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="phase3">
+  <span class="phasetag p3">Phase 3</span> <span class="months">Monat 5&ndash;9</span>
+  <h2>Skalierung &amp; Integration</h2>
+  <div class="goal"><strong>Ziel:</strong> ACI auf deutlich mehr Repositories
+  ausrollen und in bestehende Enterprise-Prozesse integrieren.</div>
+
+  <h3>Wichtige Ma&szlig;nahmen</h3>
+  <h4>1. Breiterer Rollout</h4>
+  <ul>
+    <li>Rollout-Plan pro Team/Portfolio.</li>
+    <li>&bdquo;ACI by Default&ldquo;-Policy f&uuml;r neue Repositories (mit
+      klaren Ausnahmen).</li>
+    <li>Onboarding-Self-Service (z.&nbsp;B. GitHub-Template +
+      vorkonfigurierte <code>aci.ini</code>).</li>
+  </ul>
+  <h4>2. Integration in die Enterprise-Toolchain</h4>
+  <ul>
+    <li>SARIF-Reports in ein zentrales Tool einspeisen (DefectDojo, GitHub
+      Advanced Security, SonarQube oder firmeneigenes Dashboard).</li>
+    <li>Findings mit Tickets verkn&uuml;pfen (z.&nbsp;B. automatische
+      Jira-Tickets bei Critical Findings).</li>
+    <li>Optional: Integration mit ChatOps (Teams-/Slack-Benachrichtigungen).</li>
+  </ul>
+  <h4>3. Zentrale Konfigurations- und Regelverwaltung</h4>
+  <ul>
+    <li>Zentrale <code>aci-policy</code>-Repositories pro Risikoklasse
+      (z.&nbsp;B. <code>aci-policy-strict</code>,
+      <code>aci-policy-standard</code>).</li>
+    <li>Interne Rule-Registry oder zumindest eine gute &Uuml;bersicht, welche
+      Regeln wo aktiv sind.</li>
+    <li>Prozess f&uuml;r das Einbringen neuer interner Regeln.</li>
+  </ul>
+  <h4>4. Wichtige inhaltliche L&uuml;cken adressieren</h4>
+  <ul>
+    <li>Erste substanzielle Erweiterungen im APEX-Bereich (auch wenn nur
+      heuristisch).</li>
+    <li>Bessere Unterst&uuml;tzung f&uuml;r g&auml;ngige Migrations-Frameworks
+      (Liquibase, Flyway, custom).</li>
+    <li>Weitere Client-Script-Regeln oder Verbesserungen, falls in Phase 2
+      Bedarf erkannt wurde.</li>
+  </ul>
+  <h4>5. Betriebsmodell festigen</h4>
+  <ul>
+    <li>Dedizierte Kapazit&auml;t f&uuml;r die Tool-Pflege (auch wenn ACI extern
+      entwickelt wird).</li>
+    <li>Regelm&auml;&szlig;ige Abstimmung mit dem ACI-Maintainer
+      (Feature-Requests, Bug-Reports, Contributions).</li>
+    <li>Interne Support-Kan&auml;le (z.&nbsp;B. Slack-Channel + Wiki).</li>
+  </ul>
+
+  <div class="note"><strong>Erfolgskriterien Phase 3</strong>
+    <ul>
+      <li>ACI wird in einem signifikanten Teil der relevanten Repositories
+        genutzt (z.&nbsp;B. &gt;50&nbsp;%).</li>
+      <li>Findings flie&szlig;en in bestehende Entwickler-Workflows ein.</li>
+      <li>Es existiert ein skalierbares Betriebs- und Governance-Modell.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="phase4">
+  <span class="phasetag p4">Phase 4</span> <span class="months">Monat 9&ndash;12+</span>
+  <h2>Optimierung &amp; Nachhaltigkeit</h2>
+  <div class="goal"><strong>Ziel:</strong> ACI langfristig als etabliertes
+  Security-Tool betreiben und kontinuierlich verbessern.</div>
+
+  <h3>Wichtige Ma&szlig;nahmen</h3>
+  <h4>1. Zentrale Reporting- &amp; Governance-Plattform</h4>
+  <ul>
+    <li>Eigenes oder gekauftes Dashboard f&uuml;r alle Security-Findings (nicht
+      nur ACI).</li>
+    <li>Trend-Analysen, Risk-Scoring pro Anwendung, Compliance-Reports.</li>
+  </ul>
+  <h4>2. Weiterentwicklung &amp; Customizing</h4>
+  <ul>
+    <li>Interne Erweiterungen (z.&nbsp;B. firmenspezifische Regeln, bessere
+      APEX-Unterst&uuml;tzung, Kontext-Modelle).</li>
+    <li>Regelm&auml;&szlig;ige Beitr&auml;ge zur&uuml;ck in das
+      Open-Source-Projekt (wenn gew&uuml;nscht).</li>
+  </ul>
+  <h4>3. Performance &amp; Skalierbarkeit f&uuml;r gro&szlig;e Umgebungen</h4>
+  <ul>
+    <li>Caching / inkrementelles Scannen evaluieren und ggf. umsetzen.</li>
+    <li>Verteiltes Scannen oder Integration in bestehende Scan-Farmen.</li>
+  </ul>
+  <h4>4. Langfristiges Ownership-Modell</h4>
+  <ul>
+    <li>Klare Verantwortlichkeiten (auch bei Personalwechsel).</li>
+    <li>Budget f&uuml;r Wartung und Weiterentwicklung.</li>
+    <li>Regelm&auml;&szlig;ige Re-Evaluation: Passt ACI noch zu unseren
+      Anforderungen oder brauchen wir Erg&auml;nzungen/Kombinationen mit anderen
+      Tools?</li>
+  </ul>
+  <h4>5. Reifegrad-Messung</h4>
+  <ul>
+    <li>Definition von Reifegraden (z.&nbsp;B. Level 1&ndash;4) f&uuml;r
+      Anwendungen/Teams bez&uuml;glich ACI-Nutzung.</li>
+    <li>Regelm&auml;&szlig;ige Audits der ACI-Konfigurationen.</li>
+  </ul>
+</section>
+
+<section id="prioritaeten">
+  <h2>Zusammengefasste Priorisierung &ndash; Top 8</h2>
+  <p>Nach <strong>Impact vs. Aufwand</strong> sortiert &ndash; die wirksamsten,
+  zugleich g&uuml;nstigsten Ma&szlig;nahmen stehen oben.</p>
+  <table>
+    <tr><th>#</th><th>Ma&szlig;nahme</th><th>Phase</th><th>Impact</th><th>Aufwand</th></tr>
+    <tr><td>1</td><td>Klarer Scope + fokussierter Start (kein &bdquo;alles auf einmal&ldquo;)</td>
+      <td>1</td><td><span class="badge critical">sehr hoch</span></td>
+      <td><span class="badge minor">niedrig</span></td></tr>
+    <tr><td>2</td><td>Kleines dediziertes Team + Governance-Prozesse</td>
+      <td>1&ndash;2</td><td><span class="badge critical">sehr hoch</span></td>
+      <td><span class="badge warning">mittel</span></td></tr>
+    <tr><td>3</td><td>Hartes Critical/High-Gate mit Ruleset-Pinning</td>
+      <td>1</td><td><span class="badge high">hoch</span></td>
+      <td><span class="badge minor">niedrig&ndash;mittel</span></td></tr>
+    <tr><td>4</td><td>Zentrales Reporting / Findings-Sammlung</td>
+      <td>2</td><td><span class="badge high">hoch</span></td>
+      <td><span class="badge warning">mittel</span></td></tr>
+    <tr><td>5</td><td>Integration in bestehende Entwickler-Tools (SARIF)</td>
+      <td>3</td><td><span class="badge high">hoch</span></td>
+      <td><span class="badge major">mittel&ndash;hoch</span></td></tr>
+    <tr><td>6</td><td>Interne Dokumentation + Enablement</td>
+      <td>1&ndash;2</td><td><span class="badge high">mittel&ndash;hoch</span></td>
+      <td><span class="badge warning">mittel</span></td></tr>
+    <tr><td>7</td><td>Erste substanzielle Erweiterungen (APEX / Migrations-Tools)</td>
+      <td>3</td><td><span class="badge high">hoch</span></td>
+      <td><span class="badge critical">hoch</span></td></tr>
+    <tr><td>8</td><td>Langfristiges Ownership- &amp; Weiterentwicklungsmodell</td>
+      <td>4</td><td><span class="badge high">hoch</span></td>
+      <td><span class="badge major">mittel&ndash;hoch</span></td></tr>
+  </table>
+</section>
+
+<section id="risiken">
+  <h2>Wichtige Risiken &amp; Gegenma&szlig;nahmen</h2>
+  <div class="warn"><strong>Scope Creep</strong> &ndash; zu viele Code-Arten
+  gleichzeitig angehen. <br><strong>Gegenma&szlig;nahme:</strong> harten Scope in
+  Phase 1 festlegen und schriftlich fixieren.</div>
+  <div class="warn"><strong>Zu viele Waivers</strong> &ndash; das Gate verliert
+  an Wirkung. <br><strong>Gegenma&szlig;nahme:</strong> guter Waiver-Prozess mit
+  Fristen, Owner und regelm&auml;&szlig;igen Reviews.</div>
+  <div class="warn"><strong>Wartungsaufwand</strong> &ndash; das Tool wird nicht
+  mehr gepflegt. <br><strong>Gegenma&szlig;nahme:</strong> fr&uuml;he Kl&auml;rung
+  des Ownership-Modells und Budget f&uuml;r Wartung.</div>
+  <div class="warn"><strong>Akzeptanzprobleme</strong> &ndash; Teams sehen nur
+  Mehraufwand. <br><strong>Gegenma&szlig;nahme:</strong> gutes Enablement und
+  Fokus auf echte Risiken (Remote Scripts etc.).</div>
+</section>
+
+<section id="fazit">
+  <h2>Zusammenfassung</h2>
+  <p>Mit disziplinierter Umsetzung dieser Roadmap kann ein Unternehmen ACI
+  innerhalb von <strong>9&ndash;12 Monaten</strong> von einem &bdquo;interessanten
+  Tool&ldquo; zu einem <strong>etablierten, produktiven Security-Gate</strong> in
+  der Pipeline bringen &ndash; besonders stark im Bereich von Deployment- und
+  Migrationsskripten sowie Oracle-/EPAS-Packages.</p>
+  <div class="note">Die gr&ouml;&szlig;ten Erfolgsfaktoren sind <strong>nicht</strong>
+  prim&auml;r technische Features von ACI, sondern <strong>Scope-Disziplin, klare
+  Prozesse und internes Ownership</strong>.</div>
+  <h3>N&auml;chste Schritte (optional)</h3>
+  <p>Vertiefungen je nach Bedarf: konkrete Meilensteine pro Phase, Templates
+  f&uuml;r Policy-Repositories (<code>aci-policy-*</code>) oder eine auf ein
+  konkretes Unternehmens-Szenario zugeschnittene Variante.</p>
+</section>
+
+</main>
+</div>
+
+<footer>ACI &ndash; Automated Code Inspection &middot; Enterprise-Adoptions-Roadmap
+  &middot; Stand 2.20</footer>
+</body>
+</html>

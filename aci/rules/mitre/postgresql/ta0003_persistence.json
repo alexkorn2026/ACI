@@ -1,0 +1,74 @@
+{
+  "tactic": "TA0003 Persistence",
+  "tactic_id": "TA0003",
+  "description": "MITRE ATT&CK - Persistence: PostgreSQL code indicators for persistent execution paths.",
+  "rules": [
+    {
+      "id": "ACI-PG-PERSISTENCE-EVENT-TRIGGER",
+      "technique": "Event Trigger",
+      "title": "PostgreSQL CREATE EVENT TRIGGER",
+      "severity": "High",
+      "message": "CREATE EVENT TRIGGER can persistently execute code on DDL events and is security-sensitive in deployment scripts.",
+      "recommendation": "Create event triggers only through controlled DBA/security processes and review the called function.",
+      "url": "https://attack.mitre.org/tactics/TA0003/",
+      "enabled": true,
+      "detector": {
+        "type": "builtin",
+        "name": "regex_static_and_dynamic",
+        "params": {
+          "pattern": "\\bCREATE\\s+EVENT\\s+TRIGGER\\b"
+        }
+      }
+    },
+    {
+      "id": "ACI-PG-REPLICATION-CREATE-SUBSCRIPTION",
+      "technique": "Replication-based Persistence/Lateral Movement",
+      "title": "PostgreSQL CREATE SUBSCRIPTION",
+      "severity": "High",
+      "message": "CREATE SUBSCRIPTION configures logical replication and can move data between systems.",
+      "recommendation": "Manage logical replication subscriptions through controlled DBA/security approval processes.",
+      "url": "https://attack.mitre.org/tactics/TA0003/",
+      "enabled": true,
+      "detector": {
+        "type": "builtin",
+        "name": "regex_static_and_dynamic",
+        "params": {
+          "pattern": "\\bCREATE\\s+SUBSCRIPTION\\b"
+        }
+      }
+    },
+    {
+      "id": "ACI-PG-SYSTEM-SCHEMA-OBJECT",
+      "technique": "Server Software Component (System-Schema-Objekt)",
+      "title": "Objekt in einem PostgreSQL-Systemschema anlegen/ersetzen",
+      "severity": "Critical",
+      "message": "CREATE [OR REPLACE] eines Objekts in pg_catalog bzw. information_schema - mögliches Unterschieben oder Verdecken (Shadowing) von Systemobjekten.",
+      "recommendation": "Sehr kritisch: keine eigenen Objekte in pg_catalog oder information_schema anlegen oder ersetzen.",
+      "url": "https://attack.mitre.org/techniques/T1505/",
+      "enabled": true,
+      "detector": {
+        "type": "regex",
+        "target": "masked",
+        "pattern": "\\bCREATE\\s+(?:OR\\s+REPLACE\\s+)?(?:FUNCTION|PROCEDURE|VIEW|TABLE|AGGREGATE|OPERATOR|TYPE)\\s+(?:pg_catalog|information_schema)\\s*\\."
+      }
+    },
+    {
+      "id": "ACI-EPAS-SCHEDULER-CREATE-JOB",
+      "technique": "Scheduled Task/Job (EPAS DBMS_SCHEDULER/DBMS_JOB)",
+      "title": "EPAS geplanter Job (DBMS_SCHEDULER.CREATE_JOB / DBMS_JOB.SUBMIT)",
+      "severity": "High",
+      "message": "DBMS_SCHEDULER.CREATE_JOB bzw. DBMS_JOB.SUBMIT legt einen wiederkehrend ausgefuehrten Job an (EPAS Oracle-Kompatibilitaet) - ein moeglicher Persistenzmechanismus.",
+      "recommendation": "Datenbank-Jobs nur ueber kontrollierte DBA-/Betriebsprozesse anlegen und das ausgefuehrte Programm/PLSQL pruefen.",
+      "url": "https://attack.mitre.org/techniques/T1053/",
+      "cwe": "CWE-250",
+      "enabled": true,
+      "detector": {
+        "type": "builtin",
+        "name": "regex_static_and_dynamic",
+        "params": {
+          "pattern": "\\b(?:DBMS_SCHEDULER\\s*\\.\\s*CREATE_JOB|DBMS_JOB\\s*\\.\\s*SUBMIT)\\b"
+        }
+      }
+    }
+  ]
+}

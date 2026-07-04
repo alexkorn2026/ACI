@@ -1,0 +1,3 @@
+SET DEFINE ^
+CREATE USER ^username IDENTIFIED BY secret;
+CREATE USER &username IDENTIFIED BY secret;

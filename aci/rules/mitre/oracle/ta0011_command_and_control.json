@@ -1,0 +1,29 @@
+{
+  "tactic": "TA0011 Command and Control",
+  "tactic_id": "TA0011",
+  "description": "MITRE ATT&CK - Command and Control: Code-Indikatoren für Steuerkanäle. Quelle der Technikzuordnung: Oracle MITRE ATT&CK Defensive Guide v1.7.0.",
+  "rules": [
+    {
+      "id": "T1071",
+      "technique": "Application Layer Protocol (JDWP)",
+      "title": "Ausgehende JDWP-Verbindung über DBMS_DEBUG_JDWP",
+      "severity": "Critical",
+      "message": "DBMS_DEBUG_JDWP.CONNECT_TCP / PROCESS_CONNECTION - baut eine ausgehende TCP-Verbindung auf. Ohne legitime Debug-Verwendung ein starker C2-Indikator.",
+      "recommendation": "Sehr kritisch: DBMS_DEBUG_JDWP gehört nicht in Produktionscode.",
+      "url": "https://attack.mitre.org/techniques/T1071/",
+      "enabled": true,
+      "detector": {"type": "regex", "target": "code", "pattern": "\\bDBMS_DEBUG_JDWP\\s*\\.\\s*(?:CONNECT_TCP|PROCESS_CONNECTION)"}
+    },
+    {
+      "id": "T1102",
+      "technique": "Web Service",
+      "title": "Hartkodierte verdächtige URL",
+      "severity": "High",
+      "message": "Eine hartkodierte URL verweist auf einen typischen Relay-/Paste-/Tunnel-Dienst (pastebin, gist/githubusercontent, ngrok, webhook.site, requestbin u.a.).",
+      "recommendation": "Prüfen, wozu die externe Adresse kontaktiert wird; solche Dienste werden häufig als C2-Relais genutzt. Generische Cloud-Objektspeicher (S3, Azure-Blob) werden hier bewusst nicht erfasst - sie kommen zu häufig legitim vor; dafür ist der DBMS_CLOUD-Indikator (T1567) zuständig.",
+      "url": "https://attack.mitre.org/techniques/T1102/",
+      "enabled": true,
+      "detector": {"type": "regex", "target": "string", "pattern": "(?:pastebin\\.com|hastebin\\.com|gist\\.githubusercontent\\.com|raw\\.githubusercontent\\.com|ngrok\\.io|webhook\\.site|requestbin|burpcollaborator|interact\\.sh)"}
+    }
+  ]
+}

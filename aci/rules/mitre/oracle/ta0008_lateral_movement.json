@@ -1,0 +1,67 @@
+{
+  "tactic": "TA0008 Lateral Movement",
+  "tactic_id": "TA0008",
+  "description": "MITRE ATT&CK - Lateral Movement: Code-Indikatoren für die Ausbreitung auf andere Systeme. Quelle der Technikzuordnung: Oracle MITRE ATT&CK Defensive Guide v1.7.0.",
+  "rules": [
+    {
+      "id": "T1570",
+      "technique": "Lateral Tool Transfer",
+      "title": "Dateitransfer über DBMS_FILE_TRANSFER",
+      "severity": "High",
+      "message": "Aufruf von DBMS_FILE_TRANSFER (PUT_FILE/GET_FILE/COPY_FILE) - überträgt Dateien zwischen Datenbankservern.",
+      "recommendation": "Prüfen, welche Dateien zwischen welchen Servern übertragen werden.",
+      "url": "https://attack.mitre.org/techniques/T1570/",
+      "enabled": true,
+      "detector": {
+        "type": "regex",
+        "target": "code",
+        "pattern": "\\bDBMS_FILE_TRANSFER\\s*\\."
+      }
+    },
+    {
+      "id": "T1563",
+      "technique": "Remote Service Session Hijacking (SQL Translation)",
+      "title": "SQL-Translation-Profile / DBMS_SQL_TRANSLATOR",
+      "severity": "High",
+      "message": "Verwendung von SQL-Translation-Profilen bzw. DBMS_SQL_TRANSLATOR - kann SQL-Anweisungen anderer Sitzungen umschreiben (MITM).",
+      "recommendation": "Prüfen, ob ein SQL-Translation-Profil legitim ist; es kann Abfragen transparent manipulieren.",
+      "url": "https://attack.mitre.org/techniques/T1563/",
+      "enabled": true,
+      "detector": {
+        "type": "regex",
+        "target": "code",
+        "pattern": "\\bDBMS_SQL_TRANSLATOR\\s*\\.|\\bSQL_TRANSLATION_PROFILE\\b"
+      }
+    },
+    {
+      "id": "T1021",
+      "technique": "Remote Services (Database Link)",
+      "title": "Zugriff über einen Datenbank-Link (@dblink)",
+      "severity": "High",
+      "message": "Verwendung eines Datenbank-Links (objekt@dblink) - Zugriff auf eine entfernte Datenbank. Möglicher Kanal für laterale Bewegung oder Datenabfluss.",
+      "recommendation": "Ziel und Notwendigkeit des Datenbank-Links prüfen; Zugriffe über Links auf das Nötigste beschränken.",
+      "url": "https://attack.mitre.org/techniques/T1021/",
+      "enabled": true,
+      "detector": {
+        "type": "regex",
+        "target": "masked",
+        "pattern": "\\b[A-Za-z_]\\w*@[A-Za-z_]\\w*"
+      }
+    },
+    {
+      "id": "T1021-CREATE-DBLINK",
+      "technique": "Remote Services (Database Link Creation)",
+      "title": "Erstellung eines Datenbank-Links",
+      "severity": "Critical",
+      "message": "CREATE [PUBLIC] DATABASE LINK legt einen dauerhaften Zugriffspfad auf eine entfernte Datenbank an - oft inklusive gespeicherter Zugangsdaten.",
+      "recommendation": "Datenbank-Links nicht aus Anwendungscode anlegen; Ziel, Zugangsdaten und Notwendigkeit über einen kontrollierten DBA-/Security-Prozess prüfen. CREATE PUBLIC DATABASE LINK besonders restriktiv halten.",
+      "url": "https://attack.mitre.org/techniques/T1021/",
+      "enabled": true,
+      "detector": {
+        "type": "regex",
+        "target": "masked",
+        "pattern": "\\bCREATE\\s+(?:OR\\s+REPLACE\\s+)?(?:SHARED\\s+)?(?:PUBLIC\\s+)?DATABASE\\s+LINK\\b"
+      }
+    }
+  ]
+}

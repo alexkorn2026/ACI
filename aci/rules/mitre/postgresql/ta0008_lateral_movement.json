@@ -1,0 +1,58 @@
+{
+  "tactic": "TA0008 Lateral Movement",
+  "tactic_id": "TA0008",
+  "description": "MITRE ATT&CK - Lateral Movement: PostgreSQL FDW and remote connectivity indicators.",
+  "rules": [
+    {
+      "id": "ACI-PG-FDW-CREATE-SERVER",
+      "technique": "Remote Services / Foreign Data Wrapper",
+      "title": "PostgreSQL CREATE SERVER for risky FDW",
+      "severity": "High",
+      "message": "CREATE SERVER with a foreign data wrapper can introduce remote connectivity, lateral movement or exfiltration paths.",
+      "recommendation": "Create FDW servers only through controlled DBA/security processes and review host, wrapper and options.",
+      "url": "https://attack.mitre.org/tactics/TA0008/",
+      "enabled": true,
+      "detector": {
+        "type": "builtin",
+        "name": "regex_static_and_dynamic",
+        "params": {
+          "pattern": "\\bCREATE\\s+SERVER\\b[\\s\\S]*?\\bFOREIGN\\s+DATA\\s+WRAPPER\\s+(?:postgres_fdw|file_fdw|dblink_fdw|oracle_fdw|mysql_fdw|tds_fdw|jdbc_fdw)\\b"
+        }
+      }
+    },
+    {
+      "id": "ACI-PG-FDW-USER-MAPPING",
+      "technique": "Remote Services / Foreign Data Wrapper",
+      "title": "PostgreSQL CREATE USER MAPPING",
+      "severity": "High",
+      "message": "CREATE USER MAPPING can bind local users to remote FDW identities and enable lateral movement or exfiltration.",
+      "recommendation": "Manage user mappings through controlled DBA/security processes and avoid embedding remote identity data in deployment scripts.",
+      "url": "https://attack.mitre.org/tactics/TA0008/",
+      "enabled": true,
+      "detector": {
+        "type": "builtin",
+        "name": "regex_static_and_dynamic",
+        "params": {
+          "pattern": "\\bCREATE\\s+USER\\s+MAPPING\\b"
+        }
+      }
+    },
+    {
+      "id": "ACI-PG-DBLINK-CALL",
+      "technique": "Remote Services / dblink",
+      "title": "PostgreSQL dblink call",
+      "severity": "High",
+      "message": "dblink/dblink_connect/dblink_exec can create outgoing database connections or execute remote SQL.",
+      "recommendation": "Review remote target, credentials and need for dblink; prefer controlled integration paths.",
+      "url": "https://attack.mitre.org/tactics/TA0008/",
+      "enabled": true,
+      "detector": {
+        "type": "builtin",
+        "name": "regex_static_and_dynamic",
+        "params": {
+          "pattern": "\\b(?:dblink|dblink_connect|dblink_connect_u|dblink_exec)\\s*\\("
+        }
+      }
+    }
+  ]
+}

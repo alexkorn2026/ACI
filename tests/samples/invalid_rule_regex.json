@@ -1,0 +1,15 @@
+{
+  "category": "Test - ungueltiges Regex",
+  "description": "Testregeldatei: enthaelt ein nicht kompilierbares Regex-Muster. Wird von der ACI-Testsuite verwendet, NICHT ausliefern.",
+  "rules": [
+    {
+      "id": "G-INVALID-REGEX",
+      "title": "Regel mit defektem Regex-Muster",
+      "severity": "Major",
+      "message": "Diese Regel besitzt ein nicht kompilierbares Regex-Muster.",
+      "recommendation": "Regex-Muster korrigieren.",
+      "enabled": true,
+      "detector": {"type": "regex", "target": "code", "pattern": "[abc"}
+    }
+  ]
+}

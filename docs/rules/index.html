@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ACI &amp;ndash; Regeldokumentation</title>
+<style>
+:root{--blocker:#7f1d1d;--critical:#b91c1c;--high:#c2410c;--major:#b45309;
+--warning:#a16207;--minor:#0e7490;--info:#6b7280;--bg:#f4f5f7;--card:#fff;
+--ink:#1f2933;--muted:#6b7280;--border:#e3e6ea;--accent:#2563eb;}
+*{box-sizing:border-box;}html{scroll-behavior:smooth;}
+body{margin:0;background:var(--bg);color:var(--ink);font-size:15px;
+line-height:1.6;font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,
+sans-serif;}
+header{background:#111827;color:#fff;padding:30px 40px;}
+header h1{margin:0 0 6px;font-size:23px;}
+header .sub{color:#9ca3af;font-size:13.5px;}
+header a{color:#9ca3af;}
+.wrap{max-width:1100px;margin:0 auto;padding:28px 40px 80px;}
+section{background:var(--card);border:1px solid var(--border);
+border-radius:12px;padding:22px 28px;margin-bottom:20px;}
+h2{font-size:19px;margin:2px 0 6px;padding-bottom:8px;
+border-bottom:2px solid var(--border);}
+h3{font-size:15px;margin:0;}
+p{margin:7px 0;}
+p.lead{color:var(--muted);}
+code{background:#eef2f7;color:#b91c5b;padding:1px 5px;border-radius:4px;
+font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:12.5px;
+word-break:break-word;}
+table{width:100%;border-collapse:collapse;margin:10px 0;font-size:13.5px;}
+th{text-align:left;background:#f9fafb;padding:8px 11px;
+border-bottom:2px solid var(--border);font-size:11px;text-transform:uppercase;
+letter-spacing:.04em;color:var(--muted);}
+td{padding:8px 11px;border-bottom:1px solid var(--border);
+vertical-align:top;}
+.badge{display:inline-block;padding:2px 9px;border-radius:999px;color:#fff;
+font-size:10.5px;font-weight:700;text-transform:uppercase;}
+.badge.blocker{background:var(--blocker);}.badge.critical{background:var(--critical);}
+.badge.high{background:var(--high);}.badge.major{background:var(--major);}
+.badge.warning{background:var(--warning);}.badge.minor{background:var(--minor);}
+.badge.info{background:var(--info);}
+.rule{border:1px solid var(--border);border-radius:10px;padding:14px 18px;
+margin:12px 0;}
+.rule.off{opacity:.6;}
+.rule-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.rid{font-family:ui-monospace,Menlo,monospace;font-size:12px;font-weight:700;
+background:#1f2933;color:#fff;padding:2px 8px;border-radius:5px;}
+.tag{font-size:10.5px;border:1px solid var(--border);border-radius:999px;
+padding:1px 8px;color:var(--muted);}
+.rule .msg{margin:8px 0;}
+.meta{font-size:13px;color:var(--muted);margin:4px 0;}
+.meta b{color:var(--ink);}
+.chips{display:flex;flex-wrap:wrap;gap:5px;margin:6px 0;}
+.chip{background:#eef2f7;border-radius:5px;padding:2px 7px;font-size:12px;
+font-family:ui-monospace,Menlo,monospace;}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+gap:14px;}
+.cards a{display:block;text-decoration:none;color:inherit;border:1px solid
+var(--border);border-radius:10px;padding:16px 18px;background:#fff;}
+.cards a:hover{border-color:var(--accent);}
+.cards h3{color:var(--accent);margin-bottom:4px;}
+.toc{font-size:13.5px;}
+.toc a{color:var(--accent);text-decoration:none;margin-right:14px;}
+.examples{margin-top:14px;}
+.ex{border-top:1px dashed var(--border);margin-top:14px;padding-top:12px;}
+.ex.first{border-top:none;margin-top:8px;}
+.exname{font-weight:700;margin:0 0 2px;font-size:13.5px;}
+.exname code{background:#1f2933;color:#fff;}
+.exnote{color:var(--muted);font-size:12.5px;margin:2px 0 6px;}
+.exlabel{font-size:10.5px;font-weight:700;text-transform:uppercase;
+letter-spacing:.04em;margin:9px 0 3px;}
+.exlabel.bad{color:var(--critical);}
+.exlabel.bad::before{content:"\2718  ";}
+.exlabel.good{color:#15803d;}
+.exlabel.good::before{content:"\2714  ";}
+pre.code{margin:0;padding:10px 13px;border-radius:7px;overflow-x:auto;
+font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:12px;
+line-height:1.55;white-space:pre;}
+pre.code.bad{background:#fef2f2;border:1px solid #fecaca;color:#7f1d1d;}
+pre.code.good{background:#f0fdf4;border:1px solid #bbf7d0;color:#14532d;}
+footer{max-width:1100px;margin:0 auto;padding:0 40px 50px;color:var(--muted);
+font-size:12.5px;}
+</style>
+</head>
+<body>
+<header>
+<h1>ACI &amp;ndash; Regeldokumentation</h1>
+<div class="sub">Übersicht aller Prüfregeln</div>
+</header>
+<div class="wrap">
+<section><h2>ACI-Regeldokumentation</h2><p class="lead">Diese Seiten beschreiben alle von ACI (Automated Code Inspection) ausgewerteten Regeln &ndash; je Regelsatz und je einzelner Regel. ACI prüft Oracle-PL/SQL- und PostgreSQL-PL/pgSQL-Code in drei Regelbereichen: Sicherheit, Coding Guidelines und MITRE-ATT&amp;CK-Angriffsindikatoren.</p><p class="meta">Die Seiten werden aus den JSON-Regeldateien unter <code>aci/rules/</code> erzeugt und spiegeln den ausgelieferten Regelstand wider.</p></section><section><h2>Regelsätze</h2><div class="cards"><a href="oracle-security.html"><h3>Oracle &ndash; Sicherheit</h3><p class="meta">5 Sicherheits-Checks (Naming, Pakete, Obfuskation, SQL-Injection, DDL).</p></a><a href="oracle-guidelines.html"><h3>Oracle &ndash; Coding Guidelines</h3><p class="meta">10 Kategorien, 116 Regeln (Trivadis).</p></a><a href="oracle-mitre.html"><h3>Oracle &ndash; MITRE ATT&CK</h3><p class="meta">12 Taktiken, 67 Angriffsindikatoren.</p></a><a href="postgresql-security.html"><h3>PostgreSQL &ndash; Sicherheit</h3><p class="meta">5 Sicherheits-Checks für PL/pgSQL und SQL.</p></a><a href="postgresql-guidelines.html"><h3>PostgreSQL &ndash; Coding Guidelines</h3><p class="meta">1 Kategorie(n), 26 Regeln.</p></a><a href="postgresql-mitre.html"><h3>PostgreSQL &ndash; MITRE ATT&CK</h3><p class="meta">10 Taktiken, 68 Angriffsindikatoren.</p></a></div></section>
+</div>
+<footer>ACI &ndash; Automated Code Inspection &middot; Regeldokumentation &middot; generiert am 2026-07-03 von <code>docs/generate_rule_docs.py</code></footer>
+</body>
+</html>

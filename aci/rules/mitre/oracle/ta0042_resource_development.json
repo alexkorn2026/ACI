@@ -1,0 +1,18 @@
+{
+  "tactic": "TA0042 Resource Development",
+  "tactic_id": "TA0042",
+  "description": "MITRE ATT&CK - Resource Development: Code-Indikatoren für das Vorbereiten von Angriffswerkzeugen. Quelle der Technikzuordnung: Oracle MITRE ATT&CK Defensive Guide v1.7.0.",
+  "rules": [
+    {
+      "id": "T1027",
+      "technique": "Obfuscated Files or Information (Code-Wrapping)",
+      "title": "Code-Wrapping zur Laufzeit über DBMS_DDL",
+      "severity": "High",
+      "message": "Aufruf von DBMS_DDL.WRAP bzw. CREATE_WRAPPED - erzeugt zur Laufzeit gewrappten, nicht mehr lesbaren PL/SQL-Code.",
+      "recommendation": "Prüfen, warum Code zur Laufzeit gewrappt wird; dynamisches Wrapping verbirgt den tatsächlichen Inhalt vor einer Prüfung.",
+      "url": "https://attack.mitre.org/techniques/T1027/",
+      "enabled": true,
+      "detector": {"type": "regex", "target": "code", "pattern": "\\bDBMS_DDL\\s*\\.\\s*(?:WRAP|CREATE_WRAPPED)"}
+    }
+  ]
+}

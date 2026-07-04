@@ -1,0 +1,212 @@
+{
+  "tactic": "TA0002 Execution",
+  "tactic_id": "TA0002",
+  "description": "MITRE ATT&CK - Execution: Code-Indikatoren fuer die Ausfuehrung von Betriebssystembefehlen aus PostgreSQL heraus.",
+  "rules": [
+    {
+      "id": "T1059",
+      "technique": "Command and Scripting Interpreter (COPY PROGRAM)",
+      "title": "Betriebssystembefehl ueber COPY ... PROGRAM",
+      "severity": "Critical",
+      "message": "COPY ... FROM/TO PROGRAM fuehrt einen Betriebssystembefehl auf dem Datenbankserver aus.",
+      "recommendation": "COPY ... PROGRAM ist Superuser-Funktionalitaet und gehoert nicht in regulaeren Anwendungscode. Verwendung streng pruefen und auf das Noetigste beschraenken.",
+      "url": "https://attack.mitre.org/techniques/T1059/",
+      "enabled": true,
+      "detector": {
+        "type": "regex",
+        "target": "masked",
+        "pattern": "\\bCOPY\\b[^;]*?\\b(?:FROM|TO)\\s+PROGRAM\\b"
+      }
+    },
+    {
+      "id": "T1059-ALTER-SYSTEM",
+      "technique": "Command and Scripting Interpreter (ALTER SYSTEM)",
+      "title": "PostgreSQL ALTER SYSTEM",
+      "severity": "High",
+      "message": "ALTER SYSTEM aendert Serverkonfiguration persistent und gehoert nicht in normalen Anwendungscode.",
+      "recommendation": "Datenbankserver-Konfiguration ueber kontrollierte DBA-/Betriebsprozesse verwalten.",
+      "url": "https://attack.mitre.org/techniques/T1059/",
+      "enabled": true,
+      "detector": {
+        "type": "regex",
+        "target": "masked",
+        "pattern": "\\bALTER\\s+SYSTEM\\s+SET\\b"
+      }
+    },
+    {
+      "id": "T1059-CREATE-EXTENSION-RISKY",
+      "technique": "Command and Scripting Interpreter (Riskante PostgreSQL Extension)",
+      "title": "Riskante PostgreSQL Extension wird erzeugt",
+      "severity": "High",
+      "message": "CREATE EXTENSION fuer eine sicherheitskritische PostgreSQL-Erweiterung erkannt.",
+      "recommendation": "Extensions wie dblink, file_fdw, postgres_fdw oder untrusted PLs nur ueber kontrollierte DBA-/Security-Prozesse verwalten.",
+      "url": "https://attack.mitre.org/techniques/T1059/",
+      "enabled": true,
+      "detector": {
+        "type": "regex",
+        "target": "masked",
+        "pattern": "\\bCREATE\\s+EXTENSION\\b[^;]*?\\b(?:dblink|file_fdw|postgres_fdw|plpythonu|plpython3u|plperlu|plr|pltclu|adminpack|pg_cron|pg_net|pg_timetable|pglogical|plv8|http)\\b"
+      }
+    },
+    {
+      "id": "ACI-PG-EXECUTION-LANGUAGE-C",
+      "technique": "Command and Scripting Interpreter / Native Code",
+      "title": "PostgreSQL CREATE FUNCTION LANGUAGE C",
+      "severity": "Critical",
+      "message": "CREATE FUNCTION ... LANGUAGE C can load server-side native code and must not be introduced through normal application CI/CD scripts.",
+      "recommendation": "Native C functions must go through controlled DBA/security review and filesystem/deployment controls.",
+      "url": "https://attack.mitre.org/techniques/T1059/",
+      "enabled": true,
+      "detector": {
+        "type": "builtin",
+        "name": "regex_static_and_dynamic",
+        "params": {
+          "pattern": "\\bCREATE\\s+(?:OR\\s+REPLACE\\s+)?FUNCTION\\b[\\s\\S]*?\\bLANGUAGE\\s+C\\b"
+        }
+      }
+    },
+    {
+      "id": "ACI-PG-EXECUTION-CREATE-LANGUAGE-UNTRUSTED",
+      "technique": "Command and Scripting Interpreter / Untrusted Language",
+      "title": "PostgreSQL CREATE LANGUAGE for untrusted language",
+      "severity": "Critical",
+      "message": "CREATE LANGUAGE for C or untrusted procedural languages can enable server-side code execution.",
+      "recommendation": "Create untrusted languages only through controlled DBA/security processes.",
+      "url": "https://attack.mitre.org/techniques/T1059/",
+      "enabled": true,
+      "detector": {
+        "type": "builtin",
+        "name": "regex_static_and_dynamic",
+        "params": {
+          "pattern": "\\bCREATE\\s+(?:TRUSTED\\s+|UNTRUSTED\\s+)?LANGUAGE\\s+(?:plpythonu|plpython3u|plperlu|pltclu|c)\\b"
+        }
+      }
+    },
+    {
+      "id": "ACI-PG-LOAD-LIBRARY",
+      "technique": "Command and Scripting Interpreter (LOAD)",
+      "title": "PostgreSQL LOAD einer Shared Library",
+      "severity": "Critical",
+      "message": "LOAD lädt eine Shared Library in die Datenbanksitzung - das kann servernahen, nativen Code ausführen.",
+      "recommendation": "Sehr kritisch: LOAD gehört nicht in regulären Anwendungscode. Verwendung streng prüfen.",
+      "url": "https://attack.mitre.org/techniques/T1059/",
+      "enabled": true,
+      "detector": {
+        "type": "regex",
+        "target": "masked",
+        "pattern": "(?m)^\\s*LOAD\\s+'"
+      }
+    },
+    {
+      "id": "ACI-PG-PSQL-SHELL",
+      "technique": "Command and Scripting Interpreter (psql \\! Shell)",
+      "title": "Betriebssystembefehl ueber psql \\!",
+      "severity": "High",
+      "message": "Die psql-Meta-Anweisung \\! fuehrt einen Betriebssystembefehl auf dem Client aus. In Deployment-Skripten ein direkter OS-Command-Vektor.",
+      "recommendation": "Betriebssystembefehle aus SQL-/psql-Skripten vermeiden; pruefen, welcher Befehl ausgefuehrt wird.",
+      "url": "https://attack.mitre.org/techniques/T1059/",
+      "enabled": true,
+      "detector": {"type": "builtin", "name": "psql_meta_command", "params": {"commands": ["!"], "requires": "shell"}}
+    },
+    {
+      "id": "ACI-PG-PSQL-PIPE",
+      "technique": "Command and Scripting Interpreter (psql Pipe an Programm)",
+      "title": "Ausgabe per Pipe an ein Programm (\\o | / \\g |)",
+      "severity": "High",
+      "message": "Eine psql-Ausgabe-Anweisung (\\o, \\g, \\gx) leitet per Pipe an ein externes Programm weiter - das fuehrt einen Betriebssystembefehl aus.",
+      "recommendation": "Keine Pipe an externe Programme aus psql-Skripten verwenden; Ausgabe in eine Datei lenken und getrennt verarbeiten.",
+      "url": "https://attack.mitre.org/techniques/T1059/",
+      "enabled": true,
+      "detector": {"type": "builtin", "name": "psql_meta_command", "params": {"commands": ["o", "out", "g", "gx"], "requires": "pipe"}}
+    },
+    {
+      "id": "ACI-PG-PSQL-INCLUDE",
+      "technique": "Command and Scripting Interpreter (psql Skript-Include)",
+      "title": "Einbinden eines externen Skripts ueber \\i / \\ir / \\include",
+      "severity": "Warning",
+      "message": "Die psql-Meta-Anweisung \\i / \\ir / \\include fuehrt ein externes SQL-Skript aus. In Deployment-Skripten ein Einfallstor, wenn der Pfad nicht kontrolliert ist.",
+      "recommendation": "Nur vertrauenswuerdige, versionierte Skripte einbinden; Pfade nicht aus Variablen bilden.",
+      "url": "https://attack.mitre.org/techniques/T1059/",
+      "enabled": true,
+      "detector": {"type": "builtin", "name": "psql_meta_command", "params": {"commands": ["i", "ir", "include", "include_relative"]}}
+    },
+    {
+      "id": "ACI-PG-PSQL-COPY-PROGRAM",
+      "technique": "Command and Scripting Interpreter (psql \\copy PROGRAM)",
+      "title": "OS-Befehl ueber psql \\copy ... PROGRAM",
+      "severity": "High",
+      "message": "psql \\copy mit PROGRAM-Klausel leitet Daten von/zu einem externen Programm - das fuehrt einen Betriebssystembefehl auf dem Client aus.",
+      "recommendation": "Keine PROGRAM-Pipes aus Deployment-/psql-Skripten; Daten ueber Dateien austauschen und getrennt verarbeiten.",
+      "url": "https://attack.mitre.org/techniques/T1059/",
+      "enabled": true,
+      "detector": {"type": "builtin", "name": "psql_meta_command", "params": {"commands": ["copy"], "requires": "program"}}
+    },
+    {
+      "id": "ACI-PG-PSQL-GEXEC",
+      "technique": "Command and Scripting Interpreter (psql \\gexec)",
+      "title": "Dynamische SQL-Ausfuehrung ueber psql \\gexec",
+      "severity": "High",
+      "message": "\\gexec fuehrt jede Zeile des vorherigen Abfrageergebnisses als eigenes SQL-Kommando aus - generiertes/abgeleitetes SQL wird ungeprueft ausgefuehrt (dynamische SQL-Ausfuehrung auf Client-Ebene).",
+      "recommendation": "\\gexec nur fuer vertrauenswuerdig erzeugtes SQL verwenden; generierte Anweisungen vor der Ausfuehrung pruefen.",
+      "url": "https://attack.mitre.org/techniques/T1059/",
+      "enabled": true,
+      "detector": {"type": "builtin", "name": "client_directive", "params": {"pattern": "\\\\gexec\\b"}}
+    },
+    {
+      "id": "ACI-PG-PSQL-SET-BACKTICK",
+      "technique": "Command and Scripting Interpreter (psql \\set Backtick)",
+      "title": "OS-Befehl ueber psql \\set mit Backquote-Substitution",
+      "severity": "High",
+      "message": "psql \\set mit Backquotes (`...`) fuehrt den eingeschlossenen Text als Shell-Befehl aus und legt dessen Ausgabe in einer psql-Variable ab - ein direkter OS-Command-Vektor in Skripten.",
+      "recommendation": "Keine Backquote-Kommandos in \\set verwenden; benoetigte Werte ausserhalb des Skripts ermitteln und kontrolliert uebergeben.",
+      "url": "https://attack.mitre.org/techniques/T1059/",
+      "enabled": true,
+      "detector": {"type": "builtin", "name": "psql_meta_command", "params": {"commands": ["set"], "requires": "backtick"}}
+    },
+    {
+      "id": "ACI-PG-PSQL-ENV",
+      "technique": "Command and Scripting Interpreter (psql Umgebungsvariablen)",
+      "title": "psql Umgebungsvariablen ueber \\setenv / \\getenv",
+      "severity": "Warning",
+      "message": "psql \\setenv setzt eine Umgebungsvariable fuer nachfolgende \\!-Subprozesse; \\getenv liest eine Umgebungsvariable in eine psql-Variable. Beides kann Werte aus der Umgebung in Befehle/SQL einschleusen (z.B. ueber :var-Interpolation).",
+      "recommendation": "Umgebungsabhaengige Werte in Skripten vermeiden bzw. validieren; keine env-Werte ungeprueft in Shell-Befehle oder SQL interpolieren.",
+      "url": "https://attack.mitre.org/techniques/T1059/",
+      "enabled": true,
+      "detector": {"type": "builtin", "name": "psql_meta_command", "params": {"commands": ["setenv", "getenv"]}}
+    },
+    {
+      "id": "ACI-EPAS-SCHEDULER-EXECUTABLE",
+      "technique": "Command and Scripting Interpreter (EPAS DBMS_SCHEDULER EXECUTABLE)",
+      "title": "EPAS DBMS_SCHEDULER-Job vom Typ EXECUTABLE",
+      "severity": "Critical",
+      "message": "Ein DBMS_SCHEDULER-Job mit job_type => 'EXECUTABLE' fuehrt ein externes Programm/Betriebssystembefehl auf dem Datenbankserver aus (EPAS Oracle-Kompatibilitaet).",
+      "recommendation": "Keine EXECUTABLE-Jobs aus Anwendungscode anlegen; OS-naehe Jobs nur ueber kontrollierte DBA-/Security-Prozesse.",
+      "url": "https://attack.mitre.org/techniques/T1059/",
+      "cwe": "CWE-78",
+      "enabled": true,
+      "detector": {
+        "type": "regex",
+        "target": "code",
+        "pattern": "\\bjob_type\\s*=>\\s*'EXECUTABLE'"
+      }
+    },
+    {
+      "id": "ACI-EPAS-DBMS-SQL",
+      "technique": "Command and Scripting Interpreter (EPAS DBMS_SQL dynamisches SQL)",
+      "title": "Dynamische SQL-Ausfuehrung ueber EPAS DBMS_SQL",
+      "severity": "High",
+      "message": "DBMS_SQL.PARSE/EXECUTE fuehrt dynamisch zusammengesetztes SQL aus (EPAS Oracle-Kompatibilitaet) - bei ungeprueften Eingaben ein SQL-Injection-/Ausfuehrungsvektor.",
+      "recommendation": "Dynamisches SQL vermeiden oder Eingaben streng validieren und Bezeichner schemaqualifizieren; bevorzugt parametrisierte/gebundene Statements.",
+      "url": "https://attack.mitre.org/techniques/T1059/",
+      "cwe": "CWE-89",
+      "enabled": true,
+      "detector": {
+        "type": "builtin",
+        "name": "regex_static_and_dynamic",
+        "params": {
+          "pattern": "\\bDBMS_SQL\\s*\\.\\s*(?:PARSE|EXECUTE)\\b"
+        }
+      }
+    }
+  ]
+}

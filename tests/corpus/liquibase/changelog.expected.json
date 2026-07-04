@@ -1,0 +1,2 @@
+{"dialect":"oracle","group":"security","findings":[],
+ "absent":["ACI-ORA-SQLPLUS-SUBSTITUTION"],"allow_extra":true}

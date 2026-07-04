@@ -1,0 +1,29 @@
+# Build- und Distributionsartefakte
+build/
+dist/
+*.egg-info/
+*.egg
+
+# Python-Bytecode / Caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tox/
+
+# virtuelle Umgebungen
+.venv/
+venv/
+
+# Editor / OS
+.idea/
+.vscode/
+.DS_Store
+
+# Build-/Distributions-Tarballs
+*.tar.gz
+
+# Generierte Scan-Reports
+aci_report_*.json
+aci_report_*.sarif

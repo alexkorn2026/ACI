@@ -1,0 +1,108 @@
+{
+  "category": "Variablen & Typen",
+  "description": "Trivadis Coding Guidelines, Kategorie 2 - Variables & Types. Quelle: Trivadis PL/SQL & SQL Coding Guidelines v4.4 (Apache-2.0).",
+  "rules": [
+    {
+      "id": "G-2180",
+      "title": "Keine gequoteten Bezeichner verwenden",
+      "severity": "Major",
+      "characteristics": "Maintainability",
+      "message": "Gequoteter Bezeichner (\"...\") gefunden. Gequotete Bezeichner erzwingen Groß-/Kleinschreibung und erschweren die Wartung.",
+      "recommendation": "Bezeichner ohne doppelte Anführungszeichen und in Kleinschreibung verwenden.",
+      "url": "https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/2-variables-and-types/1-general/g-2180/",
+      "enabled": true,
+      "detector": {"type": "regex", "target": "code", "pattern": "\"[A-Za-z_][^\"\\n]*\""}
+    },
+    {
+      "id": "G-2185",
+      "title": "Keine zu kurzen Bezeichner verwenden",
+      "severity": "Minor",
+      "characteristics": "Maintainability",
+      "message": "Sehr kurzer Bezeichner.",
+      "recommendation": "Aussagekräftige, ausreichend lange Bezeichner verwenden.",
+      "url": "https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/2-variables-and-types/1-general/g-2185/",
+      "enabled": true,
+      "detector": {"type": "builtin", "name": "short_identifier", "params": {"min_length": 3}}
+    },
+    {
+      "id": "G-2190",
+      "title": "ROWID / UROWID vermeiden",
+      "severity": "Minor",
+      "characteristics": "Portability, Reliability",
+      "message": "Verwendung von ROWID oder UROWID.",
+      "recommendation": "ROWID/UROWID vermeiden; sie sind nicht stabil und nicht portabel.",
+      "url": "https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/2-variables-and-types/1-general/g-2190/",
+      "enabled": true,
+      "detector": {"type": "regex", "target": "masked", "pattern": "\\b(?:UROWID|ROWID)\\b"}
+    },
+    {
+      "id": "G-2210",
+      "title": "NUMBER nicht ohne Genauigkeit deklarieren",
+      "severity": "Minor",
+      "characteristics": "Reliability",
+      "message": "NUMBER ohne Angabe von Genauigkeit/Skalierung.",
+      "recommendation": "NUMBER mit Precision/Scale deklarieren oder einen passenden Subtyp (z.B. INTEGER, PLS_INTEGER) verwenden.",
+      "url": "https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/2-variables-and-types/2-numeric-data-types/g-2210/",
+      "enabled": true,
+      "detector": {"type": "regex", "target": "masked", "pattern": "\\bNUMBER\\b(?!\\s*[(%])"}
+    },
+    {
+      "id": "G-2310",
+      "title": "Datentyp CHAR vermeiden",
+      "severity": "Minor",
+      "characteristics": "Reliability",
+      "message": "Verwendung des Datentyps CHAR.",
+      "recommendation": "VARCHAR2 statt CHAR verwenden; CHAR füllt Werte mit Leerzeichen auf.",
+      "url": "https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/2-variables-and-types/3-character-data-types/g-2310/",
+      "enabled": true,
+      "detector": {"type": "regex", "target": "masked", "pattern": "(?<![A-Za-z0-9_#$])CHAR\\s*\\("}
+    },
+    {
+      "id": "G-2320",
+      "title": "Datentyp VARCHAR niemals verwenden",
+      "severity": "Major",
+      "characteristics": "Reliability",
+      "message": "Verwendung des Datentyps VARCHAR.",
+      "recommendation": "Immer VARCHAR2 verwenden; die Semantik von VARCHAR kann sich künftig ändern.",
+      "url": "https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/2-variables-and-types/3-character-data-types/g-2320/",
+      "enabled": true,
+      "detector": {"type": "regex", "target": "masked", "pattern": "\\bVARCHAR\\b(?!2)"}
+    },
+    {
+      "id": "G-2330",
+      "title": "Leere Zeichenkette nicht als NULL-Ersatz verwenden",
+      "severity": "Minor",
+      "characteristics": "Reliability",
+      "message": "Leere Zeichenkette ('') als Wert oder im Vergleich verwendet.",
+      "recommendation": "Statt '' explizit NULL verwenden bzw. mit IS [NOT] NULL prüfen.",
+      "url": "https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/2-variables-and-types/3-character-data-types/g-2330/",
+      "enabled": true,
+      "detector": {"type": "regex", "target": "masked", "pattern": "(?:=|<>|!=|:=)\\s*''"}
+    },
+    {
+      "id": "G-2510",
+      "title": "Datentypen LONG und LONG RAW vermeiden",
+      "severity": "Major",
+      "characteristics": "Portability, Reliability",
+      "message": "Verwendung des veralteten Datentyps LONG bzw. LONG RAW.",
+      "recommendation": "CLOB/BLOB statt LONG/LONG RAW verwenden.",
+      "url": "https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/2-variables-and-types/5-large-objects/g-2510/",
+      "enabled": true,
+      "detector": {"type": "regex", "target": "masked", "pattern": "\\bLONG(?:\\s+RAW)?\\b"}
+    },
+    {"id": "G-2110", "title": "Anchored Declarations verwenden", "severity": "Minor", "enabled": false, "coverage": "needs-parser"},
+    {"id": "G-2120", "title": "Typen an einer Stelle definieren", "severity": "Minor", "enabled": false, "coverage": "needs-parser"},
+    {"id": "G-2130", "title": "Subtypes für häufige Konstrukte verwenden", "severity": "Minor", "enabled": false, "coverage": "needs-parser"},
+    {"id": "G-2135", "title": "Keine zugewiesenen, aber ungenutzten Werte", "severity": "Minor", "enabled": false, "coverage": "needs-parser"},
+    {"id": "G-2140", "title": "Variablen nicht mit NULL initialisieren", "severity": "Minor", "enabled": false, "coverage": "needs-parser"},
+    {"id": "G-2145", "title": "Keine Selbstzuweisung von Variablen", "severity": "Minor", "enabled": false, "coverage": "needs-parser"},
+    {"id": "G-2150", "title": "Vergleiche mit NULL vermeiden (IS [NOT] NULL)", "severity": "Minor", "enabled": false, "coverage": "needs-parser"},
+    {"id": "G-2160", "title": "Variablen nicht im Deklarationsteil per Funktion initialisieren", "severity": "Minor", "enabled": false, "coverage": "needs-parser"},
+    {"id": "G-2170", "title": "Variablen nicht überladen", "severity": "Minor", "enabled": false, "coverage": "needs-parser"},
+    {"id": "G-2220", "title": "PLS_INTEGER statt NUMBER für Ganzzahl-Arithmetik", "severity": "Minor", "enabled": false, "coverage": "needs-parser"},
+    {"id": "G-2230", "title": "SIMPLE_INTEGER nutzen, wo passend", "severity": "Minor", "enabled": false, "coverage": "needs-parser"},
+    {"id": "G-2340", "title": "VARCHAR2 mit CHAR-Semantik definieren", "severity": "Minor", "enabled": false, "coverage": "needs-parser"},
+    {"id": "G-2410", "title": "BOOLEAN für Werte mit zwei Bedeutungen", "severity": "Minor", "enabled": false, "coverage": "needs-parser"},
+    {"id": "G-2610", "title": "Keine selbstdefinierten Weak-Ref-Cursor-Typen", "severity": "Minor", "enabled": false, "coverage": "needs-parser"}
+  ]
+}

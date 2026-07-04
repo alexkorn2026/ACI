@@ -1,0 +1,24 @@
+{
+  "tactic": "TA0011 Command and Control",
+  "tactic_id": "TA0011",
+  "description": "MITRE ATT&CK - Command and Control: PostgreSQL covert channel indicators.",
+  "rules": [
+    {
+      "id": "ACI-PG-C2-LISTEN-NOTIFY",
+      "technique": "Application Layer Protocol / LISTEN NOTIFY",
+      "title": "PostgreSQL LISTEN/NOTIFY or pg_notify",
+      "severity": "High",
+      "message": "LISTEN/NOTIFY or pg_notify can be used as an asynchronous communication or covert channel.",
+      "recommendation": "Review whether database notifications are required and ensure channels/payloads are not used for command/control data.",
+      "url": "https://attack.mitre.org/tactics/TA0011/",
+      "enabled": true,
+      "detector": {
+        "type": "builtin",
+        "name": "regex_static_and_dynamic",
+        "params": {
+          "pattern": "\\b(?:LISTEN|NOTIFY)\\s+[A-Za-z_][\\w$]*\\b|\\bpg_notify\\s*\\("
+        }
+      }
+    }
+  ]
+}

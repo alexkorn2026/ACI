@@ -1,0 +1,1545 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ACI - Automated Code Inspection - Dokumentation</title>
+<style>
+  :root {
+    --blocker:#7f1d1d; --critical:#b91c1c; --high:#c2410c;
+    --major:#b45309; --warning:#a16207; --minor:#0e7490; --info:#6b7280;
+    --bg:#f4f5f7; --card:#fff; --ink:#1f2933; --muted:#6b7280;
+    --border:#e3e6ea; --accent:#2563eb; --code-bg:#1f2933;
+  }
+  * { box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+  body { margin:0; background:var(--bg); color:var(--ink);
+    font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    font-size:15px; line-height:1.65; }
+  header { background:#111827; color:#fff; padding:34px 40px; }
+  header h1 { margin:0 0 6px; font-size:25px; }
+  header .sub { color:#9ca3af; font-size:14px; }
+  .layout { display:flex; max-width:1180px; margin:0 auto; }
+  nav { width:250px; flex-shrink:0; padding:30px 16px 60px;
+    position:sticky; top:0; align-self:flex-start; height:100vh;
+    overflow-y:auto; }
+  nav a { display:block; color:var(--muted); text-decoration:none;
+    padding:5px 10px; border-radius:6px; font-size:13.5px; }
+  nav a:hover { background:#e8eaed; color:var(--ink); }
+  nav .group { font-size:11px; text-transform:uppercase; letter-spacing:.06em;
+    color:#9ca3af; margin:16px 10px 4px; font-weight:700; }
+  main { flex:1; min-width:0; padding:30px 40px 80px; }
+  section { background:var(--card); border:1px solid var(--border);
+    border-radius:12px; padding:24px 30px; margin-bottom:22px; }
+  h2 { font-size:20px; margin:4px 0 14px; padding-bottom:8px;
+    border-bottom:2px solid var(--border); }
+  h3 { font-size:16px; margin:22px 0 8px; }
+  h4 { font-size:14px; margin:16px 0 6px; color:var(--accent); }
+  p { margin:8px 0; }
+  code { background:#eef2f7; color:#b91c5b; padding:1px 5px;
+    border-radius:4px; font-family:ui-monospace,"SF Mono",Menlo,monospace;
+    font-size:13px; }
+  pre { background:var(--code-bg); color:#e5e7eb; padding:14px 16px;
+    border-radius:8px; overflow-x:auto; font-size:13px; line-height:1.5;
+    font-family:ui-monospace,"SF Mono",Menlo,monospace; }
+  pre code { background:none; color:inherit; padding:0; font-size:13px; }
+  table { width:100%; border-collapse:collapse; margin:12px 0; font-size:14px; }
+  th { text-align:left; background:#f9fafb; padding:9px 12px;
+    border-bottom:2px solid var(--border); font-size:12px;
+    text-transform:uppercase; letter-spacing:.04em; color:var(--muted); }
+  td { padding:9px 12px; border-bottom:1px solid var(--border);
+    vertical-align:top; }
+  .badge { display:inline-block; padding:2px 9px; border-radius:999px;
+    color:#fff; font-size:11px; font-weight:700; text-transform:uppercase; }
+  .badge.blocker { background:var(--blocker); }
+  .badge.critical { background:var(--critical); }
+  .badge.high { background:var(--high); }
+  .badge.major { background:var(--major); }
+  .badge.warning { background:var(--warning); }
+  .badge.minor { background:var(--minor); }
+  .badge.info { background:var(--info); }
+  .note { background:#eff6ff; border-left:4px solid var(--accent);
+    padding:10px 16px; border-radius:6px; margin:14px 0; font-size:14px; }
+  .warn { background:#fffbeb; border-left:4px solid var(--warning);
+    padding:10px 16px; border-radius:6px; margin:14px 0; font-size:14px; }
+  figure { margin:18px 0; }
+  figure svg { display:block; width:100%; height:auto;
+    border:1px solid var(--border); border-radius:10px;
+    background:var(--card); padding:8px; }
+  figcaption { color:var(--muted); font-size:12.5px; margin-top:7px;
+    text-align:center; }
+  ul,ol { margin:8px 0; padding-left:24px; }
+  li { margin:3px 0; }
+  footer { text-align:center; color:var(--muted); font-size:12px;
+    padding:30px; }
+  @media (max-width:820px){ nav{display:none;} main{padding:24px 20px 60px;} }
+</style>
+</head>
+<body>
+<header>
+  <h1>ACI &ndash; Automated Code Inspection</h1>
+  <div class="sub">Sicherheits- und Coding-Guidelines-Scanner für Oracle-
+    und PostgreSQL-Code &middot; Dokumentation &middot; Version 2.20.2
+</header>
+
+<div class="layout">
+<nav>
+  <a href="#einschraenkungen">Kritische Einschränkungen</a>
+  <a href="#onboarding">Developer Onboarding</a>
+  <div class="group">Grundlagen</div>
+  <a href="#overview">1. Überblick</a>
+  <a href="#funktionsweise">2. Funktionsweise</a>
+  <a href="#architektur">3. Architektur &amp; Aufbau</a>
+  <div class="group">Benutzung</div>
+  <a href="#installation">4. Installation</a>
+  <a href="#verwendung">5. Verwendung (CLI)</a>
+  <a href="#gruppen">6. Prüfgruppen &amp; Schweregrade</a>
+  <a href="#reports">7. Reportformate</a>
+  <div class="group">Prüfungen</div>
+  <a href="#sicherheit">8. Gruppe Sicherheit</a>
+  <a href="#guidelines">9. Gruppe Coding Guidelines</a>
+  <div class="group">Anpassung</div>
+  <a href="#regeldateien">10. Regeldateien (JSON)</a>
+  <a href="#cicd">11. CI/CD-Integration</a>
+  <a href="#enterprise">12. How to use in Enterprise</a>
+  <a href="#grenzen">13. Grenzen</a>
+  <div class="group">Referenz</div>
+  <a href="#debugging">14. Debugging</a>
+  <a href="#glossar">15. Glossar</a>
+</nav>
+
+<main>
+
+<section id="einschraenkungen">
+  <h2>Kritische Einschränkungen</h2>
+  <p>Diese Hinweise stehen bewusst am Anfang der Dokumentation, weil sie
+  für eine Audit- bzw. Freigabe-Bewertung von ACI maßgeblich sind.</p>
+  <div class="warn">
+  <p>ACI ist <strong>kein vollständiger SQL-/PL/SQL-/PL/pgSQL-Compiler</strong>.
+  Es bleibt ein <strong>heuristischer statischer Scanner</strong>. Ein
+  Auditor sollte deshalb folgende Grenzen akzeptieren:</p>
+  <ul>
+    <li><strong>False Positives und False Negatives sind möglich.</strong>
+      ACI ersetzt kein manuelles Review.</li>
+    <li>Dynamisch zusammengesetztes SQL wird gut, aber <strong>nicht formal
+      vollständig</strong> analysiert. <strong>False Negatives</strong>
+      bleiben insbesondere bei SQL möglich, das ACI nicht statisch
+      vorliegt &ndash; dynamisches SQL über mehrere Dateien hinweg,
+      Build-Templates, Code-/Migrations-Generatoren oder
+      konfigurations-/datengetriebenes SQL (siehe Abschnitt
+      <a href="#grenzen">13. Grenzen &amp; Hinweise</a>).</li>
+    <li>Regeldateien sind Teil der <strong>Trust Boundary</strong>: Wer die
+      Regeln (<code>aci/rules/</code>, <code>--rules</code>/<code>--rules-dir</code>)
+      manipulieren kann, kann den CI/CD-Gate schwächen.</li>
+    <li>PostgreSQL-kritische CI/CD-Policies liegen teils in MITRE- bzw.
+      Spezialdetektoren und nicht einheitlich in
+      <code>ddl_in_code.critical_statements</code> &ndash; funktional in
+      Ordnung, governance-seitig aber etwas verstreut.</li>
+    <li><span class="badge high">High</span> ist für CI/CD praktisch oft
+      genauso blockierwürdig wie <span class="badge critical">Critical</span>:
+      für eine echte Deployment-Blockade unsicherer Befehle daher
+      <code>--fail-on high</code> verwenden (siehe Abschnitt
+      <a href="#cicd">11. CI/CD-Integration</a>).</li>
+  </ul>
+  </div>
+  <p>Eine ausführlichere Darstellung enthält Abschnitt
+  <a href="#grenzen">13. Grenzen &amp; Hinweise</a>.</p>
+</section>
+
+<section id="onboarding">
+  <h2>Developer Onboarding</h2>
+  <div class="note"><strong>Lies diesen Abschnitt zuerst.</strong> Er ist
+  der zentrale Einstieg für Entwickler, die ACI übernehmen oder
+  weiterentwickeln. Er gibt den Überblick und <em>navigiert</em> zu den
+  Detailabschnitten &ndash; er dupliziert sie nicht.</div>
+
+  <h3>High-Level-Pipeline</h3>
+  <p>ACI verarbeitet jede Datei in einer festen Kette; jede Stufe
+  entspricht einem Modul in <code>aci/</code>:</p>
+  <pre><code>Quelltext
+  -> Lexer            aci/lexer.py    Tokens, Maskierung von Kommentaren/Strings
+  -> Parser / IR      aci/parser.py   leichte IR: Routinen, Statements, dyn. SQL
+                      aci/ir.py       IR-Datenmodell + line_starts()
+  -> Source-Fassade   aci/source.py   buendelt Lexer + IR pro Datei
+  -> Checks           aci/checks/     Security-Checks, Guideline-/MITRE-Detektoren
+  -> Findings         aci/finding.py  Finding, Severity, Fingerprint
+  -> Waiver           aci/waivers.py  Ausnahmen anwenden (nicht entfernen)
+  -> Integritaet      aci/integrity.py Ruleset-Hash + Trust-Status
+  -> Reporter         aci/reporting/  console / json / html / sarif
+  -> CLI              aci/cli.py      _run() orchestriert die Kette</code></pre>
+  <p>Einstiegspunkt ist <code>aci/cli.py:_run()</code>; die Funktion ist
+  bewusst in kleine Teilschritte zerlegt (Regeln laden, Optionen prüfen,
+  Integrität verifizieren, scannen, Waiver anwenden, Reports schreiben,
+  Exit-Code bestimmen). Wer den Ablauf verstehen will, liest zuerst
+  <code>_run()</code>.</p>
+
+  <h3>Lokales Setup</h3>
+  <pre><code>python3 --version            # Python 3.9+ erforderlich
+python3 -m pytest -q          # Testsuite (keine Laufzeitabhaengigkeiten)
+python3 -m compileall -q aci  # Syntaxpruefung
+python3 -m ruff check .       # Linter   (falls installiert)
+python3 -m mypy aci           # Typpruefung (falls installiert)
+python3 -m aci samples/vulnerable_oracle.sql -g security</code></pre>
+  <p>ACI nutzt ausschließlich die Standardbibliothek; <code>ruff</code> und
+  <code>mypy</code> sind reine Entwickler-Werkzeuge
+  (<code>pip install .[dev]</code>).</p>
+
+  <h3>Kernkonzepte</h3>
+  <ul>
+    <li><strong>IR (Intermediate Representation)</strong> &ndash; eine
+      bewusst <em>leichtgewichtige</em> Zwischenform, kein vollständiger
+      SQL-Compiler. Sie bewahrt Statement- und Routinegrenzen sowie die
+      Reihenfolge von Zuweisungen (siehe <a href="#architektur">3.
+      Architektur</a>).</li>
+    <li><strong>Maskierung</strong> &ndash; <code>code_masked</code>
+      ersetzt Kommentar- und String-Inhalte, sodass Regex-Detektoren
+      nicht auf Daten statt Code anschlagen.</li>
+    <li><strong>Taint-Quelle</strong> &ndash; bei SQL-Injection wird
+      neben der Fundstelle (Sink) die Herkunft des dynamischen Strings
+      ausgewiesen; Details und alle Begriffe im <a href="#glossar">14.
+      Glossar</a>.</li>
+    <li><strong>Regeln sind Daten</strong> &ndash; Checks lesen JSON aus
+      <code>aci/rules/</code>; neue Regeln brauchen i.&nbsp;d.&nbsp;R.
+      keinen Code (siehe <a href="#regeldateien">10. Regeldateien</a>).</li>
+  </ul>
+
+  <h3>Dialekt-Fallen</h3>
+  <ul>
+    <li>Der Dialekt wird <strong>nicht</strong> erraten: ohne
+      <code>--dialect postgresql</code> gilt der Oracle-Regelsatz.</li>
+    <li>Oracle- und PostgreSQL-Regeln liegen getrennt
+      (<code>oracle.json</code> / <code>postgresql.json</code>,
+      Unterverzeichnisse <code>oracle/</code> / <code>postgresql/</code>).</li>
+    <li>PostgreSQL-Dollar-Quotes müssen verschachtelt unterschiedliche
+      Tags verwenden (<code>$func$</code> / <code>$msg$</code>).</li>
+  </ul>
+
+  <h3>Typische Stolpersteine</h3>
+  <ul>
+    <li>Regex-Detektoren für mehrteilige Anweisungen werden
+      <strong>statement-lokal</strong> ausgewertet (Auswertung je
+      <code>;</code>-Region) &ndash; ein <code>[\s\S]*?</code> darf eine
+      Statement-Grenze nicht überschreiten, sonst entstehen False
+      Positives über mehrere Statements hinweg.</li>
+    <li>Die Datenflussanalyse ist <strong>routine-lokal</strong>; sie
+      folgt keinen Aufrufen über Routinegrenzen hinweg.</li>
+    <li>Reports können Quelltext enthalten &ndash; für CI-Artefakte
+      <code>--safe-report</code> verwenden.</li>
+    <li>Findings und Reporttexte sind teils deutschsprachig und werden
+      von Tests geprüft: Wortlaut nicht unbedacht ändern.</li>
+  </ul>
+  <p>Tiefe folgt in den verlinkten Abschnitten; im Fehlerfall hilft
+  <a href="#debugging">14. Debugging</a>.</p>
+</section>
+
+<section id="overview">
+  <h2>1. Überblick</h2>
+  <p><strong>ACI (Automated Code Inspection)</strong> ist ein statisches
+  Analyse-Werkzeug, das übergebenen Datenbank-Code &ndash; Oracle PL/SQL
+  oder PostgreSQL PL/pgSQL &ndash; untersucht. ACI führt den Code nicht
+  aus, sondern prüft ausschließlich den Quelltext.</p>
+  <p>ACI prüft in <strong>zwei Gruppen</strong>:</p>
+  <ul>
+    <li><strong>Sicherheit</strong> &ndash; fünf Sicherheits-Checks
+      (SQL-Injection, unerwünschte Packages, obfuskierter Code u.a.).
+      Schweregrade: <span class="badge warning">Warning</span>
+      <span class="badge high">High</span>
+      <span class="badge critical">Critical</span></li>
+    <li><strong>Coding Guidelines</strong> &ndash; Prüfungen nach den
+      <em>Trivadis PL/SQL &amp; SQL Coding Guidelines</em> (Stil,
+      Wartbarkeit, Zuverlässigkeit). Schweregrade:
+      <span class="badge info">Info</span>
+      <span class="badge minor">Minor</span>
+      <span class="badge major">Major</span>
+      <span class="badge critical">Critical</span>
+      <span class="badge blocker">Blocker</span>.
+      Diese Gruppe steht nur für Oracle zur Verfügung.</li>
+  </ul>
+  <p>Beide Gruppen werden im Report getrennt dargestellt, jede mit ihrer
+  eigenen Schweregrad-Skala. Die Regeln werden in <strong>externen
+  JSON-Dateien</strong> gepflegt und sind ohne Code-Änderung erweiterbar.</p>
+  <h3>Hauptmerkmale</h3>
+  <ul>
+    <li>Zwei Prüfgruppen mit getrennten Schweregrad-Skalen</li>
+    <li>Fünf Sicherheits-Checks plus MITRE-ATT&amp;CK- und APEX-/ORDS-Regeln
+        sowie über 50 aktive Coding-Guideline-Regeln</li>
+    <li>Heuristische Erkennung für Client-/Deployment-Skripte (SQL*Plus,
+        edbplus, psql) und Oracle APEX/ORDS (inkl. APEX-Export-Dateien)</li>
+    <li>Zwei SQL-Dialekte: Oracle und PostgreSQL (EPAS-bewusst)</li>
+    <li>Vier Ausgabeformate: Konsole, JSON, HTML, SARIF</li>
+    <li>Externe, frei editierbare JSON-Regeldateien</li>
+    <li>Einbindbar in CI/CD über Exit-Codes</li>
+    <li>Reine Python-Standardbibliothek &ndash; keine Abhängigkeiten</li>
+  </ul>
+</section>
+
+<section id="funktionsweise">
+  <h2>2. Funktionsweise</h2>
+  <p>Ein Scan durchläuft für jede Datei vier Schritte:</p>
+  <ol>
+    <li><strong>Regeln laden</strong> &ndash; die Sicherheits-Regeldatei
+      des Dialekts und (für Oracle) die Coding-Guideline-Kategoriedateien
+      werden eingelesen und validiert.</li>
+    <li><strong>Vorverarbeitung</strong> &ndash; der Quelltext wird
+      einmalig aufbereitet: Kommentare werden entfernt und String-Literale
+      erkannt. Dadurch lösen Schlüsselworte in Kommentaren keine
+      Fehlalarme aus, und Checks können gezielt im Code oder im
+      String-Inhalt suchen.</li>
+    <li><strong>Checks ausführen</strong> &ndash; alle aktiven Checks
+      beider Gruppen werden ausgeführt und liefern Findings.</li>
+    <li><strong>Bericht erstellen</strong> &ndash; die Findings werden
+      nach Gruppe getrennt zusammengeführt, sortiert und in den
+      gewählten Formaten ausgegeben.</li>
+  </ol>
+  <div class="note">Die Vorverarbeitung erzeugt zwei aufbereitete
+  Textvarianten: eine ohne Kommentare (String-Literale bleiben erhalten)
+  und eine zusätzlich maskierte Variante, in der auch der Inhalt von
+  String-Literalen ausgeblendet ist. Beide Varianten sind zeichengenau
+  gleich lang wie das Original, sodass Fundstellen exakt auf Zeile und
+  Spalte abgebildet werden.</div>
+</section>
+
+<section id="architektur">
+  <h2>3. Architektur &amp; Aufbau</h2>
+  <p>ACI ist als Python-Paket organisiert. Jeder Sicherheits-Check ist
+  eine Klasse; jede Coding-Guideline-Regel wird durch einen
+  <code>GuidelineCheck</code> mit Detektor-Beschreibung ausgeführt.</p>
+  <figure>
+  <svg viewBox="0 0 780 218" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Aufbau von ACI: Analyse-Pipeline von der Eingabe bis zum Report">
+    <defs>
+      <marker id="d1ah" markerWidth="9" markerHeight="9" refX="7.5" refY="3.5" orient="auto">
+        <path d="M0,0 L8,3.5 L0,7 Z" fill="#6b7280"/>
+      </marker>
+    </defs>
+    <rect x="468" y="14" width="132" height="46" rx="8" fill="#eef2f7" stroke="#e3e6ea"/>
+    <text x="534" y="35" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1f2933">Regeldateien</text>
+    <text x="534" y="51" text-anchor="middle" font-size="11" fill="#6b7280">aci/rules/*.json</text>
+    <line x1="534" y1="60" x2="534" y2="110" stroke="#6b7280" stroke-width="1.8" marker-end="url(#d1ah)"/>
+    <rect x="12" y="112" width="132" height="94" rx="9" fill="#fff" stroke="#e3e6ea"/>
+    <text x="78" y="141" text-anchor="middle" font-size="13" font-weight="700" fill="#1f2933">1 · Eingabe</text>
+    <text x="78" y="164" text-anchor="middle" font-size="11" fill="#6b7280">SQL-Quelltext</text>
+    <text x="78" y="181" text-anchor="middle" font-size="11" fill="#6b7280">Oracle · PostgreSQL</text>
+    <rect x="164" y="112" width="132" height="94" rx="9" fill="#fff" stroke="#e3e6ea"/>
+    <text x="230" y="141" text-anchor="middle" font-size="13" font-weight="700" fill="#1f2933">2 · Lexer</text>
+    <text x="230" y="164" text-anchor="middle" font-size="11" fill="#6b7280">Kommentare &amp;</text>
+    <text x="230" y="181" text-anchor="middle" font-size="11" fill="#6b7280">Strings maskieren</text>
+    <rect x="316" y="112" width="132" height="94" rx="9" fill="#fff" stroke="#e3e6ea"/>
+    <text x="382" y="141" text-anchor="middle" font-size="13" font-weight="700" fill="#1f2933">3 · Parser / IR</text>
+    <text x="382" y="164" text-anchor="middle" font-size="11" fill="#6b7280">Routinen · dyn. SQL</text>
+    <text x="382" y="181" text-anchor="middle" font-size="11" fill="#6b7280">Statements · Ausdrücke</text>
+    <rect x="468" y="112" width="132" height="94" rx="9" fill="#eff4ff" stroke="#2563eb" stroke-width="1.8"/>
+    <text x="534" y="141" text-anchor="middle" font-size="13" font-weight="700" fill="#1d4ed8">4 · Checks</text>
+    <text x="534" y="164" text-anchor="middle" font-size="11" fill="#6b7280">Sicherheit + MITRE</text>
+    <text x="534" y="181" text-anchor="middle" font-size="11" fill="#6b7280">Coding Guidelines</text>
+    <rect x="620" y="112" width="132" height="94" rx="9" fill="#fff" stroke="#e3e6ea"/>
+    <text x="686" y="141" text-anchor="middle" font-size="13" font-weight="700" fill="#1f2933">5 · Reporting</text>
+    <text x="686" y="164" text-anchor="middle" font-size="11" fill="#6b7280">Konsole · JSON</text>
+    <text x="686" y="181" text-anchor="middle" font-size="11" fill="#6b7280">HTML · SARIF</text>
+    <line x1="144" y1="159" x2="164" y2="159" stroke="#6b7280" stroke-width="1.8" marker-end="url(#d1ah)"/>
+    <line x1="296" y1="159" x2="316" y2="159" stroke="#6b7280" stroke-width="1.8" marker-end="url(#d1ah)"/>
+    <line x1="448" y1="159" x2="468" y2="159" stroke="#6b7280" stroke-width="1.8" marker-end="url(#d1ah)"/>
+    <line x1="600" y1="159" x2="620" y2="159" stroke="#6b7280" stroke-width="1.8" marker-end="url(#d1ah)"/>
+  </svg>
+  <figcaption>Abbildung 1: Aufbau von ACI &ndash; die Analyse-Pipeline vom Quelltext bis zum Report. Die Regeldateien speisen Stufe 4 (Checks).</figcaption>
+  </figure>
+  <pre><code>ACI/
+&#9474;
+&#9500;&#9472; aci.py                  Kommandozeilen-Einstiegspunkt
+&#9500;&#9472; aci/                    Python-Paket
+&#9474;   &#9500;&#9472; cli.py              CLI - _run() orchestriert die Pipeline
+&#9474;   &#9500;&#9472; config.py           Standardparameter aus aci.ini
+&#9474;   &#9500;&#9472; finding.py          Datenmodell: Finding, Severity, Fingerprint
+&#9474;   &#9500;&#9472; lexer.py            Kommentare/Strings maskieren
+&#9474;   &#9500;&#9472; parser.py / ir.py   leichtgewichtige Parser-/IR-Schicht
+&#9474;   &#9500;&#9472; source.py           Vorverarbeitung je Datei
+&#9474;   &#9500;&#9472; rules.py            Laden der Sicherheits-/Guideline-/MITRE-Regeln
+&#9474;   &#9500;&#9472; scanner.py          Scan-Engine (Dateien/Verzeichnisse)
+&#9474;   &#9500;&#9472; waivers.py          Waiver-/Ausnahmeprozess
+&#9474;   &#9500;&#9472; integrity.py        Ruleset-Hash + Vertrauensstatus
+&#9474;   &#9500;&#9472; checks/             Pruef-Checks (Paket)
+&#9474;   &#9474;   &#9500;&#9472; base.py        Check-Basisklasse + gemeinsame Helfer
+&#9474;   &#9474;   &#9500;&#9472; lexical.py     Naming-, Packages-, Obfuscation-Check
+&#9474;   &#9474;   &#9500;&#9472; sqli.py        SQL-Injection-Check (Datenfluss)
+&#9474;   &#9474;   &#9500;&#9472; ddl.py         DDL-im-Code-Check (Datenfluss)
+&#9474;   &#9474;   &#9500;&#9472; detectors.py   eingebaute Guideline-/MITRE-Detektoren
+&#9474;   &#9474;   &#9492;&#9472; guidelines.py  GuidelineCheck, MitreCheck
+&#9474;   &#9492;&#9472; reporting/          Reportformate (Paket)
+&#9474;       &#9500;&#9472; report.py      ScanReport (Datenmodell)
+&#9474;       &#9500;&#9472; console.py     Konsolen-Report
+&#9474;       &#9500;&#9472; json_report.py JSON-Report
+&#9474;       &#9500;&#9472; sarif.py       SARIF-Report
+&#9474;       &#9492;&#9472; html.py        HTML-Report
+&#9500;&#9472; rules/                  externe Regeldateien
+&#9474;   &#9500;&#9472; oracle.json             Sicherheit (Oracle)
+&#9474;   &#9500;&#9472; postgresql.json         Sicherheit (PostgreSQL)
+&#9474;   &#9492;&#9472; guidelines/oracle/      Coding Guidelines (je Kategorie)
+&#9500;&#9472; samples/                Beispieldateien
+&#9492;&#9472; docs/                   diese Dokumentation</code></pre>
+  <p>Die beiden umfangreichsten Bereiche sind als <strong>Unterpakete</strong>
+  organisiert: <code>aci/checks/</code> trennt Basisklasse, lexikalische
+  Checks, Datenfluss-Checks (SQL-Injection/DDL), Detektor-Bibliothek und
+  GuidelineCheck; <code>aci/reporting/</code> trennt das Datenmodell von je
+  einem Modul pro Reportformat. Beide besitzen ein
+  re-exportierendes <code>__init__.py</code>, sodass
+  <code>from aci.checks import &hellip;</code> bzw.
+  <code>from aci.reporting import &hellip;</code> unverändert funktioniert.</p>
+  <p>Wichtig: Die Coding Guidelines werden in <strong>einer JSON-Datei je
+  Trivadis-Kategorie</strong> gepflegt (gute Wartbarkeit), erscheinen im
+  Report jedoch als <strong>eine</strong> gemeinsame Gruppe.</p>
+
+  <h3>Warum kein Compiler &ndash; bewusst ein heuristischer Scanner</h3>
+  <p>ACI ist <strong>kein</strong> vollständiger SQL-/PL/SQL-/PL/pgSQL-
+  Compiler, sondern bleibt bewusst ein <strong>heuristischer statischer
+  Scanner</strong>. Das ist eine Architekturentscheidung, keine
+  Unfertigkeit:</p>
+  <ul>
+    <li><strong>Ein Compiler löst Probleme prozeduralen Codes</strong>
+      &ndash; vollständige Daten- und Kontrollflussanalyse,
+      Sichtbarkeits- und Typauflösung. Diesen Aufwand bräuchte man für
+      Stored Procedures, Funktionen und Trigger. Reine DDL
+      (<code>CREATE TABLE</code>, <code>VIEW</code>,
+      <code>SEQUENCE</code>, <code>GRANT</code>) ist dagegen
+      <em>deklarativ</em>: kein Datenfluss, kein Kontrollfluss. Sie gut
+      zu prüfen heißt, die einzelne Anweisung sauber abzugrenzen und
+      gegen Regeln zu halten &ndash; dafür ist kein Compiler nötig.</li>
+    <li><strong>Echte semantische Prüfung bräuchte den
+      Datenbank-Katalog.</strong> Fragen wie &bdquo;existiert diese
+      Spalte, stimmt der Typ?&ldquo; lassen sich nur gegen ein laufendes
+      Schema beantworten. ACI ist bewusst ein <em>offline</em>, DB-loses
+      Werkzeug, das nur den übergebenen Quelltext liest &ndash; ein
+      Compiler ohne Katalog brächte diese Stufe ohnehin nicht.</li>
+    <li><strong>Die leichtgewichtige Parser-/IR-Schicht reicht gezielt
+      so weit, wie sie Präzision bringt</strong> &ndash; Statement- und
+      Routine-Grenzen, dynamisches SQL, Reihenfolge von Zuweisungen
+      &ndash; und bewusst nicht weiter. Sie gibt nicht vor, eine
+      vollständige SQL-Grammatik oder Kontrollfluss-Engine zu sein.</li>
+    <li><strong>Die Entscheidung bringt konkrete Vorteile:</strong> nur
+      Python-Standardbibliothek (keine Parser-Abhängigkeit, kleine
+      Lieferkette), robust über Dialekt- und Versionsunterschiede
+      hinweg, schnell und wartbar.</li>
+  </ul>
+  <p>Die Kehrseite wird offen benannt: Eine Heuristik kann
+  <strong>False Positives und False Negatives</strong> erzeugen. ACI ist
+  daher ein <strong>Review-Assistent und CI-Signal</strong>, kein
+  formaler Sicherheitsbeweis &ndash; siehe Abschnitt
+  <a href="#grenzen">13. Grenzen &amp; Hinweise</a>.</p>
+</section>
+
+<section id="installation">
+  <h2>4. Installation</h2>
+  <p>ACI benötigt <strong>Python 3.9 oder neuer</strong> und verwendet
+  ausschließlich die Standardbibliothek &ndash; es müssen keine
+  zusätzlichen Pakete installiert werden.</p>
+  <pre><code>python3 --version        # erwartet: Python 3.9+
+cd ACI
+python3 aci.py samples/vulnerable_oracle.sql</code></pre>
+</section>
+
+<section id="verwendung">
+  <h2>5. Verwendung (CLI)</h2>
+  <pre><code>python3 aci.py &lt;Datei-oder-Verzeichnis&gt; [Optionen]</code></pre>
+  <h3>Optionen</h3>
+  <table>
+    <tr><th>Option</th><th>Beschreibung</th><th>Standard</th></tr>
+    <tr><td><code>-d, --dialect</code></td><td><code>oracle</code> oder
+      <code>postgresql</code></td><td>oracle</td></tr>
+    <tr><td><code>-g, --group</code></td><td>zu prüfende Gruppe(n):
+      <code>all</code>, <code>security</code>, <code>guidelines</code></td>
+      <td>all</td></tr>
+    <tr><td><code>--profile</code></td><td>CI/CD-Voreinstellung statt
+      langer Schalter-Kette: <code>advisory</code>, <code>ci</code>,
+      <code>strict</code>, <code>audit</code>, <code>apex</code>
+      (siehe Abschnitt 11)</td>
+      <td>&ndash;</td></tr>
+    <tr><td><code>--rules</code></td><td>explizite Sicherheits-Regeldatei
+      (überschreibt <code>--rules-dir</code>)</td><td>&ndash;</td></tr>
+    <tr><td><code>--rules-dir</code></td><td>Verzeichnis mit
+      <code>oracle.json</code> / <code>postgresql.json</code></td>
+      <td>gebündelt</td></tr>
+    <tr><td><code>--guidelines-dir</code></td><td>Basisverzeichnis der
+      Guideline-Kategoriedateien</td><td>gebündelt</td></tr>
+    <tr><td><code>--mitre-dir</code></td><td>Basisverzeichnis der
+      MITRE-Taktikdateien</td><td>gebündelt</td></tr>
+    <tr><td><code>-f, --format</code></td><td>Ausgabeformate, kommagetrennt:
+      <code>console</code>, <code>json</code>, <code>html</code>,
+      <code>sarif</code></td><td>console</td></tr>
+    <tr><td><code>-o, --output-dir</code></td><td>Zielverzeichnis für
+      JSON-/HTML-/SARIF-Reports</td><td>akt. Verz.</td></tr>
+    <tr><td><code>--html-group-by</code></td><td>HTML-Findings nach
+      <code>rule</code> oder <code>file</code> gruppieren</td><td>rule</td></tr>
+    <tr><td><code>--min-level</code></td><td>nur Findings ab diesem
+      Schweregrad ausgeben</td><td>info</td></tr>
+    <tr><td><code>--fail-on</code></td><td>Exit-Code 1, wenn Findings
+      &ge; Schweregrad (für CI/CD; Empfehlung: mindestens
+      <code>high</code>)</td><td>none</td></tr>
+    <tr><td><code>--strict-internal-errors</code></td><td>Exit-Code 2, wenn
+      ein Check intern fehlschlägt</td><td>&ndash;</td></tr>
+    <tr><td><code>--waivers</code></td><td>JSON-Datei mit kontrollierten
+      Ausnahmen (Waiver); gewaiverte Findings bleiben sichtbar, zählen
+      aber nicht für <code>--fail-on</code></td><td>&ndash;</td></tr>
+    <tr><td><code>--strict-waivers</code></td><td>Exit-Code 2, wenn die
+      Waiver-Datei fehlerhaft ist (sonst nur Warnung)</td><td>&ndash;</td></tr>
+    <tr><td><code>--baseline DATEI</code></td><td>bekannte (in der Baseline
+      enthaltene) Findings unterdrücken &ndash; es werden nur <b>neue</b>
+      Findings gemeldet und gezählt (Adoption auf Legacy-Code)</td>
+      <td>&ndash;</td></tr>
+    <tr><td><code>--write-baseline DATEI</code></td><td>aktuellen Stand als
+      Baseline schreiben und ohne Gate beenden (Exit 0)</td><td>&ndash;</td></tr>
+    <tr><td><code>--require-trusted-rules</code></td><td>Exit-Code 2, wenn
+      eine Regeldatei aus einem benutzerdefinierten (nicht gebündelten)
+      Pfad geladen würde</td><td>&ndash;</td></tr>
+    <tr><td><code>--context-lines N</code></td><td>Zeilen Quelltext-Kontext
+      pro Finding (<code>0</code> = kein Kontext)</td><td>3</td></tr>
+    <tr><td><code>--no-context</code></td><td>keinen Quelltext-Kontext in
+      den Report aufnehmen</td><td>&ndash;</td></tr>
+    <tr><td><code>--redact-secrets</code> /
+      <code>--no-redact-secrets</code></td><td>einfache Geheimnis-Muster
+      (inkl. PostgreSQL/EPAS <code>PASSWORD '…'</code>) im Report maskieren</td>
+      <td>&ndash;</td></tr>
+    <tr><td><code>--redact-paths</code> /
+      <code>--no-redact-paths</code></td><td>absolute Pfade im Report
+      anonymisieren (Verzeichnis &rarr; <code>&lt;PATH&gt;</code>, Dateiname
+      bleibt); von <code>--safe-report</code> impliziert</td>
+      <td>&ndash;</td></tr>
+    <tr><td><code>--safe-report</code> /
+      <code>--unsafe-report</code></td><td>bündelt <code>--no-context</code>,
+      <code>--redact-secrets</code> und <code>--redact-paths</code></td>
+      <td>&ndash;</td></tr>
+    <tr><td><code>--taint-sources</code> /
+      <code>--no-taint-sources</code></td><td>Taint-Quelle bei
+      SQL-Injection- und dynamischen DDL-Findings als zusätzliche
+      Fundstelle zeigen</td><td>an</td></tr>
+    <tr><td><code>--exclude MUSTER</code></td><td>Datei-/Verzeichnismuster
+      vom Scan ausschließen (mehrfach möglich)</td><td>&ndash;</td></tr>
+    <tr><td><code>--max-file-size GRÖSSE</code></td><td>Dateien über dieser
+      Größe überspringen (z.B. <code>5MB</code>, <code>500KB</code>)</td>
+      <td>&ndash;</td></tr>
+    <tr><td><code>--follow-symlinks</code></td><td>symbolischen
+      Verknüpfungen folgen</td><td>&ndash;</td></tr>
+    <tr><td><code>--no-color</code></td><td>Konsolenausgabe ohne Farben</td>
+      <td>&ndash;</td></tr>
+    <tr><td><code>--debug</code></td><td>bei unerwarteten Fehlern den vollen
+      Python-Traceback zeigen</td><td>&ndash;</td></tr>
+    <tr><td><code>--dump-ir</code></td><td>Parser-/IR-Debugausgabe als JSON
+      erzeugen und beenden</td><td>&ndash;</td></tr>
+    <tr><td><code>--list-checks</code></td><td>aktive Checks/Regeln anzeigen
+      und beenden</td><td>&ndash;</td></tr>
+  </table>
+  <p>Die Vorgabewerte der meisten Optionen stammen aus <code>aci.ini</code>;
+  ein gesetzter Schalter überschreibt sie. Die mit &bdquo;gebündelt&ldquo;
+  markierten Regelverzeichnisse zeigen auf die mit ACI ausgelieferten
+  Regeldateien.</p>
+  <h3>Beispiele</h3>
+  <pre><code># Beide Gruppen, Konsolenausgabe
+python3 aci.py samples/vulnerable_oracle.sql
+
+# Nur die Sicherheits-Checks
+python3 aci.py code.sql --group security
+
+# Nur die Coding Guidelines, HTML-Report
+python3 aci.py code.sql --group guidelines -f html -o reports/
+
+# PostgreSQL (Sicherheit, MITRE und Coding Guidelines)
+python3 aci.py code.sql -d postgresql
+
+# Aktive Checks und Guideline-Abdeckung anzeigen
+python3 aci.py --list-checks</code></pre>
+</section>
+
+<section id="gruppen">
+  <h2>6. Prüfgruppen &amp; Schweregrade</h2>
+  <p>Jedes Finding gehört zu genau einer Gruppe und trägt einen
+  Schweregrad aus der Skala dieser Gruppe.</p>
+  <h3>Gruppe Sicherheit</h3>
+  <table>
+    <tr><th>Level</th><th>Bedeutung</th></tr>
+    <tr><td><span class="badge warning">Warning</span></td>
+      <td>Auffälligkeit / Verstoß gegen gute Praxis</td></tr>
+    <tr><td><span class="badge high">High</span></td>
+      <td>ernstzunehmendes Risiko, sollte behoben werden</td></tr>
+    <tr><td><span class="badge critical">Critical</span></td>
+      <td>schwerwiegende Lücke mit hohem Missbrauchspotenzial</td></tr>
+  </table>
+  <h3>Gruppe Coding Guidelines</h3>
+  <p>Diese Gruppe nutzt die fünfstufige Skala der Trivadis-Guidelines:</p>
+  <table>
+    <tr><th>Level</th><th>Bedeutung</th></tr>
+    <tr><td><span class="badge info">Info</span></td>
+      <td>Hinweis ohne unmittelbare Auswirkung</td></tr>
+    <tr><td><span class="badge minor">Minor</span></td>
+      <td>geringfügiger Verstoß (Stil, Lesbarkeit)</td></tr>
+    <tr><td><span class="badge major">Major</span></td>
+      <td>deutlicher Verstoß gegen Wartbarkeit/Zuverlässigkeit</td></tr>
+    <tr><td><span class="badge critical">Critical</span></td>
+      <td>schwerwiegender Verstoß</td></tr>
+    <tr><td><span class="badge blocker">Blocker</span></td>
+      <td>Verstoß, der die Auslieferung blockieren sollte</td></tr>
+  </table>
+  <div class="note">Für gruppenübergreifende Funktionen
+  (<code>--fail-on</code>, <code>--min-level</code>, Sortierung) besitzt
+  jeder Schweregrad zusätzlich ein internes Gewicht. So lassen sich
+  Findings beider Skalen vergleichen.</div>
+</section>
+
+<section id="reports">
+  <h2>7. Reportformate</h2>
+  <p>ACI kennt <strong>vier</strong> Reportformate
+  (<code>--format console,json,html,sarif</code>, kommagetrennt
+  kombinierbar). Alle stellen die Prüfgruppen getrennt dar &ndash;
+  jeweils mit eigener Schweregrad-Zusammenfassung.</p>
+  <h3>Konsole</h3>
+  <p>Farbiger Textreport, je Gruppe ein eigener Abschnitt. Mit
+  <code>--no-color</code> ohne ANSI-Farben.</p>
+  <h3>JSON</h3>
+  <p>Maschinenlesbarer Report. Jedes Finding enthält <code>group</code>,
+  <code>severity</code>, <code>fingerprint</code> und (bei
+  Guideline-Findings) eine <code>url</code> zur Regelseite. Der Report
+  führt zusätzlich <code>scanner_config</code>, <code>ruleset.integrity</code>
+  und &ndash; bei genutzter Waiver-Datei &ndash; einen
+  <code>waivers</code>-Block.</p>
+  <h3>HTML</h3>
+  <p>Eigenständige HTML-Seite mit Kennzahlen-Karten je Gruppe; die
+  Findings sind über <code>--html-group-by</code> wahlweise nach Regel
+  oder nach Datei gruppiert.</p>
+  <h3>SARIF</h3>
+  <p>SARIF-2.1.0-Report (<code>aci_report_&lt;name&gt;.sarif</code>) für
+  GitHub-/GitLab-/Azure-DevOps-Code-Scanning. Der Regelkatalog ist je
+  <code>check_id:rule_ref</code> geführt; gewaiverte Findings erscheinen
+  als <code>suppressions</code>, der Ruleset-Hash als
+  Run-<code>property</code>.</p>
+</section>
+
+<section id="sicherheit">
+  <h2>8. Gruppe Sicherheit</h2>
+  <p>Fünf Checks, gesteuert über <code>rules/oracle.json</code> bzw.
+  <code>rules/postgresql.json</code>:</p>
+  <table>
+    <tr><th>ID</th><th>Check</th><th>Prüft auf</th></tr>
+    <tr><td><code>ACI-NAME</code></td><td>Namenskonventionen</td>
+      <td>reservierte Worte als Bezeichner, überlange Namen</td></tr>
+    <tr><td><code>ACI-PKG</code></td><td>Unerwünschte Packages</td>
+      <td>sicherheitskritische Packages/Funktionen/Sprachen</td></tr>
+    <tr><td><code>ACI-OBF</code></td><td>Obfuskierter Code</td>
+      <td>gewrappter, kodierter oder verschleierter Code</td></tr>
+    <tr><td><code>ACI-SQLI</code></td><td>SQL Injection</td>
+      <td>dynamisches SQL mit String-Konkatenation</td></tr>
+    <tr><td><code>ACI-DDL</code></td><td>DDL im Code</td>
+      <td>GRANT/CREATE/ALTER/DROP &hellip; im Code</td></tr>
+  </table>
+  <p>Details zu diesen Checks: jeder Check kann in der Regeldatei über
+  <code>enabled</code> ein-/ausgeschaltet werden; Wortlisten, Pakete,
+  DDL-Schlüsselworte und Muster sind dort frei pflegbar.</p>
+  <div class="note"><strong>SQL-Injection-Erweiterungen (ACI&nbsp;2.22.0):</strong>
+  Der <code>ACI-SQLI</code>-Check erkennt zusätzlich (a) eine gezielte
+  <em>interprozedurale</em> Injection &ndash; ein ungeprüfter Wert, der über
+  einen Routinenaufruf in das dynamische SQL einer Hilfsroutine derselben
+  Datei fließt (Regel-Ref <code>ACI-SQLI-IP</code>; über
+  <code>"interprocedural": false</code> abschaltbar); (b) Oracle-SQLi über
+  <code>DBMS_XMLGEN.NEWCONTEXT</code>/<code>DBMS_XMLQUERY.NEWCONTEXT</code>,
+  die die übergebene Abfrage ausführen und die
+  <code>EXECUTE&nbsp;IMMEDIATE</code>-Erkennung umgehen; sowie (c) die
+  PostgreSQL-Session-/GUC-Quelle <code>current_setting</code>/<code>set_config</code>
+  als typisierte, benutzerkontrollierbare Eingabe.</div>
+
+  <h3>MITRE-ATT&amp;CK-Angriffsindikatoren</h3>
+  <p>Zusätzlich zu den fünf Checks prüft die Gruppe Sicherheit eine Reihe
+  von <strong>Angriffsindikatoren nach MITRE ATT&amp;CK</strong> (Oracle
+  und PostgreSQL/EPAS). Es handelt sich um Code-Muster, die auf konkrete
+  Angriffstechniken hindeuten &ndash; etwa datenbankweite LOGON-Trigger
+  (Persistenz), das Löschen von Audit-Daten (Defense Evasion), den Zugriff
+  auf interne Hash-Tabellen (Credential Access) oder ausgehende
+  JDWP-Verbindungen (Command &amp; Control). Jedes Finding ist mit
+  MITRE-Taktik und -Technik (<code>T&hellip;</code>) versehen und verlinkt
+  auf die zugehörige Seite bei <code>attack.mitre.org</code>.</p>
+  <p>Die Indikatoren ergänzen die fünf Checks gezielt um Muster, die diese
+  noch nicht erfassen &ndash; es entstehen keine doppelten Findings. Sie
+  liegen als eigene Regeldateien je Taktik unter
+  <code>rules/mitre/&lt;dialect&gt;/</code> (z.B.
+  <code>rules/mitre/oracle/ta0003_persistence.json</code>) und sind dort
+  frei erweiterbar.</p>
+  <table>
+    <tr><th>Taktik</th><th>Beispiel-Indikatoren</th></tr>
+    <tr><td>Execution (TA0002)</td><td><code>DBMS_MLE</code>,
+      <code>CREATE JAVA SOURCE</code></td></tr>
+    <tr><td>Persistence (TA0003)</td><td><code>AFTER LOGON ON DATABASE</code>,
+      Scheduler-Job <code>job_type=&gt;'EXECUTABLE'</code>,
+      <code>CREATE OR REPLACE &hellip; SYS.&hellip;</code></td></tr>
+    <tr><td>Privilege Escalation (TA0004)</td><td><code>AUTHID DEFINER</code>,
+      <code>IDENTIFIED BY VALUES</code></td></tr>
+    <tr><td>Defense Evasion (TA0005)</td><td><code>_oracle_script</code>,
+      <code>NOAUDIT</code>, <code>DELETE FROM SYS.AUD$</code></td></tr>
+    <tr><td>Credential Access (TA0006)</td><td><code>SYS.USER$</code>,
+      <code>DBMS_SYSTEM.GET_ENV</code></td></tr>
+    <tr><td>Lateral Movement (TA0008)</td><td><code>DBMS_FILE_TRANSFER</code></td></tr>
+    <tr><td>Exfiltration / C2 (TA0010/TA0011)</td>
+      <td><code>DBMS_DEBUG_JDWP.CONNECT_TCP</code>, hartkodierte
+      Relay-URLs, <code>DBMS_NETWORK_ACL_ADMIN</code></td></tr>
+    <tr><td>Impact (TA0040)</td><td><code>CREATE LIBRARY</code>,
+      <code>DBMS_ADVANCED_REWRITE</code></td></tr>
+    <tr><td>Defense Impairment (TA0112)</td>
+      <td><code>DBMS_SQL_FIREWALL.DISABLE</code></td></tr>
+  </table>
+  <div class="note">Viele dieser Muster haben auch legitime DBA-Verwendung.
+  Ein MITRE-Finding ist ein <em>Indikator, der ein Review verdient</em>
+  &ndash; kein sicherer Nachweis eines Angriffs. Laufzeitbezogene
+  ATT&amp;CK-Techniken (Logins, Audit-Trail-Auswertung, DB-Zustand) kann
+  ein statischer Scanner nicht erkennen; dafür sind die SOC-Regeln des
+  Oracle-MITRE-Leitfadens vorgesehen.</div>
+</section>
+
+<section id="guidelines">
+  <h2>9. Gruppe Coding Guidelines</h2>
+  <p>Die Gruppe &bdquo;Coding Guidelines&ldquo; setzt eine Teilmenge der
+  <strong>Trivadis PL/SQL &amp; SQL Coding Guidelines</strong> (Version
+  4.4, Apache-2.0-Lizenz) um. Die Regeln tragen ihre originalen IDs
+  (<code>G-NNNN</code>) und verlinken auf die jeweilige Trivadis-Regelseite.</p>
+
+  <h3>Abdeckung</h3>
+  <p>ACI ist ein muster-/heuristikbasierter Scanner. Umgesetzt ist die
+  Teilmenge der Guidelines, die sich damit zuverlässig prüfen lässt
+  &ndash; rund 35 aktive Regeln. Regeln, die eine vollständige
+  PL/SQL-Syntaxanalyse erfordern (z.B. unbenutzte Variablen, toter Code,
+  Kontrollfluss), sind in den Regeldateien mit
+  <code>"enabled": false</code> und <code>"coverage": "needs-parser"</code>
+  hinterlegt. Sie erscheinen in <code>--list-checks</code> als bekannt,
+  aber nicht geprüft.</p>
+
+  <h3>Beispiele aktiver Regeln</h3>
+  <table>
+    <tr><th>ID</th><th>Regel</th><th>Level</th></tr>
+    <tr><td><code>G-2180</code></td><td>keine gequoteten Bezeichner</td>
+      <td><span class="badge major">Major</span></td></tr>
+    <tr><td><code>G-2320</code></td><td>Datentyp VARCHAR nie verwenden</td>
+      <td><span class="badge major">Major</span></td></tr>
+    <tr><td><code>G-3145</code></td><td>kein SELECT *</td>
+      <td><span class="badge major">Major</span></td></tr>
+    <tr><td><code>G-3310</code></td><td>kein COMMIT in einer Schleife</td>
+      <td><span class="badge critical">Critical</span></td></tr>
+    <tr><td><code>G-4310</code></td><td>keine GOTO-Anweisungen</td>
+      <td><span class="badge major">Major</span></td></tr>
+    <tr><td><code>G-6010</code></td><td>dynamisches SQL über Variable
+      ausführen</td><td><span class="badge major">Major</span></td></tr>
+    <tr><td><code>G-7125</code></td><td>CREATE OR REPLACE verwenden</td>
+      <td><span class="badge major">Major</span></td></tr>
+    <tr><td><code>G-9010</code></td><td>Formatmaske bei TO_DATE</td>
+      <td><span class="badge major">Major</span></td></tr>
+  </table>
+
+  <h3>Detektoren</h3>
+  <p>Jede Guideline-Regel besitzt eine Detektor-Beschreibung &ndash;
+  entweder ein regulärer Ausdruck (<code>type: regex</code>) oder ein
+  eingebauter Detektor mit Sonderlogik (<code>type: builtin</code>, z.B.
+  für Namenspräfixe, COMMIT-in-Schleife oder fehlende Parametermodi).</p>
+
+  <div class="note">Die Coding Guidelines gelten ausschließlich für
+  Oracle PL/SQL. Bei <code>--dialect postgresql</code> wird nur die Gruppe
+  Sicherheit geprüft.</div>
+</section>
+
+<section id="regeldateien">
+  <h2>10. Regeldateien (JSON)</h2>
+  <p>Alle Regeln liegen außerhalb des Programmcodes.</p>
+  <h3>Sicherheit</h3>
+  <p>Eine Datei je Dialekt (<code>rules/oracle.json</code>,
+  <code>rules/postgresql.json</code>) mit den fünf Checks, Wortlisten,
+  Paketen und DDL-Schlüsselworten.</p>
+  <h3>Coding Guidelines</h3>
+  <p>Eine Datei je Trivadis-Kategorie unter
+  <code>rules/guidelines/oracle/</code>. Eine Regel hat folgende Form:</p>
+  <pre><code>{
+  "id": "G-3145",
+  "title": "Kein SELECT * aus Tabelle oder View",
+  "severity": "Major",
+  "characteristics": "Maintainability, Reliability",
+  "message": "Verwendung von SELECT * .",
+  "recommendation": "Benötigte Spalten explizit aufzählen.",
+  "url": "https://trivadis.github.io/.../g-3145/",
+  "enabled": true,
+  "detector": { "type": "regex", "target": "code",
+                "pattern": "\\bSELECT\\s+\\*" }
+}</code></pre>
+  <p>Eine neue Regel ist durch einen weiteren Eintrag in der passenden
+  Kategoriedatei aktivierbar; ein <code>regex</code>-Detektor benötigt
+  keinen Code. <code>target</code> wählt, ob im Code
+  (<code>code</code>/<code>masked</code>) oder im Inhalt von
+  String-Literalen (<code>string</code>) gesucht wird.</p>
+  <div class="warn">Auf gültiges JSON achten; Rückwärtsstriche in
+  regulären Ausdrücken JSON-konform verdoppeln (<code>\\b</code>). ACI
+  prüft jede Regeldatei beim Laden und meldet Fehler verständlich.</div>
+</section>
+
+<section id="cicd">
+  <h2>11. CI/CD-Integration</h2>
+  <p>Mit <code>--fail-on</code> liefert ACI einen auswertbaren Exit-Code.
+  Der Schwellwert akzeptiert jeden Schweregrad beider Skalen; verglichen
+  wird über das interne Gewicht.</p>
+  <figure>
+  <svg viewBox="0 0 780 232" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Integration von ACI als blockierender Gate in eine CI/CD-Pipeline">
+    <defs>
+      <marker id="d2g" markerWidth="9" markerHeight="9" refX="7.5" refY="3.5" orient="auto"><path d="M0,0 L8,3.5 L0,7 Z" fill="#6b7280"/></marker>
+      <marker id="d2ok" markerWidth="9" markerHeight="9" refX="7.5" refY="3.5" orient="auto"><path d="M0,0 L8,3.5 L0,7 Z" fill="#15803d"/></marker>
+      <marker id="d2no" markerWidth="9" markerHeight="9" refX="7.5" refY="3.5" orient="auto"><path d="M0,0 L8,3.5 L0,7 Z" fill="#b91c1c"/></marker>
+    </defs>
+    <rect x="14" y="46" width="140" height="58" rx="9" fill="#fff" stroke="#e3e6ea"/>
+    <text x="84" y="72" text-anchor="middle" font-size="13" font-weight="700" fill="#1f2933">Commit / MR</text>
+    <text x="84" y="89" text-anchor="middle" font-size="11" fill="#6b7280">Quellcode-Änderung</text>
+    <rect x="196" y="46" width="140" height="58" rx="9" fill="#fff" stroke="#e3e6ea"/>
+    <text x="266" y="72" text-anchor="middle" font-size="13" font-weight="700" fill="#1f2933">Build &amp; Test</text>
+    <text x="266" y="89" text-anchor="middle" font-size="11" fill="#6b7280">Kompilieren · Tests</text>
+    <rect x="378" y="29" width="196" height="92" rx="10" fill="#eff4ff" stroke="#2563eb" stroke-width="1.8"/>
+    <text x="476" y="56" text-anchor="middle" font-size="14" font-weight="700" fill="#1d4ed8">ACI-Gate</text>
+    <text x="476" y="78" text-anchor="middle" font-size="10.5" fill="#6b7280">aci sql/ --group security</text>
+    <text x="476" y="94" text-anchor="middle" font-size="10.5" fill="#6b7280">--fail-on high --safe-report</text>
+    <text x="476" y="110" text-anchor="middle" font-size="10.5" fill="#6b7280">--strict-internal-errors</text>
+    <rect x="618" y="22" width="150" height="52" rx="9" fill="#fff" stroke="#15803d" stroke-width="1.6"/>
+    <text x="693" y="44" text-anchor="middle" font-size="12.5" font-weight="700" fill="#15803d">Deployment</text>
+    <text x="693" y="60" text-anchor="middle" font-size="10.5" fill="#6b7280">Freigabe &amp; Rollout</text>
+    <rect x="618" y="100" width="150" height="52" rx="9" fill="#fff" stroke="#b91c1c" stroke-width="1.6"/>
+    <text x="693" y="122" text-anchor="middle" font-size="12.5" font-weight="700" fill="#b91c1c">Build gestoppt</text>
+    <text x="693" y="138" text-anchor="middle" font-size="10.5" fill="#6b7280">kein Deployment</text>
+    <rect x="378" y="166" width="196" height="52" rx="9" fill="#fff" stroke="#e3e6ea"/>
+    <text x="476" y="188" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1f2933">Report-Artefakte</text>
+    <text x="476" y="204" text-anchor="middle" font-size="10.5" fill="#6b7280">JSON · SARIF · HTML</text>
+    <rect x="618" y="166" width="150" height="52" rx="9" fill="#fff" stroke="#e3e6ea"/>
+    <text x="693" y="188" text-anchor="middle" font-size="12.5" font-weight="700" fill="#1f2933">Code-Scanning /</text>
+    <text x="693" y="204" text-anchor="middle" font-size="10.5" fill="#6b7280">Audit-Dashboard</text>
+    <line x1="154" y1="75" x2="196" y2="75" stroke="#6b7280" stroke-width="1.8" marker-end="url(#d2g)"/>
+    <line x1="336" y1="75" x2="378" y2="75" stroke="#6b7280" stroke-width="1.8" marker-end="url(#d2g)"/>
+    <line x1="574" y1="60" x2="618" y2="48" stroke="#15803d" stroke-width="1.8" marker-end="url(#d2ok)"/>
+    <line x1="574" y1="92" x2="618" y2="124" stroke="#b91c1c" stroke-width="1.8" marker-end="url(#d2no)"/>
+    <line x1="476" y1="121" x2="476" y2="166" stroke="#6b7280" stroke-width="1.8" marker-end="url(#d2g)"/>
+    <line x1="574" y1="192" x2="618" y2="192" stroke="#6b7280" stroke-width="1.8" marker-end="url(#d2g)"/>
+    <text x="580" y="40" font-size="10" font-weight="700" fill="#15803d">Exit-Code 0</text>
+    <text x="578" y="134" font-size="10" font-weight="700" fill="#b91c1c">Exit-Code 1 / 2</text>
+  </svg>
+  <figcaption>Abbildung 2: ACI als blockierender Gate in einer CI/CD-Pipeline &ndash; Exit-Code 0 gibt frei, Exit-Code 1/2 stoppt den Build; die Report-Artefakte fließen ins Code-Scanning.</figcaption>
+  </figure>
+  <table>
+    <tr><th>Exit-Code</th><th>Bedeutung</th></tr>
+    <tr><td><code>0</code></td><td>kein Finding erreicht die Schwelle</td></tr>
+    <tr><td><code>1</code></td><td>mindestens ein Finding erreicht/übersteigt
+      die Schwelle</td></tr>
+    <tr><td><code>2</code></td><td>Werkzeug-/Eingabefehler (ungültige
+      Regeldatei, Pfad nicht gefunden, ungültige Option) oder &ndash; mit
+      <code>--strict-internal-errors</code> bzw.
+      <code>--strict-waivers</code> &ndash; ein interner Check-Fehler bzw.
+      eine fehlerhafte Waiver-Datei</td></tr>
+  </table>
+  <pre><code># Build schlägt bei sicherheitsrelevanten Findings fehl
+python3 aci.py ./src --dialect oracle --group security \
+        --format json --output-dir reports/ --fail-on high</code></pre>
+
+  <h3>CI/CD-Profile</h3>
+  <p>Damit man in der Pipeline keine lange Schalter-Kette zusammenstellen
+  muss, kennt ACI vordefinierte <strong>Profile</strong>. Ein Profil ist
+  ein benanntes Bündel sinnvoller Voreinstellungen; es legt eine
+  Vorgabe-Schicht zwischen <code>aci.ini</code> und die expliziten
+  Kommandozeilen-Schalter. Ein ausdrücklich gesetzter Schalter hat also
+  weiterhin Vorrang vor dem Profil.</p>
+  <table>
+    <tr><th>Profil</th><th>Zweck</th><th>gesetzte Vorgaben</th></tr>
+    <tr><td><code>advisory</code></td><td>beratend &ndash; scannt und
+      berichtet, blockiert nie</td><td><code>--group security
+      --fail-on none --format console,json,sarif --safe-report</code></td></tr>
+    <tr><td><code>ci</code></td><td>empfohlener harter Gate &ndash;
+      blockiert ab High</td><td><code>--group security --fail-on high
+      --format console,json,sarif --safe-report
+      --strict-internal-errors</code></td></tr>
+    <tr><td><code>strict</code></td><td>strengster Gate &ndash;
+      <code>ci</code> plus strenge Waiver-/Regelprüfung</td>
+      <td>wie <code>ci</code>, zusätzlich <code>--strict-waivers
+      --require-trusted-rules</code></td></tr>
+    <tr><td><code>audit</code></td><td>vollständige Prüfung für ein
+      manuelles Review (mit Kontext, ohne Blockade)</td>
+      <td><code>--group all --fail-on none --format console,html
+      --taint-sources</code></td></tr>
+  </table>
+  <pre><code># empfohlener Gate
+python -m aci sql/ --profile ci
+
+# Gate mit Waiver-Datei
+python -m aci sql/ --profile ci --waivers aci-waivers.json
+
+# einzelne Vorgabe des Profils ueberschreiben
+python -m aci sql/ --profile ci --fail-on critical</code></pre>
+  <div class="note">Die Profile <code>advisory</code>, <code>ci</code>
+  und <code>strict</code> setzen bereits <code>--fail-on high</code>
+  (bzw. <code>none</code> bei advisory) und <code>--safe-report</code> -
+  der folgende ausführliche Gate-Aufruf zeigt dieselben Schalter
+  einzeln.</div>
+
+  <h3>Baseline-/Diff-Modus (Legacy-Adoption)</h3>
+  <p>Auf gewachsenem Code liefert der erste Scan oft zu viele Findings, um
+  sofort ein hartes Gate zu schalten. Der Baseline-Modus schreibt den
+  aktuellen Stand als akzeptierten Ausgangspunkt fest und meldet fortan nur
+  noch <strong>neu hinzugekommene</strong> Findings. Die Bindung erfolgt
+  über denselben inhaltsgebundenen Fingerabdruck wie bei den Waivern &ndash;
+  unabhängig von absolutem Pfad und Report-Kontext.</p>
+  <pre><code># Einmalig: aktuellen Stand festschreiben (beendet mit Exit 0)
+python -m aci sql/ --write-baseline aci-baseline.json
+
+# In der Pipeline: nur neue Findings zaehlen fuers Gate
+python -m aci sql/ --profile ci --baseline aci-baseline.json</code></pre>
+  <p><code>ACI-INTERNAL</code> (Werkzeugfehler) wird nie über die Baseline
+  unterdrückt; eine fehlende oder fehlerhafte Baseline-Datei führt
+  fail-closed zu Exit-Code&nbsp;2.</p>
+  <div class="note"><strong>Ab ACI 2.22.1:</strong> Die Baseline führt je
+  Fingerabdruck eine <em>Anzahl</em> (Multiset, Format Version&nbsp;2). Zwei
+  identische Befunde in einer Datei teilen denselben Fingerabdruck; sind
+  <em>k</em> Vorkommen bekannt und treten <em>m</em> auf, gelten
+  <code>min(k, m)</code> als bekannt, die übrigen bleiben sichtbar. Legacy-
+  Baselines aus 2.22.0 (<code>{"fingerprints": […]}</code>) bleiben lesbar;
+  die Datei wird atomar geschrieben und streng validiert.</div>
+
+  <h3>Inline-Suppression (<code>-- aci:ignore</code>)</h3>
+  <p>Ergänzend zur zentralen Waiver-Datei lassen sich einzelne Fundstellen
+  mit einem Kommentar direkt am Code stummschalten: <code>-- aci:ignore</code>
+  (dieselbe Zeile) bzw. <code>-- aci:ignore-next-line</code> (nächste Zeile),
+  optional auf Regeln beschränkt via <code>[ACI-SQLI, …]</code>. Unterdrückte
+  Findings zählen nicht für <code>--fail-on</code>; ihre Anzahl wird als
+  Hinweis gemeldet. Werkzeugfehler (<code>ACI-INTERNAL</code>) sind bewusst
+  nicht unterdrückbar.</p>
+  <pre><code>EXECUTE IMMEDIATE v_sql;  -- aci:ignore[ACI-SQLI] SEC-42: geprueft</code></pre>
+
+  <h3>Empfohlener CI/CD-Gate</h3>
+  <p>Für eine Deployment-Pipeline empfiehlt sich der folgende Aufruf. Er
+  blockiert den Build bei sicherheitsrelevanten Findings und erzeugt
+  zugleich archivierbare, kontextfreie Report-Artefakte.</p>
+  <div class="warn"><strong>Audit-relevant &ndash; mindestens
+  <code>--fail-on high</code>:</strong> Für eine echte
+  Deployment-Blockade unsicherer Befehle muss die Schwelle auf
+  <code>--fail-on high</code> gesetzt werden; <code>--fail-on critical</code>
+  ist für ein verlässliches Sicherheits-Gate zu schwach. Viele
+  CI-relevante administrative Befunde sind bewusst mit <em>High</em>
+  bewertet, nicht mit <em>Critical</em> &ndash; etwa serverseitiger
+  Dateizugriff, ausgehende Netzwerkverbindungen, dynamisches SQL aus
+  ungeprüften Parametern sowie <code>ALTER SYSTEM SET</code> oder ein
+  riskantes <code>CREATE EXTENSION dblink</code>. Ein PostgreSQL-Skript
+  mit <code>ALTER SYSTEM SET work_mem</code> und
+  <code>CREATE EXTENSION dblink</code> läuft mit
+  <code>--fail-on critical</code> ungehindert durch, wird aber mit
+  <code>--fail-on high</code> korrekt blockiert.</div>
+  <pre><code># PostgreSQL
+python -m aci sql/ \
+  --dialect postgresql \
+  --group security \
+  --fail-on high \
+  --strict-internal-errors \
+  --safe-report \
+  --format console,json,sarif \
+  --output-dir reports
+
+# Oracle (analog)
+python -m aci sql/ \
+  --dialect oracle \
+  --group security \
+  --fail-on high \
+  --strict-internal-errors \
+  --safe-report \
+  --format console,json,sarif \
+  --output-dir reports</code></pre>
+  <p>Die Schalter im Einzelnen:</p>
+  <ul>
+    <li><code>--group security</code> &ndash; nur die Sicherheits-Findings
+      sind Gate-relevant; Coding-Guideline-Findings bleiben beratend und
+      blockieren den Build nicht.</li>
+    <li><code>--fail-on high</code> &ndash; Exit-Code 1 ab Schweregrad
+      <em>High</em>, blockiert also <em>High</em> und <em>Critical</em>
+      (siehe Audit-Hinweis oben).</li>
+    <li><code>--strict-internal-errors</code> &ndash; schlägt ein Check
+      intern fehl, endet der Lauf mit Exit-Code 2; eine stille Prüflücke
+      fällt so nicht unbemerkt durch den Gate.</li>
+    <li><code>--safe-report</code> &ndash; bündelt <code>--no-context</code>,
+      <code>--redact-secrets</code> und <code>--redact-paths</code>: die
+      Report-Artefakte enthalten keinen Quelltext-Kontext, keine erkannten
+      Geheimnisse und keine absoluten Pfade und können gefahrlos als
+      CI-Artefakt aufbewahrt werden.</li>
+    <li><code>--format console,json,sarif</code> &ndash; Konsole für das
+      Build-Log, JSON zur Archivierung/Auswertung, SARIF für die
+      Integration in Code-Scanning (z.B. GitHub Code Scanning).</li>
+    <li><code>--output-dir reports</code> &ndash; Zielverzeichnis der
+      JSON-/SARIF-Artefakte.</li>
+  </ul>
+  <p>Der Gate ist bestanden, wenn der Lauf mit Exit-Code 0 endet.
+  Exit-Code 1 bedeutet mindestens ein Finding ab <em>High</em>,
+  Exit-Code 2 einen Werkzeug- oder internen Prüffehler &ndash; beide
+  sollten den Build stoppen.</p>
+
+  <h3>Ausnahmeprozess / Waiver</h3>
+  <p>Reale Pipelines brauchen einen <strong>kontrollierten</strong> Weg,
+  einzelne Befunde zu akzeptieren &ndash; ohne <code>--fail-on</code>
+  global abzuschwächen oder Regeln zu deaktivieren. Beides würde den
+  Gate als Ganzes untergraben. Dafür kennt ACI <strong>Waiver</strong>:
+  eine versionierte JSON-Datei mit einem Eintrag je akzeptierter
+  Ausnahme. Ein gewaivertes Finding bleibt im Report <em>sichtbar</em>
+  &ndash; deutlich als <em>Waived</em> markiert, mit Ticket, Owner,
+  Ablaufdatum und Begründung &ndash;, zählt aber nicht mehr für
+  <code>--fail-on</code>.</p>
+
+  <p><strong>Bindung über den Fingerabdruck.</strong> Jedes Finding
+  trägt einen inhaltsgebundenen Fingerabdruck: einen SHA-256-Hash aus
+  Check-ID, Regelreferenz, Dateiname und dem (auf Leerzeichen
+  normalisierten) beanstandeten Code &ndash; bewusst <strong>ohne</strong>
+  Zeilennummer. Verschiebt sich der Code (neue Zeilen darüber), bleibt
+  der Fingerabdruck gleich und der Waiver gilt weiter. Ändert sich der
+  beanstandete Code selbst, ändert sich der Fingerabdruck: der Waiver
+  verfällt automatisch und der Code wird neu geprüft. Ein Waiver deckt
+  also <em>diesen Code</em>, nicht <em>diese Stelle für immer</em>. Der
+  Fingerabdruck steht in jedem Report (Konsole, JSON, HTML, SARIF) und
+  kann direkt in die Waiver-Datei übernommen werden.</p>
+
+  <p>Waiver-Datei (z.&nbsp;B. <code>aci-waivers.json</code>) &ndash; eine
+  JSON-Liste; Pflichtfelder je Eintrag: <code>fingerprint</code>,
+  <code>ticket</code>, <code>owner</code>, <code>expires</code>
+  (<code>YYYY-MM-DD</code>), <code>reason</code>; optional
+  <code>created</code> und <code>risk_accepted</code>:</p>
+  <pre><code>[
+  {
+    "fingerprint": "39e7c9525757badd",
+    "ticket": "SEC-1423",
+    "owner": "ak@red-database-security.com",
+    "expires": "2026-09-30",
+    "reason": "Dynamisches SQL nur über validierte Whitelist-Konstante; Refactor in SEC-1423 geplant.",
+    "created": "2026-05-24",
+    "risk_accepted": true
+  }
+]</code></pre>
+  <p>In der Pipeline wird die Datei über <code>--waivers</code>
+  übergeben:</p>
+  <pre><code>python -m aci sql/ --group security --fail-on high \
+  --waivers aci-waivers.json --safe-report \
+  --format console,json,sarif --output-dir reports</code></pre>
+  <p>Lebenszyklus eines Waivers:</p>
+  <table>
+    <tr><th>Zustand</th><th>Bedingung</th><th>Wirkung</th></tr>
+    <tr><td><strong>gültig</strong></td>
+      <td>Ablaufdatum &ge; heute und Fingerabdruck trifft ein Finding</td>
+      <td>Finding wird <em>Waived</em>: sichtbar im Report, zählt nicht
+        für <code>--fail-on</code>; in SARIF als <code>suppressions</code>
+        (<code>kind: external</code>)</td></tr>
+    <tr><td><strong>abgelaufen</strong></td>
+      <td>Ablaufdatum &lt; heute</td>
+      <td>Waiver greift nicht mehr; das Finding zählt wieder voll. ACI
+        warnt über abgelaufene Waiver</td></tr>
+    <tr><td><strong>bald fällig</strong></td>
+      <td>noch gültig, Ablauf &le; 14 Tage entfernt</td>
+      <td>ACI weist im Report darauf hin (Wiedervorlage)</td></tr>
+    <tr><td><strong>verwaist</strong></td>
+      <td>Fingerabdruck trifft kein Finding</td>
+      <td>ACI meldet den Waiver als entfernbar (Code geändert oder
+        Tippfehler)</td></tr>
+  </table>
+  <p>Eine <strong>fehlerhafte</strong> Waiver-Datei (ungültiges JSON,
+  fehlende Pflichtfelder, kaputtes Datum, doppelter Fingerabdruck) führt
+  standardmäßig nur zu einer Warnung &ndash; ein Tippfehler blockiert so
+  nicht die ganze Pipeline. Mit <code>--strict-waivers</code> endet der
+  Lauf bei einer fehlerhaften Waiver-Datei mit Exit-Code 2.</p>
+  <div class="note">Die Waiver-Datei gehört unter Versionskontrolle.
+  Änderungen daran laufen über den normalen Pull-Request-Review &ndash;
+  das ist die eigentliche Freigabe-Kontrolle. Das Pflicht-Ablaufdatum
+  erzwingt eine Wiedervorlage, sodass keine &bdquo;ewigen&ldquo;
+  Ausnahmen entstehen.</div>
+
+  <h3>Regelintegrität (Ruleset-Hash)</h3>
+  <p>Die Regeldateien bestimmen, <em>was</em> ACI prüft. Über
+  <code>--rules</code>, <code>--rules-dir</code>,
+  <code>--guidelines-dir</code> und <code>--mitre-dir</code> lassen sie
+  sich austauschen &ndash; flexibel, in einer CI/CD-Pipeline aber auch
+  ein Manipulationsrisiko: Wer die Regeln verändert, kann den Gate
+  schwächen. ACI macht den verwendeten Regelstand daher überprüfbar.</p>
+  <p>Jeder Report enthält einen <strong>Ruleset-Hash</strong> &ndash;
+  einen SHA-256 über den Inhalt <em>aller</em> tatsächlich geladenen
+  Regeldateien (Sicherheits-Regelsatz, Coding-Guidelines,
+  MITRE-Indikatoren). Der Hash ist stabil und reproduzierbar; ein Team
+  kann ihn in der Pipeline gegen einen erwarteten Wert prüfen.
+  Zusätzlich weist ACI je Datei aus, ob sie <strong>vertrauenswürdig</strong>
+  ist &ndash; also Teil der mit ACI ausgelieferten, gebündelten Regeln
+  (innerhalb des installierten <code>aci</code>-Pakets) &ndash; oder aus
+  einem benutzerdefinierten Pfad stammt (<em>untrusted</em>). Untrusted
+  Regeldateien werden im Report sichtbar markiert und auf der
+  Standard-Fehlerausgabe gewarnt.</p>
+  <p>Der Ruleset-Hash erscheint in allen Reportformaten: Konsole (Zeile
+  <code>Regeln</code>), JSON (<code>ruleset.integrity</code>), HTML
+  (Zeile <em>Regelintegrität</em>) und SARIF
+  (<code>runs[].properties.aci_ruleset_hash</code>).</p>
+  <p>Mit <code>--require-trusted-rules</code> wird daraus ein harter
+  Kontrollpunkt: ACI bricht mit Exit-Code 2 ab, sobald eine Regeldatei
+  von außerhalb des Pakets geladen würde. Für ein abgesichertes
+  CI-Gate:</p>
+  <pre><code>python -m aci sql/ --group security --fail-on high \
+  --require-trusted-rules --safe-report \
+  --format console,json,sarif --output-dir reports</code></pre>
+
+  <h3>SARIF-Regelkatalog je Regelreferenz</h3>
+  <p>Der SARIF-Regelkatalog (<code>tool.driver.rules</code>) wird je
+  <strong>konkreter Regelreferenz</strong> geführt: die
+  <code>ruleId</code> ist <code>check_id:rule_ref</code> &ndash; etwa
+  <code>ACI-PKG:utl_http</code> oder <code>ACI-OBF:CHR-CHAIN</code>
+  &ndash; und nicht nur <code>check_id</code>. So verfolgen GitHub- und
+  GitLab-Security-Dashboards einzelne Regeln getrennt (z.B. jedes
+  unerwünschte Paket unter <code>ACI-PKG</code> oder die einzelnen
+  MITRE-Indikatoren). <code>check_id</code> und <code>rule_ref</code>
+  stehen zusätzlich in den <code>properties</code> jedes Regeleintrags.
+  Fehlt eine Regelreferenz oder gleicht sie der <code>check_id</code>,
+  bleibt es bei der reinen <code>check_id</code>. Gewaiverte Findings
+  erscheinen als <code>suppressions</code>, jeder Befund trägt seinen
+  Fingerabdruck als <code>partialFingerprints</code>.</p>
+</section>
+
+<section id="enterprise">
+  <h2>12. How to use in Enterprise</h2>
+  <p>Dieser Abschnitt beschreibt, wie ACI im Unternehmen kontrolliert
+  ausgerollt wird: ein gestufter Rollout, wiederverwendbare interne
+  <strong>Runbooks</strong> mit konkreten Beispielen sowie eine
+  <strong>Onboarding-Guidance</strong> f&uuml;r neue Entwickler und Teams.
+  Alle Beispiele sind versionsfest f&uuml;r ACI&nbsp;2.20.0.</p>
+
+  <h3>12.1 Gestufter Rollout</h3>
+  <p>ACI wird nicht sofort als harter Gate eingef&uuml;hrt, sondern in drei
+  Stufen &uuml;ber die vordefinierten CI/CD-Profile (<code>--profile</code>).
+  So gew&ouml;hnen sich Teams an die Befunde, bevor der Build blockiert.</p>
+  <table>
+    <tr><th>Stufe</th><th>Profil</th><th>Wirkung</th><th>Ziel</th></tr>
+    <tr><td>1 &middot; Beobachten</td><td><code>advisory</code></td>
+      <td>scannt und berichtet, blockiert nie</td>
+      <td>Baseline erheben, Rauschen sichten, Waiver vorbereiten</td></tr>
+    <tr><td>2 &middot; Gate</td><td><code>ci</code></td>
+      <td>blockiert ab <code>High</code> (Gruppe Sicherheit)</td>
+      <td>regul&auml;rer Schutz f&uuml;r Merge-/Build-Pipelines</td></tr>
+    <tr><td>3 &middot; Streng</td><td><code>strict</code></td>
+      <td>strengster Gate, strikte interne Fehler/Waiver</td>
+      <td>regulierte/sicherheitskritische Bereiche</td></tr>
+  </table>
+  <p>Empfehlung: mindestens zwei Wochen <code>advisory</code> fahren, die
+  Findings als Baseline dokumentieren und akzeptierte Altlasten per Waiver
+  abdecken, bevor auf <code>ci</code> umgestellt wird.</p>
+
+  <h3>12.2 Runbook &mdash; Pipeline-Gate einrichten</h3>
+  <p>Der empfohlene Gate-Aufruf blockiert sicherheitsrelevante Befunde,
+  erzeugt ein archivierbares SARIF-Artefakt und gibt keine Geheimnisse oder
+  absoluten Pfade preis. Dialekt explizit setzen &ndash; ohne
+  <code>--dialect&nbsp;postgresql</code> gilt der Oracle-Regelsatz.</p>
+  <pre><code># Oracle
+python -m aci sql/ \
+    --dialect oracle \
+    --profile ci \
+    --fail-on high \
+    --safe-report \
+    --format sarif \
+    --output-dir reports/
+
+# PostgreSQL / EPAS
+python -m aci sql/ \
+    --dialect postgresql \
+    --profile ci \
+    --fail-on high \
+    --safe-report \
+    --format sarif \
+    --output-dir reports/</code></pre>
+  <p><code>--safe-report</code> b&uuml;ndelt <code>--no-context</code>,
+  <code>--redact-secrets</code> und <code>--redact-paths</code> &ndash;
+  ideal f&uuml;r CI-Artefakte, die in Dashboards oder Tickets landen.
+  Exit-Code 0 gibt frei, 1 blockiert (Gate), 2 signalisiert einen
+  Werkzeug-/Eingabefehler.</p>
+
+  <h3>12.3 Runbook &mdash; Regelintegrit&auml;t &amp; Versionsbindung</h3>
+  <p>In gr&ouml;&szlig;eren Organisationen sollte der verwendete Regelstand
+  reproduzierbar und manipulationssicher sein. ACI weist einen
+  <strong>Ruleset-Hash</strong> aus und kann ihn gegen einen Sollwert
+  pr&uuml;fen (fail-closed).</p>
+  <pre><code># 1) Sollstand einmalig festschreiben (Lock-Datei eingecheckt im Repo)
+python -m aci --dialect oracle --print-effective-config > /dev/null
+#    Ruleset-Hash aus dem Report (Block "ruleset_integrity") in
+#    aci-ruleset.lock ({"ruleset_sha256": "<hash>"}) ablegen.
+
+# 2) In der Pipeline gegen den Sollstand verifizieren
+python -m aci sql/ \
+    --dialect oracle --profile ci --fail-on high \
+    --ruleset-lock aci-ruleset.lock \
+    --require-trusted-rules \
+    --format sarif --output-dir reports/</code></pre>
+  <ul>
+    <li><code>--ruleset-lock</code> / <code>--expected-ruleset-sha256</code>:
+      Abbruch mit Exit-Code&nbsp;2 bei abweichendem Regelstand.</li>
+    <li><code>--require-trusted-rules</code>: nur die geb&uuml;ndelten
+      Regeln zulassen, keine lokal ge&auml;nderten Regelpfade.</li>
+    <li>ACI-Version im Pipeline-Image pinnen (z.B.
+      <code>pip install aci==2.20.0</code>), damit Regelsatz und Werkzeug
+      zusammenpassen.</li>
+  </ul>
+
+  <h3>12.4 Runbook &mdash; kontrollierter Ausnahmeprozess (Waiver)</h3>
+  <p>Einzelne akzeptierte Befunde werden &uuml;ber eine versionierte
+  Waiver-Datei freigegeben &ndash; ohne den Gate global abzuschw&auml;chen
+  oder Regeln zu deaktivieren. Jeder Eintrag tr&auml;gt Fingerabdruck,
+  Ticket, Owner, Ablaufdatum und Begr&uuml;ndung.</p>
+  <pre><code>python -m aci sql/ \
+    --dialect postgresql --profile ci --fail-on high \
+    --waivers aci-waivers.json \
+    --strict-waivers \
+    --format sarif --output-dir reports/</code></pre>
+  <p>Gewaiverte Befunde bleiben im Report sichtbar (als
+  <code>suppressions</code> im SARIF), z&auml;hlen aber nicht f&uuml;r das
+  Gate. Abgelaufene Waiver unterdr&uuml;cken nicht mehr; ACI warnt &uuml;ber
+  abgelaufene, bald f&auml;llige und verwaiste Eintr&auml;ge. Empfehlung:
+  Waiver-Datei reviewpflichtig (Code-Owner) halten und Ablaufdaten setzen.</p>
+
+  <h3>12.5 Onboarding-Guidance f&uuml;r neue Teams</h3>
+  <p>Ein kurzer, wiederholbarer Einstieg senkt die H&uuml;rde und sorgt
+  daf&uuml;r, dass ACI lokal &ndash; vor dem Push &ndash; genutzt wird.</p>
+  <ol>
+    <li><strong>Lokal installieren &amp; smoke-testen:</strong>
+      <code>pip install aci==2.20.0</code>, dann
+      <code>python -m aci pfad/zur_datei.sql --dialect &lt;oracle|postgresql&gt;</code>.</li>
+    <li><strong>Vor dem Commit lokal scannen:</strong> denselben
+      <code>--profile ci --fail-on high</code>-Aufruf wie die Pipeline
+      verwenden, damit es im CI keine &Uuml;berraschungen gibt.</li>
+    <li><strong>Reports lesen:</strong> Console f&uuml;r die schnelle
+      R&uuml;ckmeldung, HTML f&uuml;r Review-Meetings, SARIF f&uuml;r das
+      Code-Scanning der Plattform. Jeder Befund nennt Regel-ID, Schweregrad
+      und (sofern aktiv) Quelltext-Kontext.</li>
+    <li><strong>Befund einordnen:</strong> echtes Risiko &rarr; beheben;
+      bewusste, gepr&uuml;fte Ausnahme &rarr; Waiver mit Ticket/Owner/Ablauf;
+      vermuteter Fehlalarm &rarr; mit <code>--debug</code> reproduzieren und
+      an das ACI-/Security-Team melden.</li>
+    <li><strong>Grenzen kennen:</strong> ACI ist ein heuristischer Filter,
+      kein Ersatz f&uuml;r manuelles Review (siehe
+      <a href="#grenzen">13. Grenzen &amp; Hinweise</a>).</li>
+  </ol>
+  <p><strong>Verantwortlichkeiten:</strong> ein zentrales Team pflegt
+  Regelsatz, Lock-Datei und Profile; die Entwicklungsteams beheben Befunde
+  bzw. beantragen Waiver; Security gibt Waiver und Ausnahmen frei.</p>
+
+  <h3>12.6 Beispiel &mdash; Plattform-Integration</h3>
+  <p>ACI ist plattformneutral: Exit-Codes und SARIF sind die universellen
+  CI/CD-Schnittstellen. Beispiel f&uuml;r einen GitHub-Actions-Schritt mit
+  Code-Scanning-Upload:</p>
+  <pre><code>- name: ACI security gate
+  run: |
+    pip install aci==2.20.0
+    python -m aci sql/ \
+      --dialect postgresql --profile ci --fail-on high \
+      --ruleset-lock aci-ruleset.lock --safe-report \
+      --format sarif --output-dir reports/
+- name: Upload SARIF
+  if: always()
+  uses: github/codeql-action/upload-sarif@v3
+  with:
+    sarif_file: reports/</code></pre>
+  <p>Der <code>if: always()</code>-Schritt l&auml;dt das SARIF auch dann
+  hoch, wenn der Gate blockiert &ndash; so bleiben die Befunde im
+  Security-Dashboard sichtbar.</p>
+
+  <h3>12.7 Rule-Observability &mdash; welche Regeln wie oft anschlagen und warum</h3>
+  <p>F&uuml;r ein gepflegtes Regelwerk lohnt es sich auszuwerten, <em>welche
+  Regeln wie h&auml;ufig</em> anschlagen &ndash; und warum. ACI liefert daf&uuml;r
+  keine eingebaute Statistik, aber der <strong>JSON-Report</strong>
+  (<code>--format json</code>) ist daf&uuml;r die stabile, maschinenlesbare
+  Grundlage: Teams bauen darauf eine eigene Auswertung. Jeder Befund tr&auml;gt
+  u.a. <code>check_id</code>, <code>rule_ref</code> (konkrete Regelreferenz),
+  <code>group</code>, <code>severity</code>, <code>file</code>,
+  <code>line</code> und einen stabilen <code>fingerprint</code>.</p>
+
+  <p><strong>So funktioniert Rule-Observability &ndash; in f&uuml;nf Schritten:</strong></p>
+  <ol>
+    <li><strong>Reports erzeugen:</strong> ACI je Lauf mit
+      <code>--format json --output-dir reports/</code> ausf&uuml;hren
+      (z.B. in jeder CI-Pipeline) und die Artefakte zentral ablegen &ndash;
+      eines pro Lauf/Tag/Commit.</li>
+    <li><strong>Je Regel aggregieren:</strong> &uuml;ber
+      <code>.files[].findings[]</code> iterieren und nach
+      <code>rule_ref</code> z&auml;hlen (das &bdquo;wie oft&ldquo;).</li>
+    <li><strong>Ursache verstehen:</strong> das &bdquo;warum&ldquo; liefert
+      der Befund selbst &ndash; <code>message</code> begr&uuml;ndet die Regel,
+      <code>snippet</code>/<code>context</code> zeigen die Fundstelle,
+      <code>rule_ref</code> verweist auf die Regeldatei.</li>
+    <li><strong>Deuten &amp; reagieren:</strong> Muster gegen die Tabelle
+      unten abgleichen (echtes Risiko beheben, Fehlalarm sch&auml;rfen/waiven,
+      L&uuml;cken dokumentieren).</li>
+    <li><strong>Trends sichern:</strong> Lauf-Zeitpunkt
+      (<code>generated</code> / <code>runtime.started_at_utc</code>) und
+      Ruleset-Hash (<code>ruleset_integrity</code>) mitf&uuml;hren, damit
+      Verl&auml;ufe gegen einen bekannten Regelstand vergleichbar bleiben.</li>
+  </ol>
+
+  <p>Reports zentral einsammeln (z.B. als CI-Artefakte pro Lauf/Tag) und je
+  <code>rule_ref</code> aggregieren. <strong>Ad-hoc mit <code>jq</code></strong>
+  &ndash; H&auml;ufigkeit je Regelreferenz:</p>
+  <pre><code># Top-Regeln &uuml;ber alle Reports im Ordner, absteigend gez&auml;hlt
+jq -r '.files[].findings[].rule_ref' reports/*.json \
+  | sort | uniq -c | sort -rn</code></pre>
+
+  <p><strong>Reproduzierbare Auswertung in Python</strong> &ndash; H&auml;ufigkeit
+  je Regel inkl. Schweregrad und betroffener Dateien (rein aus
+  Standardbibliothek):</p>
+  <pre><code>import collections, glob, json
+
+counts = collections.Counter()
+sev    = {}
+files  = collections.defaultdict(set)
+
+for path in glob.glob("reports/*.json"):
+    with open(path, encoding="utf-8") as fh:
+        report = json.load(fh)
+    for entry in report.get("files", []):
+        for f in entry.get("findings", []):
+            rid = f.get("rule_ref") or f.get("check_id")
+            counts[rid] += 1
+            sev[rid] = f.get("severity")
+            files[rid].add(f.get("file"))
+
+for rid, n in counts.most_common():
+    print(f"{n:5d}  {sev.get(rid,''):8s}  {rid}  "
+          f"({len(files[rid])} Datei(en))")</code></pre>
+
+  <p>Das &bdquo;warum&ldquo; liefert der Befund selbst: <code>message</code>
+  begr&uuml;ndet die Regel, <code>snippet</code>/<code>context</code> zeigen die
+  Fundstelle (sofern nicht per <code>--no-context</code>/<code>--safe-report</code>
+  unterdr&uuml;ckt), und <code>rule_ref</code> verweist auf die konkrete
+  Regeldatei. F&uuml;r Trends &uuml;ber die Zeit den Lauf-Zeitpunkt aus
+  <code>generated</code> bzw. <code>runtime.started_at_utc</code> mitf&uuml;hren
+  und je Tag/Commit ablegen.</p>
+
+  <table>
+    <tr><th>Beobachtung</th><th>M&ouml;gliche Deutung</th><th>Reaktion</th></tr>
+    <tr><td>Eine Regel dominiert die Treffer</td>
+      <td>systemisches Muster im Code <em>oder</em> zu breite Regel
+      (Falsch-Positiv-Quelle)</td>
+      <td>Code-Pattern beheben; bei FP Regel sch&auml;rfen oder gezielt
+      Waiver setzen</td></tr>
+    <tr><td>Regel schl&auml;gt nie an</td>
+      <td>im Bestand nicht relevant <em>oder</em> Detektor greift nicht</td>
+      <td>Abdeckung pr&uuml;fen (Beispiel scannen); ggf. dokumentieren</td></tr>
+    <tr><td>Treffer auf wenige Dateien konzentriert</td>
+      <td>lokaler Hotspot / Alt-Komponente</td>
+      <td>gezieltes Review, ggf. Refactoring priorisieren</td></tr>
+    <tr><td>Plötzlicher Anstieg nach einem Commit</td>
+      <td>neue Risikoklasse eingef&uuml;hrt</td>
+      <td>im Merge-Review adressieren, Gate greift bereits</td></tr>
+  </table>
+  <p>Hinweis: Z&auml;hlungen sind &uuml;ber den <code>fingerprint</code>
+  dedupliziert vergleichbar &ndash; derselbe Befund beh&auml;lt seinen
+  Fingerabdruck &uuml;ber L&auml;ufe hinweg, solange sich der beanstandete
+  Code nicht &auml;ndert. Den Ruleset-Hash (<code>ruleset_integrity</code>)
+  mitprotokollieren, damit Trends gegen einen bekannten Regelstand
+  interpretierbar bleiben.</p>
+</section>
+
+<section id="grenzen">
+  <h2>13. Grenzen &amp; Hinweise</h2>
+  <p>ACI ist ein <strong>heuristischer statischer Review-Assistent</strong>.
+  Er ersetzt kein vollständiges Code-Review, keinen formalen
+  Sicherheitsbeweis und keine Datenbank-Härtung.</p>
+
+  <h3>Analysearchitektur</h3>
+  <p>ACI verwendet eine geschichtete Analysepipeline:</p>
+  <ol>
+    <li>Source Loading, Größenprüfung und Ausschlussregeln</li>
+    <li>Lexikalische Analyse und Maskierung von Kommentaren/String-Literalen</li>
+    <li>Leichtgewichtige Parser-/IR-Extraktion für Routinen, Statements,
+      Assignments und dynamisches SQL</li>
+    <li>Regelprüfungen mit heuristischer und IR-gestützter Analyse</li>
+    <li>Reporting in Console, JSON, HTML oder SARIF</li>
+  </ol>
+  <p>Die Parser-/IR-Schicht reduziert typische False Positives, indem sie
+  Statement-Grenzen, Routine-Grenzen und die Reihenfolge von Assignments
+  bewahrt. Sie wird unter anderem für dynamische DDL-Erkennung und
+  SQL-Injection-Klassifikation genutzt.</p>
+
+  <h3>Bekannte Grenzen der Parser-/IR-Schicht</h3>
+  <ul>
+    <li>kein vollständiger Oracle-PL/SQL- oder PostgreSQL-PL/pgSQL-Compiler,</li>
+    <li>keine vollständige Kontrollflussanalyse,</li>
+    <li>keine vollständige Datenflussanalyse über Funktionsaufrufe hinweg,</li>
+    <li>keine semantische Validierung gegen eine laufende Datenbank,</li>
+    <li>begrenztes Verständnis komplex generierter SQL-Fragmente,</li>
+    <li>False Positives und False Negatives bleiben möglich.</li>
+  </ul>
+
+  <h3>False Negatives bei generiertem und dynamischem SQL</h3>
+  <p>ACI ist eine <strong>statische</strong> Analyse des <em>übergebenen</em>
+  Quelltextes. Sie ist stark bei Code, der ihr vollständig vorliegt &ndash;
+  sie sieht jedoch grundsätzlich <strong>nicht</strong>, was erst zur
+  Build- oder Laufzeit entsteht. Dadurch können Befunde unentdeckt
+  bleiben (<strong>False Negatives</strong>), insbesondere bei:</p>
+  <ul>
+    <li><strong>dynamischem SQL über mehrere Dateien hinweg</strong> &ndash;
+      ein SQL-String wird in einer Datei bzw. Routine zusammengesetzt und
+      in einer anderen ausgeführt; ACIs Datenflussanalyse ist
+      routine-lokal und folgt Aufrufen nicht;</li>
+    <li><strong>Build-Templates und Code-Generatoren</strong> &ndash; wird
+      der eigentliche SQL-Code erst durch ein Template-/Makro-System,
+      einen Präprozessor oder einen Generator erzeugt, prüft ACI nur die
+      <em>Vorlage</em>, nicht das erzeugte Ergebnis;</li>
+    <li><strong>Migrations-Generatoren</strong> &ndash; Werkzeuge, die SQL
+      erst zur Laufzeit aus einem Modell ableiten (ORM-Migrationen,
+      Schema-Diff-Tools), liefern ACI keinen statisch prüfbaren
+      Quelltext;</li>
+    <li><strong>konfigurations- und datengetriebenem SQL</strong> &ndash;
+      SQL-Fragmente aus Konfigurationsdateien, Datenbankinhalten oder
+      externen Eingaben, die erst zur Laufzeit zu einer Anweisung
+      zusammengesetzt werden, liegen außerhalb des analysierten
+      Textes.</li>
+  </ul>
+  <p>Wo SQL erst nach dem von ACI geprüften Stand entsteht, sollte das
+  <strong>erzeugte</strong> SQL zusätzlich geprüft werden &ndash; etwa
+  indem der Generator- bzw. Migrations-Output selbst durch ACI läuft
+  &ndash; und durch manuelles Review ergänzt werden. ACI ist ein
+  Review-Assistent und CI-Signal, <strong>kein</strong> vollständiger
+  Nachweis der Abwesenheit von SQL-Injection.</p>
+
+  <h3>Reportpfade und Vertraulichkeit</h3>
+  <p>JSON-, HTML- und SARIF-Reports können Dateipfade, Scan-Metadaten und
+  Quelltext-Kontext enthalten. Absolute Pfade können interne Workspace-,
+  Repository- oder CI-Runner-Strukturen offenlegen. Behandle Reports daher
+  als interne Artefakte, sofern sie nicht geprüft oder bereinigt wurden.</p>
+  <p>Für externe Weitergabe sollten Reports ohne Quelltext-Kontext erzeugt
+  werden (<code>--no-context</code>). Wird Kontext benötigt, sollte
+  <code>--redact-secrets</code> oder <code>--safe-report</code> verwendet
+  werden. Die Redaction ist heuristisch und bietet keine Vollständigkeitsgarantie.</p>
+
+  <div class="note">Empfehlung: ACI als ersten, automatisierten Filter in
+  den Entwicklungs- und Freigabeprozess einbinden und die Findings als
+  Ausgangspunkt für ein gezieltes manuelles Review verwenden.</div>
+  <p style="color:var(--muted);font-size:13px;margin-top:16px;">
+  <strong>Lizenz:</strong> ACI ist gemischt lizenziert. Der eigene Code
+  von ACI sowie die PL/pgSQL-Guidelines stehen unter der MIT-Lizenz
+  (Datei <code>LICENSE</code>). Die Oracle-Coding-Guideline-Regeldateien
+  unter <code>aci/rules/guidelines/oracle/</code> sind aus den Trivadis
+  PL/SQL &amp; SQL Coding Guidelines v4.4 abgeleitet und stehen unter der
+  Apache-Lizenz, Version 2.0 (Datei <code>licenses/Apache-2.0.txt</code>);
+  sie wurden fuer ACI angepasst. Die Datei <code>NOTICE</code> enthaelt
+  Attribution und Aenderungshinweis. Die MITRE-ATT&amp;CK-Zuordnungen
+  verweisen auf das MITRE-ATT&amp;CK-Framework.</p>
+</section>
+
+<section id="debugging">
+  <h2>14. Debugging</h2>
+  <p>Dieser Abschnitt fasst zusammen, wie sich ein ACI-Lauf im Fehlerfall
+  eingrenzen lässt &ndash; sowohl bei einem Werkzeugfehler als auch bei
+  einem fragwürdigen Finding.</p>
+
+  <h3>Erste Schritte</h3>
+  <table>
+    <tr><th>Option</th><th>Zweck</th></tr>
+    <tr><td><code>--debug</code></td><td>zeigt bei einem unerwarteten
+      Fehler den vollständigen Python-Traceback statt nur einer
+      Kurzmeldung.</td></tr>
+    <tr><td><code>--dump-ir</code></td><td>gibt die Parser-/IR-Sicht einer
+      <em>einzelnen</em> Datei als JSON aus und beendet sich. Hier sieht
+      man, wie ACI Routinen, Statements und dynamisches SQL erkannt
+      hat &ndash; die häufigste Ursache für ein unerwartetes Finding.</td></tr>
+    <tr><td><code>--list-checks</code></td><td>zeigt, welche Checks und
+      Regeln für Dialekt und Gruppe aktiv sind. Fehlt ein erwartetes
+      Finding, ist oft die zugehörige Regel inaktiv oder der Dialekt
+      falsch.</td></tr>
+  </table>
+
+  <h3>Exit-Codes deuten</h3>
+  <p><code>0</code> = Gate bestanden, <code>1</code> =
+  <code>--fail-on</code>-Schwelle erreicht, <code>2</code> =
+  Werkzeug-/Eingabefehler oder ein durch <code>--strict-*</code>
+  erzwungener Abbruch. Bei <code>2</code> verrät die Meldung auf der
+  Standard-Fehlerausgabe (<code>FEHLER: …</code>) die Ursache.</p>
+
+  <h3>Interne Fehler (<code>ACI-INTERNAL</code>)</h3>
+  <p>Schlägt ein Check intern fehl, stoppt das den Scan nicht: der Fehler
+  erscheint als Finding der Gruppe <em>Interner Fehler</em>
+  (<code>ACI-INTERNAL</code>, Schweregrad High). Das ist ein
+  <strong>Werkzeugfehler</strong>, kein Code-Mangel. Mit
+  <code>--debug</code> lässt sich der Auslöser reproduzieren; ein
+  <code>--dump-ir</code> der betroffenen Datei grenzt ihn weiter ein.</p>
+
+  <h3>Fragwürdiges Finding eingrenzen</h3>
+  <p>Bei einem vermuteten False Positive: die betroffene Anweisung in
+  eine kleine, isolierte <code>.sql</code>-Datei kopieren und erneut
+  scannen. Bestätigt sich der Fehlbefund, zeigt <code>--dump-ir</code>,
+  ob bereits die IR die Anweisung falsch abgrenzt. Ein akzeptierter
+  Einzelfall lässt sich über einen <a href="#cicd">Waiver</a>
+  dokumentieren, statt das Gate abzuschwächen.</p>
+
+  <h3>Reproduzierbarkeit prüfen</h3>
+  <p>Weicht ein Lauf vom erwarteten Ergebnis ab, sollten zuerst der
+  <strong>Ruleset-Hash</strong> und der Vertrauensstatus (Konsole, Zeile
+  <code>Regeln</code>) verglichen werden &ndash; ein abweichender Hash
+  bedeutet einen veränderten Regelstand. <code>python3 -m compileall -q
+  aci</code> deckt Syntaxfehler nach lokalen Änderungen auf.</p>
+</section>
+
+<section id="glossar">
+  <h2>15. Glossar</h2>
+  <p>Kurzdefinitionen der in dieser Dokumentation und im ACI-Code
+  verwendeten Fachbegriffe.</p>
+  <table>
+    <tr><th>Begriff</th><th>Bedeutung</th></tr>
+    <tr><td>Check</td><td>Eine Prüfeinheit im Code
+      (z.B. <code>SqlInjectionCheck</code>). Ein Check wertet eine oder
+      mehrere <em>Regeln</em> aus.</td></tr>
+    <tr><td>Regel</td><td>Ein in JSON beschriebenes Prüfmuster
+      (<code>aci/rules/</code>) &ndash; Wortliste, Regex oder
+      Builtin-Detektor. Regeln sind ohne Code-Änderung erweiterbar.</td></tr>
+    <tr><td>Detector</td><td>Der Mechanismus, mit dem eine Regel matcht:
+      <code>regex</code> (Muster) oder <code>builtin</code> (benannte
+      Funktion in <code>aci/checks/detectors.py</code>).</td></tr>
+    <tr><td>Finding</td><td>Ein einzelner Befund: Regel, Schweregrad,
+      Datei, Zeile/Spalte, Meldung, ggf. Codeausschnitt und
+      Empfehlung.</td></tr>
+    <tr><td>Schweregrad / Gewicht</td><td>Stufe eines Findings (Warning,
+      High, Critical bzw. Info … Blocker). Jedem Grad liegt ein
+      numerisches <em>Gewicht</em> zugrunde, das den Vergleich über
+      beide Skalen erlaubt (für <code>--fail-on</code>).</td></tr>
+    <tr><td>IR (Intermediate Representation)</td><td>Leichtgewichtige
+      Zwischenform des Codes: Routinen, Statements, Zuweisungen,
+      dynamisches SQL. Kein vollständiger SQL-Compiler.</td></tr>
+    <tr><td>Maskierung</td><td>Aufbereitete Codefassung
+      (<code>code_masked</code>), in der Kommentar- und String-Inhalte
+      ersetzt sind, damit Detektoren nicht auf Daten statt Code
+      anschlagen.</td></tr>
+    <tr><td>Taint</td><td>&bdquo;Verunreinigung&ldquo; &ndash; ein Wert,
+      der aus einer ungeprüften Quelle (Benutzereingabe, Parameter,
+      Tabelle) stammt und nicht als sicher gelten kann.</td></tr>
+    <tr><td>Sink</td><td>Die Stelle, an der ein getainteter Wert
+      gefährlich wird &ndash; bei SQL-Injection das
+      <code>EXECUTE&nbsp;IMMEDIATE</code> des dynamischen SQL.</td></tr>
+    <tr><td>Taint-Quelle</td><td>Die Herkunft des getainteten Werts: die
+      aufbauende Zuweisung bzw. der Routinenkopf eines ungeprüften
+      Parameters. ACI weist sie als zusätzliche Fundstelle aus.</td></tr>
+    <tr><td>1st-/2nd-order SQL-Injection</td><td>1st-order: dynamisches
+      SQL aus einem ungeprüften Routine-Parameter. 2nd-order: aus einem
+      zuvor aus Tabelle/Cursor gelesenen Wert.</td></tr>
+    <tr><td>Fingerprint</td><td>Inhaltsgebundener SHA-256-Hash eines
+      Findings (Check-ID, Regelreferenz, Dateiname, normalisierter
+      Code) &ndash; ohne Zeilennummer. Bindet einen Waiver an den
+      Befund.</td></tr>
+    <tr><td>Waiver</td><td>Eine kontrollierte, dokumentierte Ausnahme
+      (Ticket, Owner, Ablaufdatum, Begründung). Ein gewaivertes Finding
+      bleibt sichtbar, zählt aber nicht für <code>--fail-on</code>.</td></tr>
+    <tr><td>Ruleset-Hash</td><td>SHA-256 über den Inhalt aller geladenen
+      Regeldateien &ndash; macht den verwendeten Regelstand
+      überprüfbar.</td></tr>
+    <tr><td>SARIF</td><td>Static Analysis Results Interchange Format
+      (Version 2.1.0) &ndash; ein standardisiertes JSON-Format für
+      Static-Analysis-Ergebnisse, das u.a. GitHub-, GitLab- und
+      Azure-DevOps-Code-Scanning einlesen.</td></tr>
+    <tr><td>Suppression</td><td>SARIF-Markierung eines unterdrückten
+      Ergebnisses. ACI exportiert gewaiverte Findings als
+      <code>suppressions</code>, sodass sie auditierbar bleiben.</td></tr>
+    <tr><td>MITRE ATT&amp;CK</td><td>Öffentliche Wissensbasis für
+      Angreifer-Taktiken und -Techniken. ACI ordnet sicherheitskritische
+      Muster passenden ATT&amp;CK-Techniken zu.</td></tr>
+    <tr><td>Guideline</td><td>Coding-Guideline-Regel (Oracle nach
+      Trivadis, PostgreSQL ACI-eigen) &ndash; beratend, kein
+      Sicherheitsbefund.</td></tr>
+    <tr><td>False Positive / Negative</td><td>Fehlbefund: ein gemeldetes,
+      aber harmloses Muster (Positive) bzw. ein übersehenes, tatsächlich
+      problematisches Muster (Negative).</td></tr>
+  </table>
+</section>
+
+<footer>ACI &ndash; Automated Code Inspection &middot; Version 2.20.2
+&middot; Dokumentation</footer>
+
+</main>
+</div>
+</body>
+</html>

@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ACI-Regeln &amp;ndash; PostgreSQL Coding Guidelines</title>
+<style>
+:root{--blocker:#7f1d1d;--critical:#b91c1c;--high:#c2410c;--major:#b45309;
+--warning:#a16207;--minor:#0e7490;--info:#6b7280;--bg:#f4f5f7;--card:#fff;
+--ink:#1f2933;--muted:#6b7280;--border:#e3e6ea;--accent:#2563eb;}
+*{box-sizing:border-box;}html{scroll-behavior:smooth;}
+body{margin:0;background:var(--bg);color:var(--ink);font-size:15px;
+line-height:1.6;font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,
+sans-serif;}
+header{background:#111827;color:#fff;padding:30px 40px;}
+header h1{margin:0 0 6px;font-size:23px;}
+header .sub{color:#9ca3af;font-size:13.5px;}
+header a{color:#9ca3af;}
+.wrap{max-width:1100px;margin:0 auto;padding:28px 40px 80px;}
+section{background:var(--card);border:1px solid var(--border);
+border-radius:12px;padding:22px 28px;margin-bottom:20px;}
+h2{font-size:19px;margin:2px 0 6px;padding-bottom:8px;
+border-bottom:2px solid var(--border);}
+h3{font-size:15px;margin:0;}
+p{margin:7px 0;}
+p.lead{color:var(--muted);}
+code{background:#eef2f7;color:#b91c5b;padding:1px 5px;border-radius:4px;
+font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:12.5px;
+word-break:break-word;}
+table{width:100%;border-collapse:collapse;margin:10px 0;font-size:13.5px;}
+th{text-align:left;background:#f9fafb;padding:8px 11px;
+border-bottom:2px solid var(--border);font-size:11px;text-transform:uppercase;
+letter-spacing:.04em;color:var(--muted);}
+td{padding:8px 11px;border-bottom:1px solid var(--border);
+vertical-align:top;}
+.badge{display:inline-block;padding:2px 9px;border-radius:999px;color:#fff;
+font-size:10.5px;font-weight:700;text-transform:uppercase;}
+.badge.blocker{background:var(--blocker);}.badge.critical{background:var(--critical);}
+.badge.high{background:var(--high);}.badge.major{background:var(--major);}
+.badge.warning{background:var(--warning);}.badge.minor{background:var(--minor);}
+.badge.info{background:var(--info);}
+.rule{border:1px solid var(--border);border-radius:10px;padding:14px 18px;
+margin:12px 0;}
+.rule.off{opacity:.6;}
+.rule-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.rid{font-family:ui-monospace,Menlo,monospace;font-size:12px;font-weight:700;
+background:#1f2933;color:#fff;padding:2px 8px;border-radius:5px;}
+.tag{font-size:10.5px;border:1px solid var(--border);border-radius:999px;
+padding:1px 8px;color:var(--muted);}
+.rule .msg{margin:8px 0;}
+.meta{font-size:13px;color:var(--muted);margin:4px 0;}
+.meta b{color:var(--ink);}
+.chips{display:flex;flex-wrap:wrap;gap:5px;margin:6px 0;}
+.chip{background:#eef2f7;border-radius:5px;padding:2px 7px;font-size:12px;
+font-family:ui-monospace,Menlo,monospace;}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+gap:14px;}
+.cards a{display:block;text-decoration:none;color:inherit;border:1px solid
+var(--border);border-radius:10px;padding:16px 18px;background:#fff;}
+.cards a:hover{border-color:var(--accent);}
+.cards h3{color:var(--accent);margin-bottom:4px;}
+.toc{font-size:13.5px;}
+.toc a{color:var(--accent);text-decoration:none;margin-right:14px;}
+.examples{margin-top:14px;}
+.ex{border-top:1px dashed var(--border);margin-top:14px;padding-top:12px;}
+.ex.first{border-top:none;margin-top:8px;}
+.exname{font-weight:700;margin:0 0 2px;font-size:13.5px;}
+.exname code{background:#1f2933;color:#fff;}
+.exnote{color:var(--muted);font-size:12.5px;margin:2px 0 6px;}
+.exlabel{font-size:10.5px;font-weight:700;text-transform:uppercase;
+letter-spacing:.04em;margin:9px 0 3px;}
+.exlabel.bad{color:var(--critical);}
+.exlabel.bad::before{content:"\2718  ";}
+.exlabel.good{color:#15803d;}
+.exlabel.good::before{content:"\2714  ";}
+pre.code{margin:0;padding:10px 13px;border-radius:7px;overflow-x:auto;
+font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:12px;
+line-height:1.55;white-space:pre;}
+pre.code.bad{background:#fef2f2;border:1px solid #fecaca;color:#7f1d1d;}
+pre.code.good{background:#f0fdf4;border:1px solid #bbf7d0;color:#14532d;}
+footer{max-width:1100px;margin:0 auto;padding:0 40px 50px;color:var(--muted);
+font-size:12.5px;}
+</style>
+</head>
+<body>
+<header>
+<h1>ACI-Regeln &amp;ndash; PostgreSQL Coding Guidelines</h1>
+<div class="sub">Detaillierte Beschreibung der Prüfregeln &middot; <a href="index.html">Übersicht</a></div>
+</header>
+<div class="wrap">
+<section><h2>Coding Guidelines &amp;ndash; PostgreSQL</h2><p class="lead">PL/pgSQL- und SQL-Coding-Guidelines für PostgreSQL.</p>
+<p class="meta">1 Gruppen &middot; 26 Regeln</p><p class="toc"><a href="#g_postgresql">PostgreSQL Coding Guidelines</a></p></section>
+<section id="g_postgresql"><h2>PostgreSQL Coding Guidelines <span class="rid">PostgreSQL Coding Guidelines</span></h2>
+<p class="lead">ACI-eigene PL/pgSQL-Coding-Guidelines. Heuristische Regeln, die die Sicherheits-Checks um Wartbarkeits- und Robustheitshinweise ergaenzen. Quelle: ACI (keine Trivadis-Regeln).</p>
+<p class="meta">26 Regeln</p>
+<div class="rule" id="PG-1010"><div class="rule-head"><span class="rid">PG-1010</span><h3>SELECT * vermeiden</h3><span class="badge minor">Minor</span></div><p class="msg">SELECT * liest alle Spalten und ist bei Schemaaenderungen fehleranfaellig.</p><table><tr><td><b>Merkmal</b></td><td>Maintainability</td></tr><tr><td><b>Detektor</b></td><td>Typ <code>regex</code> &middot; Muster <code>\bSELECT\s+\*</code> &middot; Ziel <code>masked</code></td></tr><tr><td><b>Empfehlung</b></td><td>Die benoetigten Spalten explizit aufzaehlen.</td></tr></table><div class="examples"><div class="ex first"><div class="exlabel bad">Verstoß</div><pre class="code bad">SELECT * INTO v_emp FROM employees WHERE id = p_id;</pre><div class="exlabel good">Konform</div><pre class="code good">SELECT id, name, dept_id
+  INTO v_id, v_name, v_dept
+  FROM employees WHERE id = p_id;</pre></div></div></div>
+<div class="rule" id="PG-1020"><div class="rule-head"><span class="rid">PG-1020</span><h3>Vergleich mit = NULL statt IS NULL</h3><span class="badge major">Major</span></div><p class="msg">Ein Vergleich &#x27;= NULL&#x27; ergibt in SQL immer NULL (unbekannt) - gemeint ist fast immer &#x27;IS NULL&#x27;.</p><table><tr><td><b>Merkmal</b></td><td>Reliability</td></tr><tr><td><b>Detektor</b></td><td>Typ <code>regex</code> &middot; Muster <code>(?&lt;![&lt;&gt;!:])=\s*NULL\b</code> &middot; Ziel <code>masked</code></td></tr><tr><td><b>Empfehlung</b></td><td>IS NULL bzw. IS NOT NULL verwenden.</td></tr></table><div class="examples"><div class="ex first"><div class="exlabel bad">Verstoß</div><pre class="code bad">-- '= NULL' ergibt immer NULL - der Zweig wird nie ausgefuehrt
+IF v_name = NULL THEN
+  handle_missing();
+END IF;</pre><div class="exlabel good">Konform</div><pre class="code good">IF v_name IS NULL THEN
+  handle_missing();
+END IF;</pre></div></div></div>
+<div class="rule" id="PG-1021"><div class="rule-head"><span class="rid">PG-1021</span><h3>Vergleich mit &lt;&gt; NULL bzw. != NULL</h3><span class="badge major">Major</span></div><p class="msg">Ein Vergleich &#x27;&lt;&gt; NULL&#x27; / &#x27;!= NULL&#x27; liefert immer NULL - gemeint ist &#x27;IS NOT NULL&#x27;.</p><table><tr><td><b>Merkmal</b></td><td>Reliability</td></tr><tr><td><b>Detektor</b></td><td>Typ <code>regex</code> &middot; Muster <code>(?:&lt;&gt;|!=)\s*NULL\b</code> &middot; Ziel <code>masked</code></td></tr><tr><td><b>Empfehlung</b></td><td>IS NOT NULL verwenden.</td></tr></table><div class="examples"><div class="ex first"><div class="exlabel bad">Verstoß</div><pre class="code bad">-- '&lt;&gt; NULL' liefert immer NULL statt TRUE/FALSE
+IF v_status &lt;&gt; NULL THEN
+  process();
+END IF;</pre><div class="exlabel good">Konform</div><pre class="code good">IF v_status IS NOT NULL THEN
+  process();
+END IF;</pre></div></div></div>
+<div class="rule" id="PG-1070"><div class="rule-head"><span class="rid">PG-1070</span><h3>Verschachtelte Blockkommentare</h3><span class="badge minor">Minor</span></div><p class="msg">Verschachtelte /* ... */-Kommentare sind schwer lesbar und fehleranfaellig.</p><table><tr><td><b>Merkmal</b></td><td>Maintainability</td></tr><tr><td><b>Detektor</b></td><td>Typ <code>builtin</code> &middot; Detektor <code>nested_comments</code></td></tr><tr><td><b>Empfehlung</b></td><td>Blockkommentare nicht verschachteln.</td></tr></table><div class="examples"><div class="ex first"><div class="exlabel bad">Verstoß</div><pre class="code bad">/* aeusserer Kommentar
+   /* innerer Block */   -- das aeussere */ beendet hier vorzeitig
+   v_x := 1;
+*/</pre><div class="exlabel good">Konform</div><pre class="code good">-- Zum Auskommentieren Zeilenkommentare verwenden
+-- v_x := 1;
+-- v_y := 2;</pre></div></div></div>
+<div class="rule" id="PG-2010"><div class="rule-head"><span class="rid">PG-2010</span><h3>varchar ohne Laengenangabe</h3><span class="badge info">Info</span></div><p class="msg">varchar / character varying ohne Laenge entspricht &#x27;text&#x27; - die Absicht bleibt unklar.</p><table><tr><td><b>Merkmal</b></td><td>Maintainability</td></tr><tr><td><b>Detektor</b></td><td>Typ <code>regex</code> &middot; Muster <code>\b(?:varchar|character\s+varying)\b(?!\s*\()</code> &middot; Ziel <code>masked</code></td></tr><tr><td><b>Empfehlung</b></td><td>Bewusst &#x27;text&#x27; verwenden oder eine Laenge angeben.</td></tr></table><div class="examples"><div class="ex first"><div class="exlabel bad">Verstoß</div><pre class="code bad">CREATE TABLE app_user (
+  id    integer,
+  name  varchar          -- ohne Laenge = text, Absicht unklar
+);</pre><div class="exlabel good">Konform</div><pre class="code good">CREATE TABLE app_user (
+  id    integer,
+  name  varchar(100)     -- feste Laenge, oder bewusst 'text'
+);</pre></div></div></div>
+<div class="rule" id="PG-3010"><div class="rule-head"><span class="rid">PG-3010</span><h3>COUNT(*) zur Existenzpruefung</h3><span class="badge minor">Minor</span></div><p class="msg">COUNT(*) &gt; 0 zaehlt unnoetig alle Zeilen - EXISTS bricht beim ersten Treffer ab.</p><table><tr><td><b>Merkmal</b></td><td>Efficiency</td></tr><tr><td><b>Detektor</b></td><td>Typ <code>regex</code> &middot; Muster <code>\bcount\s*\(\s*\*\s*\)\s*(?:&gt;\s*0|&gt;=\s*1)</code> &middot; Ziel <code>masked</code></td></tr><tr><td><b>Empfehlung</b></td><td>EXISTS (SELECT 1 ...) statt COUNT(*) &gt; 0 verwenden.</td></tr></table><div class="examples"><div class="ex first"><div class="exlabel bad">Verstoß</div><pre class="code bad">-- zaehlt unnoetig alle Zeilen
+SELECT count(*) &gt; 0 INTO v_has_rows
+  FROM orders WHERE customer_id = p_id;</pre><div class="exlabel good">Konform</div><pre class="code good">-- EXISTS bricht beim ersten Treffer ab
+SELECT EXISTS (
+  SELECT 1 FROM orders WHERE customer_id = p_id
+) INTO v_has_rows;</pre></div></div></div>
+<div class="rule" id="PG-3020"><div class="rule-head"><span class="rid">PG-3020</span><h3>NOT IN mit Unterabfrage</h3><span class="badge major">Major</span></div><p class="msg">NOT IN (SELECT ...) liefert ueberraschend keine Zeilen, sobald die Unterabfrage einen NULL-Wert enthaelt.</p><table><tr><td><b>Merkmal</b></td><td>Reliability</td></tr><tr><td><b>Detektor</b></td><td>Typ <code>regex</code> &middot; Muster <code>\bNOT\s+IN\s*\(\s*SELECT\b</code> &middot; Ziel <code>masked</code></td></tr><tr><td><b>Empfehlung</b></td><td>NOT EXISTS oder einen Anti-Join (LEFT JOIN ... IS NULL) verwenden.</td></tr></table><div class="examples"><div class="ex first"><div class="exlabel bad">Verstoß</div><pre class="code bad">-- liefert keine Zeilen, sobald die Unterabfrage ein NULL enthaelt
+SELECT id INTO v_id FROM customers
+ WHERE id NOT IN (SELECT customer_id FROM orders);</pre><div class="exlabel good">Konform</div><pre class="code good">-- NOT EXISTS ist NULL-sicher
+SELECT id INTO v_id FROM customers c
+ WHERE NOT EXISTS (
+   SELECT 1 FROM orders o WHERE o.customer_id = c.id);</pre></div></div></div>
+<div class="rule" id="PG-3310"><div class="rule-head"><span class="rid">PG-3310</span><h3>COMMIT/ROLLBACK in einer Schleife</h3><span class="badge major">Major</span></div><p class="msg">Transaktionssteuerung innerhalb einer Schleife ist meist unbeabsichtigt und teuer.</p><table><tr><td><b>Merkmal</b></td><td>Reliability</td></tr><tr><td><b>Detektor</b></td><td>Typ <code>builtin</code> &middot; Detektor <code>commit_in_loop</code></td></tr><tr><td><b>Empfehlung</b></td><td>Transaktionsgrenzen ausserhalb der Schleife setzen.</td></tr></table><div class="examples"><div class="ex first"><div class="exlabel bad">Verstoß</div><pre class="code bad">FOR r IN SELECT id FROM staging LOOP
+  PERFORM process(r.id);
+  COMMIT;              -- COMMIT je Iteration
+END LOOP;</pre><div class="exlabel good">Konform</div><pre class="code good">FOR r IN SELECT id FROM staging LOOP
+  PERFORM process(r.id);
+END LOOP;
+COMMIT;                -- ein COMMIT nach der Schleife</pre></div></div></div>
+<div class="rule" id="PG-4210"><div class="rule-head"><span class="rid">PG-4210</span><h3>Mehrere ELSIF-Zweige</h3><span class="badge minor">Minor</span></div><p class="msg">Eine IF-Anweisung mit mehreren ELSIF-Zweigen ist als CASE oft lesbarer.</p><table><tr><td><b>Merkmal</b></td><td>Maintainability</td></tr><tr><td><b>Detektor</b></td><td>Typ <code>builtin</code> &middot; Detektor <code>case_for_elsif</code></td></tr><tr><td><b>Empfehlung</b></td><td>Mehrfachverzweigungen als CASE formulieren.</td></tr></table><div class="examples"><div class="ex first"><div class="exlabel bad">Verstoß</div><pre class="code bad">IF v_grade = 'A' THEN v_bonus := 100;
+ELSIF v_grade = 'B' THEN v_bonus := 50;
+ELSIF v_grade = 'C' THEN v_bonus := 20;
+ELSE v_bonus := 0;
+END IF;</pre><div class="exlabel good">Konform</div><pre class="code good">v_bonus := CASE v_grade
+             WHEN 'A' THEN 100
+             WHEN 'B' THEN 50
+             WHEN 'C' THEN 20
+             ELSE 0
+           END;</pre></div></div></div>
+<div class="rule" id="PG-5010"><div class="rule-head"><span class="rid">PG-5010</span><h3>Leerer WHEN-OTHERS-Handler</h3><span class="badge major">Major</span></div><p class="msg">WHEN OTHERS THEN NULL verschluckt jede Ausnahme spurlos und versteckt Fehler.</p><table><tr><td><b>Merkmal</b></td><td>Reliability</td></tr><tr><td><b>Detektor</b></td><td>Typ <code>regex</code> &middot; Muster <code>\bWHEN\s+OTHERS\s+THEN\s+NULL\s*;</code> &middot; Ziel <code>masked</code></td></tr><tr><td><b>Empfehlung</b></td><td>Ausnahme protokollieren und/oder mit RAISE erneut werfen.</td></tr></table><div class="examples"><div class="ex first"><div class="exlabel bad">Verstoß</div><pre class="code bad">BEGIN
+  PERFORM process();
+EXCEPTION
+  WHEN OTHERS THEN NULL;   -- Ausnahme wird spurlos verschluckt
+END;</pre><div class="exlabel good">Konform</div><pre class="code good">BEGIN
+  PERFORM process();
+EXCEPTION
+  WHEN OTHERS THEN
+    RAISE WARNING 'process fehlgeschlagen: %', SQLERRM;
+    RAISE;
+END;</pre></div></div></div>
+<div class="rule" id="PG-7010"><div class="rule-head"><span class="rid">PG-7010</span><h3>SECURITY DEFINER ohne festen search_path</h3><span class="badge major">Major</span></div><p class="msg">Eine SECURITY-DEFINER-Funktion ohne &#x27;SET search_path&#x27; ist anfaellig fuer search_path-Angriffe.</p><table><tr><td><b>Merkmal</b></td><td>Security</td></tr><tr><td><b>Detektor</b></td><td>Typ <code>builtin</code> &middot; Detektor <code>security_definer_search_path</code></td></tr><tr><td><b>Empfehlung</b></td><td>Bei SECURITY DEFINER stets einen festen &#x27;SET search_path = ...&#x27; setzen.</td></tr></table><div class="examples"><div class="ex first"><div class="exlabel bad">Verstoß</div><pre class="code bad">-- SECURITY DEFINER ohne SET search_path -&gt; search_path-Angriff moeglich
+CREATE FUNCTION get_balance(p_id int) RETURNS numeric
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+BEGIN
+  RETURN (SELECT balance FROM app.accounts WHERE id = p_id);
+END;
+$$;</pre><div class="exlabel good">Konform</div><pre class="code good">CREATE FUNCTION get_balance(p_id int) RETURNS numeric
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = app, pg_temp
+AS $$
+BEGIN
+  RETURN (SELECT balance FROM app.accounts WHERE id = p_id);
+END;
+$$;</pre></div></div></div>
+<div class="rule" id="PG-7011"><div class="rule-head"><span class="rid">PG-7011</span><h3>SECURITY DEFINER mit riskantem search_path</h3><span class="badge major">Major</span></div><p class="msg">SECURITY-DEFINER-Funktion mit riskantem search_path (z.B. public oder pg_temp nicht am Ende).</p><table><tr><td><b>Merkmal</b></td><td>Security</td></tr><tr><td><b>Detektor</b></td><td>Typ <code>builtin</code> &middot; Detektor <code>security_definer_unsafe_search_path</code></td></tr><tr><td><b>Empfehlung</b></td><td>Einen festen, minimalen search_path setzen; public vermeiden und pg_temp ans Ende stellen.</td></tr></table><div class="examples"><div class="ex first"><div class="exlabel bad">Verstoß</div><pre class="code bad">-- 'public' im search_path einer DEFINER-Funktion ist angreifbar
+CREATE FUNCTION get_balance(p_id int) RETURNS numeric
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, app
+AS $$ BEGIN RETURN app.balance_of(p_id); END; $$;</pre><div class="exlabel good">Konform</div><pre class="code good">-- minimaler search_path, pg_temp am Ende, kein 'public'
+CREATE FUNCTION get_balance(p_id int) RETURNS numeric
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = app, pg_temp
+AS $$ BEGIN RETURN app.balance_of(p_id); END; $$;</pre></div></div></div>
+<div class="rule" id="PG-7012"><div class="rule-head"><span class="rid">PG-7012</span><h3>SECURITY DEFINER mit dynamischem EXECUTE</h3><span class="badge major">Major</span></div><p class="msg">SECURITY-DEFINER-Funktion fuehrt dynamisches SQL aus.</p><table><tr><td><b>Merkmal</b></td><td>Security</td></tr><tr><td><b>Detektor</b></td><td>Typ <code>builtin</code> &middot; Detektor <code>security_definer_dynamic_execute</code></td></tr><tr><td><b>Empfehlung</b></td><td>Dynamisches SQL in SECURITY-DEFINER-Funktionen vermeiden oder besonders streng validieren und qualifizieren.</td></tr></table><div class="examples"><div class="ex first"><div class="exlabel bad">Verstoß</div><pre class="code bad">CREATE FUNCTION wipe(p_tab text) RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = app, pg_temp
+AS $$
+BEGIN
+  EXECUTE 'TRUNCATE ' || p_tab;   -- dynamisches SQL mit DEFINER-Rechten
+END;
+$$;</pre><div class="exlabel good">Konform</div><pre class="code good">-- Festes, statisches SQL statt dynamischem EXECUTE
+CREATE FUNCTION clear_staging() RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = app, pg_temp
+AS $$
+BEGIN
+  TRUNCATE app.staging_rows;
+END;
+$$;</pre></div></div></div>
+<div class="rule" id="PG-7013"><div class="rule-head"><span class="rid">PG-7013</span><h3>SECURITY DEFINER mit unqualifiziertem Funktionsaufruf</h3><span class="badge major">Major</span></div><p class="msg">SECURITY-DEFINER-Funktion enthaelt einen unqualifizierten Funktionsaufruf.</p><table><tr><td><b>Merkmal</b></td><td>Security</td></tr><tr><td><b>Detektor</b></td><td>Typ <code>builtin</code> &middot; Detektor <code>security_definer_unqualified_call</code></td></tr><tr><td><b>Empfehlung</b></td><td>Funktionsaufrufe in SECURITY-DEFINER-Code schemaqualifiziert ausfuehren oder search_path strikt absichern.</td></tr></table><div class="examples"><div class="ex first"><div class="exlabel bad">Verstoß</div><pre class="code bad">CREATE FUNCTION post(p_id int) RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = app, pg_temp
+AS $$
+BEGIN
+  PERFORM calc_total(p_id);      -- unqualifiziert: angreifbar
+END;
+$$;</pre><div class="exlabel good">Konform</div><pre class="code good">CREATE FUNCTION post(p_id int) RETURNS void
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = app, pg_temp
+AS $$
+BEGIN
+  PERFORM app.calc_total(p_id);  -- schemaqualifiziert
+END;
+$$;</pre></div></div></div>
+<div class="rule off" id="PG-7020"><div class="rule-head"><span class="rid">PG-7020</span><h3>RAISE NOTICE im Produktionscode</h3><span class="badge info">Info</span><span class="tag">inaktiv</span></div><p class="msg">RAISE NOTICE dient meist dem Debugging und sollte produktiv nicht verbleiben.</p><table><tr><td><b>Merkmal</b></td><td>Maintainability</td></tr><tr><td><b>Empfehlung</b></td><td>Debug-Ausgaben entfernen oder ueber eine konfigurierbare Log-Stufe steuern.</td></tr></table></div>
+<div class="rule off" id="PG-7030"><div class="rule-head"><span class="rid">PG-7030</span><h3>Funktion ohne explizite LANGUAGE-Angabe</h3><span class="badge minor">Minor</span><span class="tag">inaktiv</span></div><p class="msg">Die LANGUAGE-Klausel einer Funktion sollte explizit angegeben werden.</p><table><tr><td><b>Merkmal</b></td><td>Maintainability</td></tr></table></div>
+<div class="rule" id="PG-NC-1010"><div class="rule-head"><span class="rid">PG-NC-1010</span><h3>Bezeichner in snake_case schreiben</h3><span class="badge minor">Minor</span></div><p class="msg">Bezeichner folgt nicht der snake_case-Konvention.</p><table><tr><td><b>Merkmal</b></td><td>Maintainability</td></tr><tr><td><b>Detektor</b></td><td>Typ <code>builtin</code> &middot; Detektor <code>snake_case_identifier</code></td></tr><tr><td><b>Empfehlung</b></td><td>Unquotete Bezeichner in Kleinbuchstaben mit Unterstrichen schreiben (z.B. &#x27;l_user_id&#x27; statt &#x27;lUserId&#x27;). PostgreSQL faltet unquotete Bezeichner ohnehin auf Kleinschreibung; CamelCase erschwert nur die Lesbarkeit.</td></tr></table></div>
+<div class="rule" id="PG-NC-1020"><div class="rule-head"><span class="rid">PG-NC-1020</span><h3>Keine zu kurzen Bezeichner verwenden</h3><span class="badge minor">Minor</span></div><p class="msg">Sehr kurzer Bezeichner.</p><table><tr><td><b>Merkmal</b></td><td>Maintainability</td></tr><tr><td><b>Detektor</b></td><td>Typ <code>builtin</code> &middot; Detektor <code>short_identifier</code></td></tr><tr><td><b>Empfehlung</b></td><td>Aussagekräftige, ausreichend lange Bezeichner verwenden.</td></tr></table></div>
+<div class="rule" id="PG-1080"><div class="rule-head"><span class="rid">PG-1080</span><h3>Gleicher Ausdruck auf beiden Seiten eines Vergleichs</h3><span class="badge major">Major</span></div><p class="msg">Auf beiden Seiten eines Vergleichs steht derselbe Bezeichner (z.B. &#x27;x = x&#x27;) - das ist fast immer ein Logikfehler oder Tippfehler.</p><table><tr><td><b>Merkmal</b></td><td>Reliability</td></tr><tr><td><b>Detektor</b></td><td>Typ <code>regex</code> &middot; Muster <code>\b([A-Za-z_][A-Za-z0-9_$]*)\s*(?:&lt;&gt;|!=|&lt;=|&gt;=|=|&lt;|&gt;)\s*\1\b</code> &middot; Ziel <code>masked</code></td></tr><tr><td><b>Empfehlung</b></td><td>Vergleich pruefen; vermutlich war ein anderer Operand oder &#x27;IS NULL&#x27; gemeint.</td></tr></table></div>
+<div class="rule" id="PG-3110"><div class="rule-head"><span class="rid">PG-3110</span><h3>Zielspalten bei INSERT immer angeben</h3><span class="badge minor">Minor</span></div><p class="msg">INSERT ... VALUES ohne explizite Spaltenliste ist bei Schemaaenderungen fehleranfaellig (Reihenfolge/Anzahl der Spalten).</p><table><tr><td><b>Merkmal</b></td><td>Maintainability</td></tr><tr><td><b>Detektor</b></td><td>Typ <code>regex</code> &middot; Muster <code>\bINSERT\s+INTO\s+(?:&quot;[^&quot;]+&quot;|[A-Za-z_][\w$.]*)\s+VALUES\b</code> &middot; Ziel <code>masked</code></td></tr><tr><td><b>Empfehlung</b></td><td>Die Zielspalten explizit auffuehren: INSERT INTO t (a, b) VALUES (...).</td></tr></table></div>
+<div class="rule" id="PG-3190"><div class="rule-head"><span class="rid">PG-3190</span><h3>NATURAL JOIN vermeiden</h3><span class="badge minor">Minor</span></div><p class="msg">NATURAL JOIN verknuepft ueber alle gleichnamigen Spalten - eine spaetere Spaltenaenderung kann die Join-Bedingung still veraendern.</p><table><tr><td><b>Merkmal</b></td><td>Reliability</td></tr><tr><td><b>Detektor</b></td><td>Typ <code>regex</code> &middot; Muster <code>\bNATURAL\s+(?:(?:INNER|LEFT|RIGHT|FULL)\s+)?(?:OUTER\s+)?JOIN\b</code> &middot; Ziel <code>masked</code></td></tr><tr><td><b>Empfehlung</b></td><td>Join-Bedingung explizit mit ON bzw. USING angeben.</td></tr></table></div>
+<div class="rule" id="PG-4270"><div class="rule-head"><span class="rid">PG-4270</span><h3>Boolean-Werte nicht mit Boolean-Literalen vergleichen</h3><span class="badge minor">Minor</span></div><p class="msg">Ein Vergleich mit TRUE/FALSE (z.B. &#x27;flag = TRUE&#x27;) ist redundant - der Boolean-Ausdruck kann direkt verwendet werden.</p><table><tr><td><b>Merkmal</b></td><td>Maintainability</td></tr><tr><td><b>Detektor</b></td><td>Typ <code>regex</code> &middot; Muster <code>(?:(?&lt;![:&lt;&gt;!])=|&lt;&gt;|!=)\s*(?:TRUE|FALSE)\b|\b(?:TRUE|FALSE)\s*(?:(?&lt;![:&lt;&gt;!])=|&lt;&gt;|!=)</code> &middot; Ziel <code>masked</code></td></tr><tr><td><b>Empfehlung</b></td><td>Statt &#x27;x = TRUE&#x27; einfach &#x27;x&#x27; und statt &#x27;x = FALSE&#x27; &#x27;NOT x&#x27; schreiben.</td></tr></table></div>
+<div class="rule" id="PG-7125"><div class="rule-head"><span class="rid">PG-7125</span><h3>CREATE OR REPLACE statt CREATE allein verwenden</h3><span class="badge info">Info</span></div><p class="msg">CREATE FUNCTION/PROCEDURE/VIEW ohne OR REPLACE schlaegt fehl, wenn das Objekt bereits existiert - erschwert idempotente Deployments.</p><table><tr><td><b>Merkmal</b></td><td>Maintainability</td></tr><tr><td><b>Detektor</b></td><td>Typ <code>regex</code> &middot; Muster <code>\bCREATE\s+(?!OR\s+REPLACE\b)(?:TEMP\s+|TEMPORARY\s+)?(?:FUNCTION|PROCEDURE|VIEW)\b</code> &middot; Ziel <code>masked</code></td></tr><tr><td><b>Empfehlung</b></td><td>CREATE OR REPLACE FUNCTION/PROCEDURE/VIEW verwenden.</td></tr></table></div>
+<div class="rule off" id="PG-2210"><div class="rule-head"><span class="rid">PG-2210</span><h3>numeric/decimal ohne Genauigkeit deklarieren</h3><span class="badge info">Info</span><span class="tag">inaktiv</span></div><p class="msg">numeric/decimal ohne (Genauigkeit, Skala) erlaubt beliebige Praezision - oft unbeabsichtigt. In PostgreSQL ist unbeschraenktes numeric jedoch legitim, daher standardmaessig deaktiviert.</p><table><tr><td><b>Merkmal</b></td><td>Maintainability</td></tr><tr><td><b>Detektor</b></td><td>Typ <code>regex</code> &middot; Muster <code>\b(?:numeric|decimal)\b(?!\s*\()</code> &middot; Ziel <code>masked</code></td></tr><tr><td><b>Empfehlung</b></td><td>Genauigkeit/Skala angeben (numeric(p, s)) - oder bewusst unbeschraenktes numeric belassen.</td></tr></table></div>
+<div class="rule off" id="PG-2310"><div class="rule-head"><span class="rid">PG-2310</span><h3>Datentyp char(n) vermeiden (text bevorzugen)</h3><span class="badge info">Info</span><span class="tag">inaktiv</span></div><p class="msg">char(n) fuellt Werte mit Leerzeichen auf (Blank Padding) und bietet in PostgreSQL keinen Performance-Vorteil gegenueber text/varchar.</p><table><tr><td><b>Merkmal</b></td><td>Maintainability</td></tr><tr><td><b>Detektor</b></td><td>Typ <code>regex</code> &middot; Muster <code>(?&lt;![A-Za-z0-9_$])char\s*\(</code> &middot; Ziel <code>masked</code></td></tr><tr><td><b>Empfehlung</b></td><td>text (oder varchar mit Laenge) statt char(n) verwenden.</td></tr></table></div>
+<div class="rule off" id="PG-2330"><div class="rule-head"><span class="rid">PG-2330</span><h3>Leere Zeichenkette nicht wie NULL behandeln (Oracle-Migrationsfalle)</h3><span class="badge major">Major</span><span class="tag">inaktiv</span></div><p class="msg">Anders als Oracle behandelt PostgreSQL die leere Zeichenkette &#x27;&#x27; NICHT als NULL (&#x27;&#x27; IS NOT NULL). Aus Oracle migrierter Code, der sich auf &#x27;&#x27;=NULL verlaesst, verhaelt sich in PostgreSQL anders.</p><table><tr><td><b>Merkmal</b></td><td>Reliability</td></tr><tr><td><b>Empfehlung</b></td><td>Auf &#x27;&#x27; und NULL getrennt pruefen; NULL-Pruefungen explizit mit IS NULL / IS NOT NULL durchfuehren.</td></tr></table></div>
+</section>
+</div>
+<footer>ACI &ndash; Automated Code Inspection &middot; Regeldokumentation &middot; generiert am 2026-07-03 von <code>docs/generate_rule_docs.py</code></footer>
+</body>
+</html>

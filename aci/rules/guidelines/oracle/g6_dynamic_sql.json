@@ -1,0 +1,18 @@
+{
+  "category": "Dynamic SQL",
+  "description": "Trivadis Coding Guidelines, Kategorie 6 - Dynamic SQL. Quelle: Trivadis PL/SQL & SQL Coding Guidelines v4.4 (Apache-2.0).",
+  "rules": [
+    {
+      "id": "G-6010",
+      "title": "Dynamisches SQL über eine Zeichenketten-Variable ausführen",
+      "severity": "Major",
+      "characteristics": "Maintainability, Testability",
+      "message": "EXECUTE IMMEDIATE wird direkt mit einem String-Literal aufgerufen statt mit einer Variablen.",
+      "recommendation": "Das dynamische Statement zunächst einer (Konstanten-)Variablen zuweisen - das erleichtert Debugging und Logging des ausgeführten SQL.",
+      "url": "https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/6-dynamic-sql/g-6010/",
+      "enabled": true,
+      "detector": {"type": "regex", "target": "code", "pattern": "\\bEXECUTE\\s+IMMEDIATE\\s+(?:N?'|Q')"}
+    },
+    {"id": "G-6020", "title": "Output-Bind-Argumente in RETURNING INTO statt USING", "severity": "Minor", "enabled": false, "coverage": "needs-parser"}
+  ]
+}

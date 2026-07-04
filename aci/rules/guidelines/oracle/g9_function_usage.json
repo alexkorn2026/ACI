@@ -1,0 +1,30 @@
+{
+  "category": "Funktionsnutzung",
+  "description": "Trivadis Coding Guidelines, Kategorie 9 - Function Usage. Quelle: Trivadis PL/SQL & SQL Coding Guidelines v4.4 (Apache-2.0).",
+  "rules": [
+    {
+      "id": "G-9010",
+      "title": "Formatmaske bei String-zu-Datum-Konvertierung verwenden",
+      "severity": "Major",
+      "characteristics": "Reliability",
+      "message": "TO_DATE ohne explizite Formatmaske aufgerufen.",
+      "recommendation": "TO_DATE immer mit Formatmaske aufrufen; ohne Maske hängt das Ergebnis von NLS-Einstellungen ab.",
+      "url": "https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/9-function-usage/g-9010/",
+      "enabled": true,
+      "detector": {"type": "regex", "target": "code", "pattern": "\\bTO_DATE\\s*\\(\\s*[^,()]+\\)"}
+    },
+    {
+      "id": "G-9020",
+      "title": "Formatmaske bei String-zu-Zahl-Konvertierung verwenden",
+      "severity": "Minor",
+      "characteristics": "Reliability",
+      "message": "TO_NUMBER ohne explizite Formatmaske aufgerufen.",
+      "recommendation": "TO_NUMBER mit Formatmaske und NLS_NUMERIC_CHARACTERS aufrufen, um NLS-Abhängigkeiten zu vermeiden.",
+      "url": "https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/9-function-usage/g-9020/",
+      "enabled": true,
+      "detector": {"type": "regex", "target": "code", "pattern": "\\bTO_NUMBER\\s*\\(\\s*[^,()]+\\)"}
+    },
+    {"id": "G-9030", "title": "Standardwert bei Konvertierungsfehlern definieren", "severity": "Minor", "enabled": false, "coverage": "needs-parser"},
+    {"id": "G-9040", "title": "FX in Datums-Formatmaske zur exakten Konvertierung", "severity": "Minor", "enabled": false, "coverage": "needs-parser"}
+  ]
+}

@@ -1,0 +1,151 @@
+{
+  "tactic": "TA0002 Execution",
+  "tactic_id": "TA0002",
+  "description": "MITRE ATT&CK - Execution: Code-Indikatoren für Ausführung von Fremdcode in der Oracle-Datenbank. Quelle der Technikzuordnung: Oracle MITRE ATT&CK Defensive Guide v1.7.0.",
+  "rules": [
+    {
+      "id": "T1059.007",
+      "technique": "Command and Scripting Interpreter: JavaScript (MLE)",
+      "title": "JavaScript-Ausführung über DBMS_MLE",
+      "severity": "High",
+      "message": "Aufruf der Multilingual Engine (DBMS_MLE) - führt JavaScript in der Datenbank aus.",
+      "recommendation": "Prüfen, welcher JavaScript-Code ausgeführt wird; DBMS_MLE-EXECUTE auf Service-Accounts beschränken und auditieren.",
+      "url": "https://attack.mitre.org/techniques/T1059/007/",
+      "enabled": true,
+      "detector": {"type": "regex", "target": "code", "pattern": "\\bDBMS_MLE\\s*\\."}
+    },
+    {
+      "id": "T1059.007",
+      "technique": "Command and Scripting Interpreter: JavaScript (MLE)",
+      "title": "Erstellung eines MLE-Moduls / einer MLE-Umgebung",
+      "severity": "High",
+      "message": "CREATE MLE MODULE/ENV - eigenes Multilingual-Engine-Modul wird angelegt.",
+      "recommendation": "Erstellung von MLE-Modulen streng kontrollieren; jede neue MLE-Einheit prüfen.",
+      "url": "https://attack.mitre.org/techniques/T1059/007/",
+      "enabled": true,
+      "detector": {"type": "regex", "target": "code", "pattern": "\\bCREATE\\s+(?:OR\\s+REPLACE\\s+)?MLE\\s+(?:MODULE|ENV)\\b"}
+    },
+    {
+      "id": "T1059",
+      "technique": "Command and Scripting Interpreter (Java)",
+      "title": "Erstellung von Java-Code in der Datenbank",
+      "severity": "Critical",
+      "message": "CREATE JAVA SOURCE/CLASS/RESOURCE - Java-Code in der Datenbank ermöglicht OS-nahen Zugriff.",
+      "recommendation": "CREATE JAVA SOURCE ist im Default nicht vergeben; jede Verwendung zwingend prüfen und das Privileg restriktiv halten.",
+      "url": "https://attack.mitre.org/techniques/T1059/",
+      "enabled": true,
+      "detector": {"type": "regex", "target": "code", "pattern": "\\bCREATE\\s+(?:OR\\s+REPLACE\\s+)?(?:AND\\s+(?:RESOLVE|COMPILE)\\s+)?(?:NOFORCE\\s+)?JAVA\\s+(?:SOURCE|CLASS|RESOURCE)\\b"}
+    },
+    {
+      "id": "T1059",
+      "technique": "Command and Scripting Interpreter (SQL*Plus HOST)",
+      "title": "Betriebssystembefehl über SQL*Plus HOST / !",
+      "severity": "High",
+      "message": "SQL*Plus-Kommando HOST bzw. ! am Zeilenanfang - führt einen Betriebssystembefehl aus. Wird in Skripten genutzt, um aus der Datenbankumgebung heraus OS-Befehle abzusetzen.",
+      "recommendation": "Betriebssystembefehle aus SQL-Skripten vermeiden; prüfen, welcher Befehl ausgeführt wird und ob er beabsichtigt ist.",
+      "url": "https://attack.mitre.org/techniques/T1059/",
+      "enabled": true,
+      "detector": {"type": "builtin", "name": "client_directive", "params": {"pattern": "(?m)^[ \\t]*(?:HOST[ \\t]+(?![:=])\\S|!\\s*(?![A-Za-z]\\w*\\s*:)[^\\s=])"}}
+    },
+    {
+      "id": "ACI-ORA-LDAP-INJECTION",
+      "technique": "LDAP-Injection (DBMS_LDAP)",
+      "title": "Moegliche LDAP-Injection ueber DBMS_LDAP",
+      "severity": "High",
+      "message": "Ein DBMS_LDAP-Aufruf steht in einer Anweisung mit ||-Konkatenation. Wird ein LDAP-Filter oder DN aus ungeprueften Eingaben zusammengesetzt, ist eine LDAP-Injection moeglich (Umgehung von Filtern, unautorisierter Verzeichniszugriff).",
+      "recommendation": "LDAP-Filter/DN nicht per String-Konkatenation aus Eingaben bilden. Sonderzeichen gemaess RFC 4515/4514 escapen und Eingaben strikt validieren.",
+      "url": "https://owasp.org/www-community/attacks/LDAP_Injection",
+      "enabled": true,
+      "detector": {"type": "builtin", "name": "tainted_concat_sink", "params": {"pattern": "\\bDBMS_LDAP\\s*\\.\\s*\\w+\\s*\\("}}
+    },
+    {
+      "id": "ACI-ORA-XPATH-INJECTION",
+      "technique": "XPath-/XQuery-Injection (XML)",
+      "title": "Moegliche XPath-/XQuery-Injection ueber XML-Funktionen",
+      "severity": "High",
+      "message": "Eine XML-/XPath-Funktion (EXTRACTVALUE/EXISTSNODE/XMLQUERY/XMLTABLE) steht in einer Anweisung mit ||-Konkatenation. Wird der XPath-/XQuery-Ausdruck aus ungeprueften Eingaben zusammengesetzt, ist eine XPath-/XQuery-Injection moeglich (unautorisierter Datenzugriff).",
+      "recommendation": "XPath-/XQuery-Ausdruecke nicht aus Eingaben konkatenieren. Werte als gebundene Variablen (XMLQUERY ... PASSING) uebergeben und Eingaben validieren.",
+      "url": "https://owasp.org/www-community/attacks/XPATH_Injection",
+      "enabled": true,
+      "detector": {"type": "builtin", "name": "tainted_concat_sink", "params": {"pattern": "\\b(?:EXTRACTVALUE|EXISTSNODE|XMLQUERY|XMLTABLE)\\s*\\("}}
+    },
+    {
+      "id": "ACI-ORA-SQLPLUS-REMOTE-SCRIPT",
+      "technique": "Ingress Tool Transfer / Remote Script Execution (SQL*Plus @ @@ START)",
+      "title": "Ausfuehrung eines Remote-Skripts ueber @ / @@ / START (URL bzw. UNC-Pfad)",
+      "severity": "Critical",
+      "message": "SQL*Plus-/edbplus-Direktive @, @@ oder START laedt und fuehrt ein Skript von einem entfernten Ort aus (http://, ftp:// oder UNC-Netzwerkpfad). Der Skriptpfad ist vollstaendig fremdbestimmt und wird ueber einen nicht authentifizierten Klartext-Transport bezogen - beliebiges Remote-SQL/PL-SQL laeuft mit den Rechten des ausfuehrenden Benutzers. (Hinweis: Oracle fuehrt http:// und ftp:// aus; https:// wird offiziell nicht unterstuetzt, der Aufruf gilt aber als verdaechtig.)",
+      "recommendation": "Niemals Skripte ueber URL oder Netzwerkpfad einbinden. Nur lokale, vertrauenswuerdige, versionierte Skripte mit festem Pfad aufrufen; den Remote-Bezug von Skripten in Deployment-Prozessen unterbinden.",
+      "url": "https://attack.mitre.org/techniques/T1105/",
+      "cwe": "CWE-829",
+      "enabled": true,
+      "detector": {"type": "builtin", "name": "client_directive", "params": {"pattern": "(?im)^[ \\t]*(?:@@?[ \\t]*|STA(?:RT)?[ \\t]*)(?:https?://|ftp://|//|\\\\\\\\)"}}
+    },
+    {
+      "id": "ACI-ORA-SQLPLUS-RUN-SCRIPT",
+      "technique": "Command and Scripting Interpreter (SQL*Plus/edbplus Skriptaufruf)",
+      "title": "Ausfuehrung eines externen Skripts ueber @ / @@ / START",
+      "severity": "Warning",
+      "message": "SQL*Plus-/edbplus-Direktive @, @@ oder START fuehrt ein externes SQL-Skript aus. In Deployment-Skripten ein Einfallstor, wenn der Skriptpfad nicht kontrolliert ist (eingebundenes Skript laeuft mit den Rechten des ausfuehrenden Benutzers).",
+      "recommendation": "Nur vertrauenswuerdige, versionierte Skripte einbinden; Skriptpfade nicht aus Variablen/Eingaben zusammensetzen.",
+      "url": "https://attack.mitre.org/techniques/T1059/",
+      "enabled": true,
+      "detector": {"type": "builtin", "name": "client_directive", "params": {"pattern": "(?im)^[ \\t]*(?:@@|@(?!@)|STA(?:RT)?[ \\t]+(?!WITH\\b))(?![ \\t]*&)(?![ \\t]*(?:https?://|ftp://|//|\\\\\\\\))\\S"}}
+    },
+    {
+      "id": "ACI-ORA-SQLPLUS-RUN-SCRIPT-VAR",
+      "technique": "Command and Scripting Interpreter (variabler Skriptpfad)",
+      "title": "Skriptaufruf mit Substitutionsvariable im Pfad (@ &var / START &var)",
+      "severity": "High",
+      "message": "Ein @/@@/START-Skriptaufruf bezieht den Skriptpfad aus einer Substitutionsvariable (&var). Der ausgefuehrte Skriptpfad ist damit zur Laufzeit steuerbar - ein eingeschleustes oder umgelenktes Skript laeuft mit den Rechten des ausfuehrenden Benutzers.",
+      "recommendation": "Skriptpfade fest verdrahten; @/@@/START nicht aus Substitutionsvariablen oder Eingaben zusammensetzen.",
+      "url": "https://attack.mitre.org/techniques/T1059/",
+      "enabled": true,
+      "detector": {"type": "builtin", "name": "client_directive", "params": {"pattern": "(?im)^[ \\t]*(?:@@?|STA(?:RT)?\\b)[ \\t]*&"}}
+    },
+    {
+      "id": "ACI-ORA-SQLPLUS-SUBSTITUTION",
+      "technique": "Command and Scripting Interpreter (Substitutionsvariable)",
+      "title": "SQL*Plus-/edbplus-Substitutionsvariable (& / &&)",
+      "severity": "Warning",
+      "message": "Substitutionsvariable in einer sicherheitsrelevanten Anweisung (CREATE/ALTER/DROP/GRANT/REVOKE/EXECUTE IMMEDIATE/IDENTIFIED BY). Der Wert wird vom Client VOR der Ausfuehrung rein textuell ersetzt - ohne Escaping ein SQL-Injection-Vektor, wenn er aus ungeprueften Quellen stammt. Beruecksichtigt SET DEFINE OFF und ein gewechseltes Substitutionszeichen (SET DEFINE ^).",
+      "recommendation": "Substitutionsvariablen in sicherheitsrelevantem Code vermeiden; Werte ueber Bindevariablen statt textueller Ersetzung uebergeben und Eingaben validieren.",
+      "url": "https://attack.mitre.org/techniques/T1059/",
+      "enabled": true,
+      "detector": {"type": "builtin", "name": "sqlplus_security_substitution"}
+    },
+    {
+      "id": "ACI-ORA-SQLPLUS-ACCEPT-SUBSTITUTION",
+      "technique": "Improper Input Handling (ACCEPT/DEFINE -> Substitution)",
+      "title": "Eingabe-gesteuerte Substitution (ACCEPT/DEFINE-Variable als &var in SQL)",
+      "severity": "High",
+      "message": "Eine ueber ACCEPT/DEFINE (haeufig interaktive Eingabe) gesetzte Variable wird spaeter als &var rein textuell in SQL eingesetzt - ohne Escaping. Klassischer Injection-Pfad in Deployment-/Installationsskripten.",
+      "recommendation": "Eingaben validieren; Substitutionsvariablen nicht in SQL-Identifier/-Werte einsetzen. Wo moeglich Bindevariablen statt &-Substitution verwenden.",
+      "url": "https://attack.mitre.org/techniques/T1059/",
+      "enabled": true,
+      "detector": {"type": "builtin", "name": "sqlplus_substitution"}
+    },
+    {
+      "id": "ACI-ORA-SQLPLUS-ACCEPT",
+      "technique": "Command and Scripting Interpreter (interaktive Eingabe)",
+      "title": "Interaktive/definierte Eingabe ueber ACCEPT / DEFINE",
+      "severity": "Warning",
+      "message": "SQL*Plus-/edbplus-Direktive ACCEPT bzw. DEFINE definiert eine Substitutionsvariable (haeufig aus interaktiver Eingabe). In Verbindung mit & wird daraus eine ungeprueft eingesetzte Eingabe.",
+      "recommendation": "Eingaben aus ACCEPT/DEFINE vor der Verwendung validieren und nicht ungeprueft in SQL (per &) einsetzen.",
+      "url": "https://attack.mitre.org/techniques/T1059/",
+      "enabled": true,
+      "detector": {"type": "builtin", "name": "client_directive", "params": {"pattern": "(?m)^[ \\t]*(?:ACCEPT|DEFINE)\\b"}}
+    },
+    {
+      "id": "ACI-ORA-SQLPLUS-WHENEVER-CONTINUE",
+      "technique": "Robuste Fehlerbehandlung (Fehler werden ignoriert)",
+      "title": "WHENEVER SQLERROR/OSERROR CONTINUE - Fehler werden ignoriert",
+      "severity": "Warning",
+      "message": "WHENEVER SQLERROR/OSERROR CONTINUE laesst das Skript nach einem Fehler weiterlaufen. In Deployment-/Migrationsskripten koennen so fehlgeschlagene sicherheitsrelevante Schritte (z.B. ein REVOKE oder eine Rechtevergabe) unbemerkt uebergangen werden - das Skript endet scheinbar erfolgreich in einem inkonsistenten Zustand.",
+      "recommendation": "In Deployment-Skripten WHENEVER SQLERROR EXIT FAILURE (und WHENEVER OSERROR EXIT) setzen, damit Fehler den Lauf abbrechen.",
+      "url": "https://attack.mitre.org/techniques/T1059/",
+      "enabled": true,
+      "detector": {"type": "builtin", "name": "client_directive", "params": {"pattern": "(?im)^[ \\t]*WHENEVER[ \\t]+(?:SQLERROR|OSERROR)[ \\t]+CONTINUE\\b"}}
+    }
+  ]
+}

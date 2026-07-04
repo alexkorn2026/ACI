@@ -1,0 +1,92 @@
+{
+  "tactic": "TA0010 Exfiltration",
+  "tactic_id": "TA0010",
+  "description": "MITRE ATT&CK - Exfiltration: PostgreSQL server-side export, FDW and logical replication indicators.",
+  "rules": [
+    {
+      "id": "ACI-PG-COPY-SERVER-FILE-TO",
+      "technique": "Exfiltration to Local File / COPY TO file",
+      "title": "PostgreSQL COPY TO server-side file",
+      "severity": "High",
+      "message": "COPY TO a server-side file can write exported data from the database server context.",
+      "recommendation": "Avoid server-side COPY TO files in application deployments; use controlled export mechanisms and DBA approval.",
+      "url": "https://attack.mitre.org/tactics/TA0010/",
+      "enabled": true,
+      "detector": {
+        "type": "builtin",
+        "name": "postgres_copy_server_file",
+        "params": {
+          "direction": "TO"
+        }
+      }
+    },
+    {
+      "id": "ACI-PG-REPLICATION-SUBSCRIPTION-CREDENTIALS",
+      "technique": "Exfiltration Over Alternative Protocol / Logical Replication Credentials",
+      "title": "PostgreSQL CREATE SUBSCRIPTION with credentials",
+      "severity": "Critical",
+      "message": "CREATE SUBSCRIPTION contains credentials in the connection string and can move data between systems.",
+      "recommendation": "Do not store replication credentials in deployment scripts; use controlled DBA/security processes and secret management.",
+      "url": "https://attack.mitre.org/tactics/TA0010/",
+      "enabled": true,
+      "detector": {
+        "type": "builtin",
+        "name": "postgres_subscription_credentials"
+      }
+    },
+    {
+      "id": "ACI-EPAS-UTL-HTTP",
+      "technique": "Application Layer Protocol / Web (EPAS UTL_HTTP)",
+      "title": "EPAS ausgehender Web-Request ueber UTL_HTTP",
+      "severity": "High",
+      "message": "UTL_HTTP fuehrt aus der Datenbank heraus ausgehende HTTP(S)-Requests aus (EPAS Oracle-Kompatibilitaet) - ein moeglicher Exfiltrations-/SSRF-Pfad.",
+      "recommendation": "Ausgehende Netzwerkaufrufe aus der Datenbank vermeiden; Ziel-URLs strikt validieren und Rechte auf UTL_HTTP begrenzen.",
+      "url": "https://attack.mitre.org/techniques/T1071/",
+      "cwe": "CWE-918",
+      "enabled": true,
+      "detector": {
+        "type": "builtin",
+        "name": "regex_static_and_dynamic",
+        "params": {
+          "pattern": "\\bUTL_HTTP\\s*\\."
+        }
+      }
+    },
+    {
+      "id": "ACI-EPAS-UTL-TCP",
+      "technique": "Non-Application Layer Protocol (EPAS UTL_TCP)",
+      "title": "EPAS rohe TCP-Verbindung ueber UTL_TCP",
+      "severity": "High",
+      "message": "UTL_TCP oeffnet rohe TCP-Sockets aus der Datenbank heraus (EPAS Oracle-Kompatibilitaet) - ein moeglicher Exfiltrations-/C2-Pfad.",
+      "recommendation": "Rohe Socket-Kommunikation aus der Datenbank vermeiden; Rechte auf UTL_TCP entziehen.",
+      "url": "https://attack.mitre.org/techniques/T1095/",
+      "cwe": "CWE-918",
+      "enabled": true,
+      "detector": {
+        "type": "builtin",
+        "name": "regex_static_and_dynamic",
+        "params": {
+          "pattern": "\\bUTL_TCP\\s*\\."
+        }
+      }
+    },
+    {
+      "id": "ACI-EPAS-UTL-SMTP",
+      "technique": "Exfiltration Over Alternative Protocol (EPAS UTL_SMTP)",
+      "title": "EPAS E-Mail-Versand ueber UTL_SMTP",
+      "severity": "High",
+      "message": "UTL_SMTP versendet E-Mail aus der Datenbank heraus (EPAS Oracle-Kompatibilitaet) - ein moeglicher Datenexfiltrationspfad.",
+      "recommendation": "E-Mail-Versand aus der Datenbank vermeiden bzw. ueber kontrollierte, geprueften Ablaeufe leiten; Rechte auf UTL_SMTP begrenzen.",
+      "url": "https://attack.mitre.org/techniques/T1048/",
+      "cwe": "CWE-200",
+      "enabled": true,
+      "detector": {
+        "type": "builtin",
+        "name": "regex_static_and_dynamic",
+        "params": {
+          "pattern": "\\bUTL_SMTP\\s*\\."
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "tactic": "TA0112 Defense Impairment",
+  "tactic_id": "TA0112",
+  "description": "MITRE ATT&CK - Defense Impairment: Code-Indikatoren für das gezielte Schwächen von Schutzmechanismen. Quelle der Technikzuordnung: Oracle MITRE ATT&CK Defensive Guide v1.7.0.",
+  "rules": [
+    {
+      "id": "T1562",
+      "technique": "Impair Defenses (SQL Firewall)",
+      "title": "Deaktivieren der SQL Firewall",
+      "severity": "Critical",
+      "message": "DBMS_SQL_FIREWALL.DISABLE bzw. Löschen/Deaktivieren von Allow-Lists - schaltet die SQL Firewall ab.",
+      "recommendation": "Sehr kritisch: das Abschalten der SQL Firewall entfernt einen zentralen Schutz gegen SQL-Injection und unerlaubte Statements.",
+      "url": "https://attack.mitre.org/techniques/T1562/",
+      "enabled": true,
+      "detector": {
+        "type": "regex",
+        "target": "code",
+        "pattern": "\\bDBMS_SQL_FIREWALL\\s*\\.\\s*(?:DISABLE|DISABLE_ALLOW_LIST|DELETE_ALLOW_LIST|DROP_ALLOW_LIST)"
+      }
+    },
+    {
+      "id": "T1562",
+      "technique": "Impair Defenses (Logon-Downgrade)",
+      "title": "Herabsetzen der minimalen Logon-Version",
+      "severity": "High",
+      "message": "Setzen von ALLOWED_LOGON_VERSION_SERVER - kann veraltete, schwächere Authentifizierungsprotokolle wieder zulassen.",
+      "recommendation": "Prüfen, ob das Herabsetzen der Logon-Version beabsichtigt ist; es schwächt den Schutz gegen Hash-Angriffe.",
+      "url": "https://attack.mitre.org/techniques/T1562/",
+      "enabled": true,
+      "detector": {
+        "type": "regex",
+        "target": "code",
+        "pattern": "\\bALLOWED_LOGON_VERSION_SERVER\\b"
+      }
+    },
+    {
+      "id": "T1562-AUTH-PARAM",
+      "technique": "Impair Defenses (Authentifizierungs-/Audit-Parameter)",
+      "title": "Absenken sicherheitskritischer Oracle-Parameter",
+      "severity": "Critical",
+      "message": "ALTER SYSTEM SET eines sicherheitskritischen Parameters (audit_trail, remote_os_authent, sec_case_sensitive_logon, os_authent_prefix, sql92_security, remote_login_passwordfile) - kann Auditing oder Authentifizierungsschutz absenken.",
+      "recommendation": "Sicherheitsparameter nur über kontrollierte DBA-/Security-Prozesse ändern; das Absenken von Audit- oder Authentifizierungseinstellungen streng prüfen.",
+      "url": "https://attack.mitre.org/techniques/T1562/",
+      "enabled": true,
+      "detector": {
+        "type": "regex",
+        "target": "masked",
+        "pattern": "\\bALTER\\s+SYSTEM\\s+SET\\s+\"?(?:audit_trail|remote_os_authent|sec_case_sensitive_logon|os_authent_prefix|sql92_security|remote_login_passwordfile)\\b"
+      }
+    }
+  ]
+}

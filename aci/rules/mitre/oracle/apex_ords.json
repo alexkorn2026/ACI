@@ -1,0 +1,85 @@
+{
+  "tactic": "APEX / ORDS",
+  "tactic_id": "ACI-APEX-ORDS",
+  "description": "ACI-eigene heuristische Regeln fuer Oracle APEX und ORDS: benutzerkontrollierte Page Items / Session State in dynamischem SQL, SSRF/XSS ueber APEX-APIs, AutoREST-Exposition und schwache Autorisierung. Bewusst heuristisch, hohe Signalstaerke. Kein vollstaendiger APEX-/ORDS-Parser.",
+  "rules": [
+    {
+      "id": "ACI-APEX-DYNSQL-SESSION-STATE",
+      "technique": "SQL Injection via APEX Session State (Function Body returning SQL)",
+      "title": "SQL aus APEX Session State per Konkatenation gebaut",
+      "severity": "High",
+      "message": "SQL-Text wird per ||-Konkatenation aus einem APEX Page Item / Session State (:P1_x, V('P1_x'), APEX_UTIL.GET_SESSION_STATE) gebaut und (ohne EXECUTE-Sink) zurueckgegeben - typisch fuer 'PL/SQL Function Body returning SQL', Region Sources und Reports. Benutzerkontrollierte Werte fliessen ungeprueft in den SQL-Text: SQL-Injection.",
+      "recommendation": "Werte als Bindevariablen IM SQL-Text uebergeben (z.B. 'where id = :P1_ID') statt sie zu konkatenieren. Objektnamen mit DBMS_ASSERT absichern.",
+      "url": "https://owasp.org/www-community/attacks/SQL_Injection",
+      "enabled": true,
+      "detector": {"type": "builtin", "name": "apex_concat_sql"}
+    },
+    {
+      "id": "ACI-APEX-EXPORT-DYNSQL",
+      "technique": "SQL Injection via APEX Session State (Export-Datei)",
+      "title": "APEX-Export: SQL aus Session State in einem wwv_flow_api-Argument",
+      "severity": "High",
+      "message": "Ein code-tragendes APEX-Export-Argument (z.B. p_plug_source, p_query, p_function_body) baut SQL per ||-Konkatenation aus einem APEX Page Item / Session State. In exportierten Apps ist das die typische 'PL/SQL Function Body returning SQL'-Schwachstelle - der Code steht hier als String-Literal und entgeht den regulaeren Checks.",
+      "recommendation": "Werte als Bindevariablen IM SQL-Text uebergeben (:P1_x) statt sie zu konkatenieren; Objektnamen mit DBMS_ASSERT absichern. Befund moeglichst in der APEX-Anwendung selbst korrigieren.",
+      "url": "https://owasp.org/www-community/attacks/SQL_Injection",
+      "enabled": true,
+      "detector": {"type": "builtin", "name": "apex_export_code_sql"}
+    },
+    {
+      "id": "ACI-APEX-SSRF-REST",
+      "technique": "Server-Side Request Forgery (APEX_WEB_SERVICE)",
+      "title": "SSRF-Risiko: APEX_WEB_SERVICE mit APEX-Item in konkatenierter URL",
+      "severity": "High",
+      "message": "APEX_WEB_SERVICE.MAKE_REST_REQUEST/MAKE_REQUEST mit ||-Konkatenation und einem APEX Page Item / Session State in derselben Anweisung. Wird die Zieladresse aus benutzerkontrollierten Werten gebildet, sind SSRF und Datenexfiltration moeglich.",
+      "recommendation": "Zieladressen aus einer serverseitigen Allowlist waehlen; keine URL-Bestandteile aus Eingaben/Session State konkatenieren.",
+      "url": "https://owasp.org/www-community/attacks/Server_Side_Request_Forgery",
+      "enabled": true,
+      "detector": {"type": "builtin", "name": "apex_tainted_sink", "params": {"pattern": "\\bAPEX_WEB_SERVICE\\s*\\.\\s*(?:MAKE_REST_REQUEST|MAKE_REQUEST)\\s*\\("}}
+    },
+    {
+      "id": "ACI-APEX-XSS-HTP",
+      "technique": "Cross-Site Scripting (HTP/OWA Output)",
+      "title": "XSS-Risiko: HTP-Ausgabe mit APEX-Item ohne Escaping",
+      "severity": "High",
+      "message": "HTP.P/HTP.PRN/OWA_UTIL.CELLSPRINT gibt ||-konkatenierten Inhalt aus, der ein APEX Page Item / Session State enthaelt. Ohne APEX_ESCAPE.HTML ist Cross-Site-Scripting moeglich.",
+      "recommendation": "Nutzerseitige Inhalte vor der Ausgabe mit APEX_ESCAPE.HTML/JS/JSON escapen; nie ungeprueft in HTML schreiben.",
+      "url": "https://owasp.org/www-community/attacks/xss/",
+      "enabled": true,
+      "detector": {"type": "builtin", "name": "apex_tainted_sink", "params": {"pattern": "\\bHTP\\s*\\.\\s*(?:P|PRN|PRINT|PRINTS|PS)\\b\\s*\\(|\\bOWA_UTIL\\s*\\.\\s*CELLSPRINT\\s*\\("}}
+    },
+    {
+      "id": "ACI-APEX-MAIL-EXFIL",
+      "technique": "Exfiltration Over Alternative Protocol (APEX_MAIL)",
+      "title": "APEX_MAIL mit benutzerkontrolliertem Empfaenger/Inhalt",
+      "severity": "Warning",
+      "message": "APEX_MAIL.SEND/SEND_MAIL mit ||-Konkatenation und einem APEX Page Item / Session State. Wird Empfaenger oder Inhalt aus benutzerkontrollierten Werten gebildet, sind Mail-Relay/Datenexfiltration moeglich.",
+      "recommendation": "Empfaenger gegen eine Allowlist pruefen; keine Adress-/Inhaltsbestandteile aus Eingaben/Session State konkatenieren.",
+      "url": "https://attack.mitre.org/techniques/T1048/",
+      "enabled": true,
+      "detector": {"type": "builtin", "name": "apex_tainted_sink", "params": {"pattern": "\\bAPEX_MAIL\\s*\\.\\s*(?:SEND|SEND_MAIL)\\s*\\("}}
+    },
+    {
+      "id": "ACI-ORDS-AUTOREST-ENABLE",
+      "technique": "AutoREST Exposure",
+      "title": "ORDS AutoREST-Freigabe eines Objekts/Schemas",
+      "severity": "Warning",
+      "message": "ORDS.ENABLE_OBJECT/ENABLE_SCHEMA gibt ein Objekt bzw. ein ganzes Schema als REST-Endpunkt frei. Bei sensiblen Objekten ist das eine direkte, oft ungewollte Datenexposition.",
+      "recommendation": "AutoREST nur fuer unkritische Objekte aktivieren; sensible Daten ueber kontrollierte Custom-Handler mit Autorisierung bereitstellen.",
+      "url": "https://docs.oracle.com/en/database/oracle/oracle-rest-data-services/",
+      "enabled": true,
+      "detector": {"type": "regex", "target": "masked", "pattern": "\\bORDS\\s*\\.\\s*(?:ENABLE_OBJECT|ENABLE_SCHEMA)\\b"}
+    },
+    {
+      "id": "ACI-APEX-WEAK-AUTHZ",
+      "technique": "Improper Authorization (APEX)",
+      "title": "Autorisierung allein ueber APP_USER / Session State",
+      "severity": "Warning",
+      "message": "Eine Sicherheitsentscheidung haengt allein an APEX_APPLICATION.G_USER bzw. V('APP_USER') - kein robustes Autorisierungsschema. Session-State-Werte sind nicht als alleinige Zugriffskontrolle gedacht.",
+      "recommendation": "APEX Authorization Schemes bzw. APEX_AUTHORIZATION.IS_AUTHORIZED verwenden statt Benutzernamen im Code zu vergleichen.",
+      "url": "https://owasp.org/www-community/Broken_Access_Control",
+      "enabled": false,
+      "coverage": "heuristisch - hohe Fehlalarmquote, bewusst opt-in (enabled:false)",
+      "detector": {"type": "regex", "target": "code", "pattern": "\\bIF\\b[^;]*\\b(?:APEX_APPLICATION\\s*\\.\\s*G_USER|V\\s*\\(\\s*'APP_USER')"}
+    }
+  ]
+}

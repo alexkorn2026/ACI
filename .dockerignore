@@ -1,0 +1,21 @@
+# Nur das Noetigste ins Build-Kontext - haelt Builds schnell und
+# verhindert, dass Caches/Reports/venvs im Image landen.
+.git
+.github
+.venv
+__pycache__
+*.py[cod]
+.mypy_cache
+.pytest_cache
+.ruff_cache
+.DS_Store
+dist/
+*.egg-info/
+*.tar.gz
+docs/
+Logo/
+ACI_WEB/
+tests/
+samples/
+*.sarif
+aci_report_*.json

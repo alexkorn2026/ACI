@@ -1,0 +1,24 @@
+{
+  "category": "Test - doppelte Regel-ID",
+  "description": "Testregeldatei: enthaelt zwei Regeln mit identischer ID. Wird von der ACI-Testsuite verwendet, NICHT ausliefern.",
+  "rules": [
+    {
+      "id": "G-DUP",
+      "title": "Erste Regel mit dieser ID",
+      "severity": "Minor",
+      "message": "Erste Regel mit der ID G-DUP.",
+      "recommendation": "n/a",
+      "enabled": true,
+      "detector": {"type": "regex", "target": "code", "pattern": "select"}
+    },
+    {
+      "id": "G-DUP",
+      "title": "Zweite Regel mit gleicher ID",
+      "severity": "Minor",
+      "message": "Zweite Regel mit der ID G-DUP - Konflikt.",
+      "recommendation": "n/a",
+      "enabled": true,
+      "detector": {"type": "regex", "target": "code", "pattern": "insert"}
+    }
+  ]
+}

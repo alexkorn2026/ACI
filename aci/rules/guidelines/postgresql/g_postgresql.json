@@ -1,0 +1,353 @@
+{
+  "category": "PostgreSQL Coding Guidelines",
+  "description": "ACI-eigene PL/pgSQL-Coding-Guidelines. Heuristische Regeln, die die Sicherheits-Checks um Wartbarkeits- und Robustheitshinweise ergaenzen. Quelle: ACI (keine Trivadis-Regeln).",
+  "rules": [
+    {
+      "id": "PG-1010",
+      "title": "SELECT * vermeiden",
+      "severity": "Minor",
+      "characteristics": "Maintainability",
+      "message": "SELECT * liest alle Spalten und ist bei Schemaaenderungen fehleranfaellig.",
+      "recommendation": "Die benoetigten Spalten explizit aufzaehlen.",
+      "enabled": true,
+      "detector": {
+        "type": "regex",
+        "target": "masked",
+        "pattern": "\\bSELECT\\s+\\*"
+      }
+    },
+    {
+      "id": "PG-1020",
+      "title": "Vergleich mit = NULL statt IS NULL",
+      "severity": "Major",
+      "characteristics": "Reliability",
+      "message": "Ein Vergleich '= NULL' ergibt in SQL immer NULL (unbekannt) - gemeint ist fast immer 'IS NULL'.",
+      "recommendation": "IS NULL bzw. IS NOT NULL verwenden.",
+      "enabled": true,
+      "detector": {
+        "type": "regex",
+        "target": "masked",
+        "pattern": "(?<![<>!:])=\\s*NULL\\b"
+      }
+    },
+    {
+      "id": "PG-1021",
+      "title": "Vergleich mit <> NULL bzw. != NULL",
+      "severity": "Major",
+      "characteristics": "Reliability",
+      "message": "Ein Vergleich '<> NULL' / '!= NULL' liefert immer NULL - gemeint ist 'IS NOT NULL'.",
+      "recommendation": "IS NOT NULL verwenden.",
+      "enabled": true,
+      "detector": {
+        "type": "regex",
+        "target": "masked",
+        "pattern": "(?:<>|!=)\\s*NULL\\b"
+      }
+    },
+    {
+      "id": "PG-1070",
+      "title": "Verschachtelte Blockkommentare",
+      "severity": "Minor",
+      "characteristics": "Maintainability",
+      "message": "Verschachtelte /* ... */-Kommentare sind schwer lesbar und fehleranfaellig.",
+      "recommendation": "Blockkommentare nicht verschachteln.",
+      "enabled": true,
+      "detector": {
+        "type": "builtin",
+        "name": "nested_comments"
+      }
+    },
+    {
+      "id": "PG-2010",
+      "title": "varchar ohne Laengenangabe",
+      "severity": "Info",
+      "characteristics": "Maintainability",
+      "message": "varchar / character varying ohne Laenge entspricht 'text' - die Absicht bleibt unklar.",
+      "recommendation": "Bewusst 'text' verwenden oder eine Laenge angeben.",
+      "enabled": true,
+      "detector": {
+        "type": "regex",
+        "target": "masked",
+        "pattern": "\\b(?:varchar|character\\s+varying)\\b(?!\\s*\\()"
+      }
+    },
+    {
+      "id": "PG-3010",
+      "title": "COUNT(*) zur Existenzpruefung",
+      "severity": "Minor",
+      "characteristics": "Efficiency",
+      "message": "COUNT(*) > 0 zaehlt unnoetig alle Zeilen - EXISTS bricht beim ersten Treffer ab.",
+      "recommendation": "EXISTS (SELECT 1 ...) statt COUNT(*) > 0 verwenden.",
+      "enabled": true,
+      "detector": {
+        "type": "regex",
+        "target": "masked",
+        "pattern": "\\bcount\\s*\\(\\s*\\*\\s*\\)\\s*(?:>\\s*0|>=\\s*1)"
+      }
+    },
+    {
+      "id": "PG-3020",
+      "title": "NOT IN mit Unterabfrage",
+      "severity": "Major",
+      "characteristics": "Reliability",
+      "message": "NOT IN (SELECT ...) liefert ueberraschend keine Zeilen, sobald die Unterabfrage einen NULL-Wert enthaelt.",
+      "recommendation": "NOT EXISTS oder einen Anti-Join (LEFT JOIN ... IS NULL) verwenden.",
+      "enabled": true,
+      "detector": {
+        "type": "regex",
+        "target": "masked",
+        "pattern": "\\bNOT\\s+IN\\s*\\(\\s*SELECT\\b"
+      }
+    },
+    {
+      "id": "PG-3310",
+      "title": "COMMIT/ROLLBACK in einer Schleife",
+      "severity": "Major",
+      "characteristics": "Reliability",
+      "message": "Transaktionssteuerung innerhalb einer Schleife ist meist unbeabsichtigt und teuer.",
+      "recommendation": "Transaktionsgrenzen ausserhalb der Schleife setzen.",
+      "enabled": true,
+      "detector": {
+        "type": "builtin",
+        "name": "commit_in_loop"
+      }
+    },
+    {
+      "id": "PG-4210",
+      "title": "Mehrere ELSIF-Zweige",
+      "severity": "Minor",
+      "characteristics": "Maintainability",
+      "message": "Eine IF-Anweisung mit mehreren ELSIF-Zweigen ist als CASE oft lesbarer.",
+      "recommendation": "Mehrfachverzweigungen als CASE formulieren.",
+      "enabled": true,
+      "detector": {
+        "type": "builtin",
+        "name": "case_for_elsif"
+      }
+    },
+    {
+      "id": "PG-5010",
+      "title": "Leerer WHEN-OTHERS-Handler",
+      "severity": "Major",
+      "characteristics": "Reliability",
+      "message": "WHEN OTHERS THEN NULL verschluckt jede Ausnahme spurlos und versteckt Fehler.",
+      "recommendation": "Ausnahme protokollieren und/oder mit RAISE erneut werfen.",
+      "enabled": true,
+      "detector": {
+        "type": "regex",
+        "target": "masked",
+        "pattern": "\\bWHEN\\s+OTHERS\\s+THEN\\s+NULL\\s*;"
+      }
+    },
+    {
+      "id": "PG-7010",
+      "title": "SECURITY DEFINER ohne festen search_path",
+      "severity": "Major",
+      "characteristics": "Security",
+      "message": "Eine SECURITY-DEFINER-Funktion ohne 'SET search_path' ist anfaellig fuer search_path-Angriffe.",
+      "recommendation": "Bei SECURITY DEFINER stets einen festen 'SET search_path = ...' setzen.",
+      "enabled": true,
+      "detector": {
+        "type": "builtin",
+        "name": "security_definer_search_path"
+      }
+    },
+    {
+      "id": "PG-7011",
+      "title": "SECURITY DEFINER mit riskantem search_path",
+      "severity": "Major",
+      "characteristics": "Security",
+      "message": "SECURITY-DEFINER-Funktion mit riskantem search_path (z.B. public oder pg_temp nicht am Ende).",
+      "recommendation": "Einen festen, minimalen search_path setzen; public vermeiden und pg_temp ans Ende stellen.",
+      "enabled": true,
+      "detector": {
+        "type": "builtin",
+        "name": "security_definer_unsafe_search_path"
+      }
+    },
+    {
+      "id": "PG-7012",
+      "title": "SECURITY DEFINER mit dynamischem EXECUTE",
+      "severity": "Major",
+      "characteristics": "Security",
+      "message": "SECURITY-DEFINER-Funktion fuehrt dynamisches SQL aus.",
+      "recommendation": "Dynamisches SQL in SECURITY-DEFINER-Funktionen vermeiden oder besonders streng validieren und qualifizieren.",
+      "enabled": true,
+      "detector": {
+        "type": "builtin",
+        "name": "security_definer_dynamic_execute"
+      }
+    },
+    {
+      "id": "PG-7013",
+      "title": "SECURITY DEFINER mit unqualifiziertem Funktionsaufruf",
+      "severity": "Major",
+      "characteristics": "Security",
+      "message": "SECURITY-DEFINER-Funktion enthaelt einen unqualifizierten Funktionsaufruf.",
+      "recommendation": "Funktionsaufrufe in SECURITY-DEFINER-Code schemaqualifiziert ausfuehren oder search_path strikt absichern.",
+      "enabled": true,
+      "detector": {
+        "type": "builtin",
+        "name": "security_definer_unqualified_call"
+      }
+    },
+    {
+      "id": "PG-7020",
+      "title": "RAISE NOTICE im Produktionscode",
+      "severity": "Info",
+      "characteristics": "Maintainability",
+      "message": "RAISE NOTICE dient meist dem Debugging und sollte produktiv nicht verbleiben.",
+      "recommendation": "Debug-Ausgaben entfernen oder ueber eine konfigurierbare Log-Stufe steuern.",
+      "enabled": false,
+      "coverage": "optional - RAISE NOTICE wird haeufig bewusst genutzt"
+    },
+    {
+      "id": "PG-7030",
+      "title": "Funktion ohne explizite LANGUAGE-Angabe",
+      "severity": "Minor",
+      "characteristics": "Maintainability",
+      "message": "Die LANGUAGE-Klausel einer Funktion sollte explizit angegeben werden.",
+      "enabled": false,
+      "coverage": "needs-parser"
+    },
+    {
+      "id": "PG-NC-1010",
+      "title": "Bezeichner in snake_case schreiben",
+      "severity": "Minor",
+      "characteristics": "Maintainability",
+      "message": "Bezeichner folgt nicht der snake_case-Konvention.",
+      "recommendation": "Unquotete Bezeichner in Kleinbuchstaben mit Unterstrichen schreiben (z.B. 'l_user_id' statt 'lUserId'). PostgreSQL faltet unquotete Bezeichner ohnehin auf Kleinschreibung; CamelCase erschwert nur die Lesbarkeit.",
+      "enabled": true,
+      "detector": {
+        "type": "builtin",
+        "name": "snake_case_identifier"
+      }
+    },
+    {
+      "id": "PG-NC-1020",
+      "title": "Keine zu kurzen Bezeichner verwenden",
+      "severity": "Minor",
+      "characteristics": "Maintainability",
+      "message": "Sehr kurzer Bezeichner.",
+      "recommendation": "Aussagekräftige, ausreichend lange Bezeichner verwenden.",
+      "enabled": true,
+      "detector": {
+        "type": "builtin",
+        "name": "short_identifier",
+        "params": {
+          "min_length": 3
+        }
+      }
+    },
+    {
+      "id": "PG-1080",
+      "title": "Gleicher Ausdruck auf beiden Seiten eines Vergleichs",
+      "severity": "Major",
+      "characteristics": "Reliability",
+      "message": "Auf beiden Seiten eines Vergleichs steht derselbe Bezeichner (z.B. 'x = x') - das ist fast immer ein Logikfehler oder Tippfehler.",
+      "recommendation": "Vergleich pruefen; vermutlich war ein anderer Operand oder 'IS NULL' gemeint.",
+      "enabled": true,
+      "detector": {
+        "type": "regex",
+        "target": "masked",
+        "pattern": "\\b([A-Za-z_][A-Za-z0-9_$]*)\\s*(?:<>|!=|<=|>=|=|<|>)\\s*\\1\\b"
+      }
+    },
+    {
+      "id": "PG-3110",
+      "title": "Zielspalten bei INSERT immer angeben",
+      "severity": "Minor",
+      "characteristics": "Maintainability",
+      "message": "INSERT ... VALUES ohne explizite Spaltenliste ist bei Schemaaenderungen fehleranfaellig (Reihenfolge/Anzahl der Spalten).",
+      "recommendation": "Die Zielspalten explizit auffuehren: INSERT INTO t (a, b) VALUES (...).",
+      "enabled": true,
+      "detector": {
+        "type": "regex",
+        "target": "masked",
+        "pattern": "\\bINSERT\\s+INTO\\s+(?:\"[^\"]+\"|[A-Za-z_][\\w$.]*)\\s+VALUES\\b"
+      }
+    },
+    {
+      "id": "PG-3190",
+      "title": "NATURAL JOIN vermeiden",
+      "severity": "Minor",
+      "characteristics": "Reliability",
+      "message": "NATURAL JOIN verknuepft ueber alle gleichnamigen Spalten - eine spaetere Spaltenaenderung kann die Join-Bedingung still veraendern.",
+      "recommendation": "Join-Bedingung explizit mit ON bzw. USING angeben.",
+      "enabled": true,
+      "detector": {
+        "type": "regex",
+        "target": "masked",
+        "pattern": "\\bNATURAL\\s+(?:(?:INNER|LEFT|RIGHT|FULL)\\s+)?(?:OUTER\\s+)?JOIN\\b"
+      }
+    },
+    {
+      "id": "PG-4270",
+      "title": "Boolean-Werte nicht mit Boolean-Literalen vergleichen",
+      "severity": "Minor",
+      "characteristics": "Maintainability",
+      "message": "Ein Vergleich mit TRUE/FALSE (z.B. 'flag = TRUE') ist redundant - der Boolean-Ausdruck kann direkt verwendet werden.",
+      "recommendation": "Statt 'x = TRUE' einfach 'x' und statt 'x = FALSE' 'NOT x' schreiben.",
+      "enabled": true,
+      "detector": {
+        "type": "regex",
+        "target": "masked",
+        "pattern": "(?:(?<![:<>!])=|<>|!=)\\s*(?:TRUE|FALSE)\\b|\\b(?:TRUE|FALSE)\\s*(?:(?<![:<>!])=|<>|!=)"
+      }
+    },
+    {
+      "id": "PG-7125",
+      "title": "CREATE OR REPLACE statt CREATE allein verwenden",
+      "severity": "Info",
+      "characteristics": "Maintainability",
+      "message": "CREATE FUNCTION/PROCEDURE/VIEW ohne OR REPLACE schlaegt fehl, wenn das Objekt bereits existiert - erschwert idempotente Deployments.",
+      "recommendation": "CREATE OR REPLACE FUNCTION/PROCEDURE/VIEW verwenden.",
+      "enabled": true,
+      "detector": {
+        "type": "regex",
+        "target": "masked",
+        "pattern": "\\bCREATE\\s+(?!OR\\s+REPLACE\\b)(?:TEMP\\s+|TEMPORARY\\s+)?(?:FUNCTION|PROCEDURE|VIEW)\\b"
+      }
+    },
+    {
+      "id": "PG-2210",
+      "title": "numeric/decimal ohne Genauigkeit deklarieren",
+      "severity": "Info",
+      "characteristics": "Maintainability",
+      "message": "numeric/decimal ohne (Genauigkeit, Skala) erlaubt beliebige Praezision - oft unbeabsichtigt. In PostgreSQL ist unbeschraenktes numeric jedoch legitim, daher standardmaessig deaktiviert.",
+      "recommendation": "Genauigkeit/Skala angeben (numeric(p, s)) - oder bewusst unbeschraenktes numeric belassen.",
+      "enabled": false,
+      "coverage": "optional - unbeschraenktes numeric ist in PostgreSQL legitim",
+      "detector": {
+        "type": "regex",
+        "target": "masked",
+        "pattern": "\\b(?:numeric|decimal)\\b(?!\\s*\\()"
+      }
+    },
+    {
+      "id": "PG-2310",
+      "title": "Datentyp char(n) vermeiden (text bevorzugen)",
+      "severity": "Info",
+      "characteristics": "Maintainability",
+      "message": "char(n) fuellt Werte mit Leerzeichen auf (Blank Padding) und bietet in PostgreSQL keinen Performance-Vorteil gegenueber text/varchar.",
+      "recommendation": "text (oder varchar mit Laenge) statt char(n) verwenden.",
+      "enabled": false,
+      "coverage": "optional - stilistische PostgreSQL-Empfehlung",
+      "detector": {
+        "type": "regex",
+        "target": "masked",
+        "pattern": "(?<![A-Za-z0-9_$])char\\s*\\("
+      }
+    },
+    {
+      "id": "PG-2330",
+      "title": "Leere Zeichenkette nicht wie NULL behandeln (Oracle-Migrationsfalle)",
+      "severity": "Major",
+      "characteristics": "Reliability",
+      "message": "Anders als Oracle behandelt PostgreSQL die leere Zeichenkette '' NICHT als NULL ('' IS NOT NULL). Aus Oracle migrierter Code, der sich auf ''=NULL verlaesst, verhaelt sich in PostgreSQL anders.",
+      "recommendation": "Auf '' und NULL getrennt pruefen; NULL-Pruefungen explizit mit IS NULL / IS NOT NULL durchfuehren.",
+      "enabled": false,
+      "coverage": "migration-spezifisch - statisch schwer ohne Fehlalarme erkennbar"
+    }
+  ]
+}

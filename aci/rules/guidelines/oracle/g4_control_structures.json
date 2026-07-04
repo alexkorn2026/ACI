@@ -1,0 +1,67 @@
+{
+  "category": "Kontrollstrukturen",
+  "description": "Trivadis Coding Guidelines, Kategorie 4 - Control Structures. Quelle: Trivadis PL/SQL & SQL Coding Guidelines v4.4 (Apache-2.0).",
+  "rules": [
+    {
+      "id": "G-4210",
+      "title": "CASE statt IF mit mehreren ELSIF verwenden",
+      "severity": "Minor",
+      "characteristics": "Maintainability",
+      "message": "IF-Anweisung mit mehreren ELSIF-Zweigen.",
+      "recommendation": "Bei mehreren Zweigen eine CASE-Anweisung verwenden - sie ist besser lesbar.",
+      "url": "https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/4-control-structures/2-case-if-decode-nvl-nvl2-coalesce/g-4210/",
+      "enabled": true,
+      "detector": {"type": "builtin", "name": "case_for_elsif"}
+    },
+    {
+      "id": "G-4220",
+      "title": "CASE statt DECODE verwenden",
+      "severity": "Minor",
+      "characteristics": "Maintainability",
+      "message": "Verwendung der Funktion DECODE.",
+      "recommendation": "CASE statt DECODE verwenden - CASE ist lesbarer und typsicher.",
+      "url": "https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/4-control-structures/2-case-if-decode-nvl-nvl2-coalesce/g-4220/",
+      "enabled": true,
+      "detector": {"type": "regex", "target": "code", "pattern": "\\bDECODE\\s*\\("}
+    },
+    {
+      "id": "G-4270",
+      "title": "Boolean-Werte nicht mit Boolean-Literalen vergleichen",
+      "severity": "Minor",
+      "characteristics": "Maintainability",
+      "message": "Vergleich eines Boolean-Werts mit TRUE oder FALSE.",
+      "recommendation": "Boolean-Variable direkt verwenden (IF l_flag THEN ...) statt sie mit TRUE/FALSE zu vergleichen.",
+      "url": "https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/4-control-structures/2-case-if-decode-nvl-nvl2-coalesce/g-4270/",
+      "enabled": true,
+      "detector": {"type": "regex", "target": "masked", "pattern": "(?:=|<>|!=)\\s*(?:TRUE|FALSE)\\b|\\b(?:TRUE|FALSE)\\s*(?:=|<>|!=)"}
+    },
+    {
+      "id": "G-4310",
+      "title": "Keine GOTO-Anweisungen verwenden",
+      "severity": "Major",
+      "characteristics": "Maintainability",
+      "message": "Verwendung einer GOTO-Anweisung.",
+      "recommendation": "GOTO vermeiden; mit strukturierten Konstrukten (Schleifen, Blöcke, Exceptions) ersetzen.",
+      "url": "https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/4-control-structures/3-flow-control/g-4310/",
+      "enabled": true,
+      "detector": {"type": "regex", "target": "masked", "pattern": "\\bGOTO\\b"}
+    },
+    {"id": "G-4110", "title": "%NOTFOUND statt NOT %FOUND verwenden", "severity": "Minor", "enabled": false, "coverage": "needs-parser"},
+    {"id": "G-4120", "title": "%NOTFOUND bei BULK/LIMIT nicht direkt nach FETCH", "severity": "Major", "enabled": false, "coverage": "needs-parser"},
+    {"id": "G-4130", "title": "Lokal geöffnete Cursor immer schließen", "severity": "Major", "enabled": false, "coverage": "needs-parser"},
+    {"id": "G-4140", "title": "Keine Anweisungen zwischen SQL und impliziter Cursor-Eigenschaft", "severity": "Major", "enabled": false, "coverage": "needs-parser"},
+    {"id": "G-4230", "title": "COALESCE statt NVL bei Funktionsaufrufen", "severity": "Minor", "enabled": false, "coverage": "needs-parser"},
+    {"id": "G-4240", "title": "CASE statt NVL2 bei Funktionsaufrufen", "severity": "Minor", "enabled": false, "coverage": "needs-parser"},
+    {"id": "G-4250", "title": "Keine identischen Bedingungen in IF/CASE-Zweigen", "severity": "Major", "enabled": false, "coverage": "needs-parser"},
+    {"id": "G-4260", "title": "Boolean-Bedingungen nicht mit NOT invertieren", "severity": "Minor", "enabled": false, "coverage": "needs-parser"},
+    {"id": "G-4320", "title": "Schleifen mit Labels versehen", "severity": "Minor", "enabled": false, "coverage": "needs-parser"},
+    {"id": "G-4325", "title": "Labels in inneren Scopes nicht wiederverwenden", "severity": "Major", "enabled": false, "coverage": "needs-parser"},
+    {"id": "G-4330", "title": "CURSOR FOR LOOP zum vollständigen Durchlauf", "severity": "Minor", "enabled": false, "coverage": "needs-parser"},
+    {"id": "G-4340", "title": "NUMERIC FOR LOOP für dichte Arrays", "severity": "Minor", "enabled": false, "coverage": "needs-parser"},
+    {"id": "G-4365", "title": "Kein unbedingtes CONTINUE/EXIT in Schleifen", "severity": "Major", "enabled": false, "coverage": "needs-parser"},
+    {"id": "G-4375", "title": "EXIT WHEN statt IF zum Schleifenabbruch", "severity": "Minor", "enabled": false, "coverage": "needs-parser"},
+    {"id": "G-4385", "title": "Kein CURSOR FOR LOOP zur reinen Existenzprüfung", "severity": "Major", "enabled": false, "coverage": "needs-parser"},
+    {"id": "G-4390", "title": "Keine unreferenzierten FOR-Loop-Indizes", "severity": "Minor", "enabled": false, "coverage": "needs-parser"},
+    {"id": "G-4395", "title": "Keine hartkodierten Grenzen bei FOR-Schleifen", "severity": "Minor", "enabled": false, "coverage": "needs-parser"}
+  ]
+}

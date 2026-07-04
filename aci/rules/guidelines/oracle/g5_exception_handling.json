@@ -1,0 +1,44 @@
+{
+  "category": "Exception Handling",
+  "description": "Trivadis Coding Guidelines, Kategorie 5 - Exception Handling. Quelle: Trivadis PL/SQL & SQL Coding Guidelines v4.4 (Apache-2.0).",
+  "rules": [
+    {
+      "id": "G-5040",
+      "title": "WHEN OTHERS nicht ohne spezifische Handler verwenden",
+      "severity": "Major",
+      "characteristics": "Reliability",
+      "message": "WHEN OTHERS in einer Exception-Sektion. Prüfen, ob spezifische Handler fehlen oder die Exception verschluckt wird.",
+      "recommendation": "Spezifische Exceptions gezielt behandeln; in WHEN OTHERS die Exception protokollieren und erneut auslösen (RAISE), nicht stillschweigend verschlucken.",
+      "url": "https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/5-exception-handling/g-5040/",
+      "enabled": true,
+      "detector": {"type": "regex", "target": "masked", "pattern": "\\bWHEN\\s+OTHERS\\b"}
+    },
+    {
+      "id": "G-5050",
+      "title": "RAISE_APPLICATION_ERROR nicht mit hartkodierter Fehlernummer/-meldung",
+      "severity": "Minor",
+      "characteristics": "Maintainability",
+      "message": "RAISE_APPLICATION_ERROR mit hartkodierter Fehlernummer (-20nnn).",
+      "recommendation": "Fehlernummern und -meldungen zentral (z.B. in einem Konstanten-Package) verwalten.",
+      "url": "https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/5-exception-handling/g-5050/",
+      "enabled": true,
+      "detector": {"type": "regex", "target": "code", "pattern": "\\bRAISE_APPLICATION_ERROR\\s*\\(\\s*-20\\d{3}"}
+    },
+    {
+      "id": "G-5080",
+      "title": "FORMAT_ERROR_BACKTRACE zusammen mit SQLERRM verwenden",
+      "severity": "Minor",
+      "characteristics": "Maintainability",
+      "message": "SQLERRM bzw. FORMAT_ERROR_STACK wird verwendet, aber kein FORMAT_ERROR_BACKTRACE.",
+      "recommendation": "DBMS_UTILITY.FORMAT_ERROR_BACKTRACE bzw. UTL_CALL_STACK ergänzen, um die Fehlerstelle zu protokollieren.",
+      "url": "https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/5-exception-handling/g-5080/",
+      "enabled": true,
+      "detector": {"type": "builtin", "name": "error_backtrace"}
+    },
+    {"id": "G-5010", "title": "Fehler-/Logging-Framework verwenden", "severity": "Minor", "enabled": false, "coverage": "needs-parser"},
+    {"id": "G-5020", "title": "Unbenannte Exceptions nicht über Fehlernummer behandeln", "severity": "Major", "enabled": false, "coverage": "needs-parser"},
+    {"id": "G-5030", "title": "Keine vordefinierten Exception-Namen für eigene Exceptions", "severity": "Major", "enabled": false, "coverage": "needs-parser"},
+    {"id": "G-5060", "title": "Unbehandelte Exceptions vermeiden", "severity": "Major", "enabled": false, "coverage": "needs-parser"},
+    {"id": "G-5070", "title": "Oracle-vordefinierte Exceptions nicht selbst auswerten", "severity": "Minor", "enabled": false, "coverage": "needs-parser"}
+  ]
+}

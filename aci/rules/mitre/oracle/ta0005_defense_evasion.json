@@ -1,0 +1,127 @@
+{
+  "tactic": "TA0005 Defense Evasion",
+  "tactic_id": "TA0005",
+  "description": "MITRE ATT&CK - Defense Evasion: Code-Indikatoren für das Verschleiern von Aktivitäten und Objekten. Quelle der Technikzuordnung: Oracle MITRE ATT&CK Defensive Guide v1.7.0.",
+  "rules": [
+    {
+      "id": "T1564",
+      "technique": "Hide Artifacts (_oracle_script)",
+      "title": "Verwendung des Parameters _oracle_script",
+      "severity": "Critical",
+      "message": "_oracle_script - dieser undokumentierte Parameter lässt Aktionen als Oracle-intern erscheinen und kann Objekte/Benutzer verstecken.",
+      "recommendation": "Sehr kritisch: _oracle_script hat keine legitime Verwendung in Anwendungscode.",
+      "url": "https://attack.mitre.org/techniques/T1564/",
+      "enabled": true,
+      "detector": {
+        "type": "regex",
+        "target": "code",
+        "pattern": "_oracle_script"
+      }
+    },
+    {
+      "id": "T1562",
+      "technique": "Impair Defenses (Auditing deaktivieren)",
+      "title": "NOAUDIT-Anweisung",
+      "severity": "High",
+      "message": "NOAUDIT - eine Audit-Einstellung oder Audit-Policy wird deaktiviert.",
+      "recommendation": "Prüfen, welche Audit-Funktion abgeschaltet wird; das Deaktivieren von Auditing ist ein typischer Verschleierungsschritt.",
+      "url": "https://attack.mitre.org/techniques/T1562/",
+      "enabled": true,
+      "detector": {
+        "type": "regex",
+        "target": "code",
+        "pattern": "\\bNOAUDIT\\b"
+      }
+    },
+    {
+      "id": "T1070",
+      "technique": "Indicator Removal (Audit-Trail löschen)",
+      "title": "Löschen aus einer Audit-Trail-Tabelle",
+      "severity": "Critical",
+      "message": "DELETE auf einer Audit-Trail-Tabelle (AUD$, FGA_LOG$, UNIFIED_AUDIT_TRAIL ...) - Spurenbeseitigung.",
+      "recommendation": "Sehr kritisch: Audit-Daten dürfen nicht aus Anwendungscode gelöscht werden. Bereinigung ausschließlich über DBMS_AUDIT_MGMT mit Vier-Augen-Prinzip.",
+      "url": "https://attack.mitre.org/techniques/T1070/",
+      "enabled": true,
+      "detector": {
+        "type": "regex",
+        "target": "code",
+        "pattern": "\\bDELETE\\s+FROM\\s+(?:[A-Za-z_][\\w$]*\\s*\\.\\s*)?(?:AUD\\$UNIFIED|AUD\\$|FGA_LOG\\$|UNIFIED_AUDIT_TRAIL|DBA_AUDIT_TRAIL|DBA_FGA_AUDIT_TRAIL)"
+      }
+    },
+    {
+      "id": "T1070",
+      "technique": "Indicator Removal (Audit-Bereinigung)",
+      "title": "Audit-Trail-Bereinigung über DBMS_AUDIT_MGMT",
+      "severity": "High",
+      "message": "Aufruf von DBMS_AUDIT_MGMT (CLEAN_AUDIT_TRAIL / SET_LAST_ARCHIVE_TIMESTAMP / DROP_PURGE_JOB) - kann Audit-Spuren entfernen.",
+      "recommendation": "Prüfen, ob die Audit-Bereinigung autorisiert und nachvollziehbar ist.",
+      "url": "https://attack.mitre.org/techniques/T1070/",
+      "enabled": true,
+      "detector": {
+        "type": "regex",
+        "target": "code",
+        "pattern": "\\bDBMS_AUDIT_MGMT\\s*\\.\\s*(?:CLEAN_AUDIT_TRAIL|SET_LAST_ARCHIVE_TIMESTAMP|DROP_PURGE_JOB|CLEAR_LAST_ARCHIVE_TIMESTAMP)"
+      }
+    },
+    {
+      "id": "T1564",
+      "technique": "Hide Artifacts (Editions)",
+      "title": "Erstellung einer Edition (CREATE EDITION)",
+      "severity": "Warning",
+      "message": "CREATE EDITION - Editions können genutzt werden, um abweichende Objektversionen zu verbergen.",
+      "recommendation": "Prüfen, ob die Edition zur regulären Edition-Based-Redefinition gehört.",
+      "url": "https://attack.mitre.org/techniques/T1564/",
+      "enabled": true,
+      "detector": {
+        "type": "regex",
+        "target": "code",
+        "pattern": "\\bCREATE\\s+EDITION\\b"
+      }
+    },
+    {
+      "id": "T1562",
+      "technique": "Impair Defenses (Undokumentierter Parameter)",
+      "title": "Setzen eines undokumentierten Underscore-Parameters",
+      "severity": "High",
+      "message": "ALTER SESSION/SYSTEM SET eines undokumentierten Oracle-Parameters (Name beginnt mit '_'). Solche versteckten Parameter sind nicht supportet und können Sicherheits-, Audit- oder Optimizer-Verhalten unbemerkt verändern.",
+      "recommendation": "Undokumentierte Underscore-Parameter nicht im Anwendungscode setzen. Falls zwingend nötig, Parametername und -wert gegen eine fest verdrahtete Whitelist prüfen.",
+      "url": "https://attack.mitre.org/techniques/T1562/",
+      "enabled": true,
+      "detector": {
+        "type": "regex",
+        "target": "code",
+        "pattern": "\\bALTER\\s+(?:SESSION|SYSTEM)\\s+SET\\s+\"?_[A-Za-z]"
+      }
+    },
+    {
+      "id": "T1562-NOLOGGING",
+      "technique": "Impair Defenses (NOLOGGING / NO FORCE LOGGING)",
+      "title": "Abschalten des Redo-Logging (NOLOGGING)",
+      "severity": "High",
+      "message": "NOLOGGING bzw. ALTER DATABASE NO FORCE LOGGING reduziert das Redo-Logging - das schwächt Wiederherstellbarkeit und forensische Nachvollziehbarkeit.",
+      "recommendation": "Prüfen, ob das Abschalten des Logging beabsichtigt ist; in Deployments möglichst FORCE LOGGING beibehalten.",
+      "url": "https://attack.mitre.org/techniques/T1562/",
+      "enabled": true,
+      "detector": {
+        "type": "regex",
+        "target": "masked",
+        "pattern": "\\bNO\\s+FORCE\\s+LOGGING\\b|\\bNOLOGGING\\b"
+      }
+    },
+    {
+      "id": "T1070-AUDIT-TABLE-DROP",
+      "technique": "Indicator Removal (Audit-Trail leeren/löschen)",
+      "title": "TRUNCATE/DROP einer Audit-Trail-Tabelle",
+      "severity": "Critical",
+      "message": "TRUNCATE oder DROP auf einer Audit-Trail-Tabelle (AUD$, FGA_LOG$, Unified Audit) - Spurenbeseitigung.",
+      "recommendation": "Sehr kritisch: Audit-Tabellen dürfen nicht aus Anwendungscode geleert oder gelöscht werden. Bereinigung ausschließlich über DBMS_AUDIT_MGMT mit Vier-Augen-Prinzip.",
+      "url": "https://attack.mitre.org/techniques/T1070/",
+      "enabled": true,
+      "detector": {
+        "type": "regex",
+        "target": "masked",
+        "pattern": "\\b(?:TRUNCATE\\s+TABLE|DROP\\s+TABLE)\\s+(?:[A-Za-z_]\\w*\\s*\\.\\s*)?(?:AUD\\$UNIFIED|AUD\\$|FGA_LOG\\$|UNIFIED_AUDIT_TRAIL|DBA_AUDIT_TRAIL|DBA_FGA_AUDIT_TRAIL)"
+      }
+    }
+  ]
+}

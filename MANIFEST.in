@@ -1,0 +1,39 @@
+include LICENSE
+include NOTICE
+recursive-include licenses *
+include README.md
+include CHANGELOG.md
+include REVIEW_FIXES_2.22.1.md
+include PROMPTS.MD
+include aci.py
+include aci.ini
+include MANIFEST.in
+recursive-include aci/rules *.json
+include aci/rules/guidelines/README.txt
+recursive-include samples *.sql
+recursive-include docs *.html
+recursive-include tests *.py *.sql *.json
+
+# Cache-, Build- und Werkzeug-Artefakte gehoeren nie ins Release-Archiv.
+# global-exclude *.py[cod] entfernt alle .pyc/.pyo/.pyd ueberall - damit
+# bleiben auch saemtliche __pycache__-Verzeichnisse leer (und werden vom
+# sdist nicht aufgenommen).
+global-exclude *.py[cod]
+global-exclude *.so
+global-exclude *~
+global-exclude .DS_Store
+recursive-exclude aci __pycache__
+recursive-exclude tests __pycache__
+recursive-exclude samples __pycache__
+# Generierte ACI-Reports gehoeren nie ins Quellarchiv (sie entstehen,
+# wenn ACI im Projektverzeichnis ausgefuehrt wird).
+global-exclude aci_report_*.json
+global-exclude aci_report_*.html
+global-exclude aci_report_*.sarif
+prune .pytest_cache
+prune .mypy_cache
+prune .ruff_cache
+prune .tox
+prune build
+prune dist
+prune .git

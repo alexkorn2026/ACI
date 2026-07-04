@@ -1,0 +1,39 @@
+ACI - Automated Code Inspection
+Copyright (c) 2026 Alexander Kornbrust
+
+Der eigene Code von ACI steht unter der MIT-Lizenz (siehe LICENSE).
+
+------------------------------------------------------------------------
+Abgeleitete Inhalte unter der Apache-Lizenz, Version 2.0
+------------------------------------------------------------------------
+
+Dieses Produkt enthaelt Inhalte, die aus den
+
+    Trivadis PL/SQL & SQL Coding Guidelines, Version 4.4
+    https://github.com/Trivadis/plsql-and-sql-coding-guidelines
+    Copyright (c) Trivadis AG (heute Teil von Accenture) und die
+    Mitwirkenden der Trivadis PL/SQL & SQL Coding Guidelines
+
+abgeleitet sind. Die Trivadis PL/SQL & SQL Coding Guidelines stehen unter
+der Apache-Lizenz, Version 2.0; der vollstaendige Lizenztext liegt unter
+licenses/Apache-2.0.txt.
+
+Betroffen sind ausschliesslich die Coding-Guideline-Regeldateien unter
+
+    aci/rules/guidelines/
+
+Diese Dateien wurden fuer ACI angepasst und veraendert (Section 4(b) der
+Apache-Lizenz): Die Guideline-Regeln (Regel-IDs wie G-1010, Titel,
+Beschreibungen, Empfehlungen, Schweregrad-Skala) wurden als
+JSON-Regeldateien neu strukturiert, mit einer Detector-Konfiguration und
+einer Schweregrad-Zuordnung fuer ACI versehen und teilweise gekuerzt
+oder umformuliert. Sie sind damit eine Bearbeitung der urspruenglichen
+Trivadis-Inhalte, nicht deren woertliche Kopie.
+
+Die PostgreSQL-PL/pgSQL-Guidelines (aci/rules/guidelines/postgresql/)
+sind eigene Regeln des ACI-Projekts und stehen unter der MIT-Lizenz; sie
+sind den Trivadis-Guidelines lediglich nachempfunden.
+
+Die Nennung des Namens "Trivadis" dient ausschliesslich der sachlichen
+Angabe der Herkunft und stellt keine Billigung oder Empfehlung von ACI
+durch Trivadis bzw. Accenture dar.

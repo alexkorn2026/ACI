@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ACI &ndash; Automated Code Inspection für Oracle &amp; PostgreSQL</title>
+<meta name="description" content="ACI ist ein heuristischer Sicherheits- und Coding-Guidelines-Scanner für Oracle-PL/SQL- und PostgreSQL-PL/pgSQL-Code. SQL-Injection-Erkennung, MITRE-ATT&CK-Indikatoren, SARIF-Reports und CI/CD-Profile." />
+<link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32x32.png" />
+<link rel="icon" href="assets/favicon.ico" />
+<style>
+  :root {
+    --bg: #0b1120;
+    --bg-soft: #0d1424;
+    --fg: #e2e8f0;
+    --muted: #94a3b8;
+    --faint: #64748b;
+    --card: #111827;
+    --card-border: #1e293b;
+    --red: #e7443b;
+    --blue: #3b82f6;
+    --ring: rgba(59, 130, 246, 0.35);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      Helvetica, Arial, sans-serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  a { color: inherit; text-decoration: none; }
+
+  .container {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  .gradient-text {
+    background: linear-gradient(135deg, #f05a52 0%, #a855f7 50%, #3b82f6 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* ---------- Navbar ---------- */
+  .navbar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 50;
+    background: rgba(11, 17, 32, 0.82);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--card-border);
+  }
+  .navbar .container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 68px;
+  }
+  .nav-logo img { height: 40px; display: block; }
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+    list-style: none;
+  }
+  .nav-links a {
+    color: var(--muted);
+    font-size: 15px;
+    font-weight: 500;
+    transition: color 0.18s ease;
+  }
+  .nav-links a:hover { color: var(--fg); }
+  .nav-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 18px;
+    border-radius: 9px;
+    font-size: 14px;
+    font-weight: 600;
+    background: linear-gradient(135deg, var(--red), var(--blue));
+    color: #fff;
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
+  }
+  .nav-cta:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 24px -8px var(--ring);
+  }
+
+  /* mobile nav via checkbox hack */
+  #nav-toggle { display: none; }
+  .nav-burger {
+    display: none;
+    cursor: pointer;
+    padding: 8px;
+    color: var(--fg);
+  }
+  .nav-burger svg { display: block; }
+
+  /* ---------- Hero ---------- */
+  .hero {
+    position: relative;
+    padding: 168px 0 110px;
+    text-align: center;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: "";
+    position: absolute;
+    top: -160px; left: 50%;
+    transform: translateX(-50%);
+    width: 820px; height: 620px;
+    background: radial-gradient(
+      ellipse at center,
+      rgba(59, 130, 246, 0.16) 0%,
+      rgba(231, 68, 59, 0.10) 42%,
+      transparent 72%
+    );
+    pointer-events: none;
+  }
+  .hero-inner { position: relative; }
+  .hero-shield {
+    width: 168px;
+    height: auto;
+    margin: 0 auto 28px;
+    display: block;
+    filter: drop-shadow(0 18px 40px rgba(0, 0, 0, 0.55));
+  }
+  .hero h1 {
+    font-size: clamp(2.1rem, 5vw, 3.5rem);
+    line-height: 1.14;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    max-width: 880px;
+    margin: 0 auto 22px;
+  }
+  .hero p.lead {
+    font-size: clamp(1.02rem, 2vw, 1.2rem);
+    color: var(--muted);
+    max-width: 660px;
+    margin: 0 auto 30px;
+  }
+  .badges {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 36px;
+  }
+  .badge {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted);
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 999px;
+    padding: 6px 14px;
+  }
+  .cta-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 14px;
+    margin-bottom: 30px;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    padding: 13px 26px;
+    border-radius: 11px;
+    font-size: 15px;
+    font-weight: 600;
+    transition: transform 0.18s ease, box-shadow 0.18s ease,
+      border-color 0.18s ease, background 0.18s ease;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--red), var(--blue));
+    color: #fff;
+  }
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 34px -10px var(--ring);
+  }
+  .btn-ghost {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    color: var(--fg);
+  }
+  .btn-ghost:hover {
+    border-color: var(--blue);
+    transform: translateY(-2px);
+  }
+  .version-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 13.5px;
+    color: var(--faint);
+  }
+  .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #22c55e;
+    box-shadow: 0 0 10px rgba(34, 197, 94, 0.7);
+  }
+
+  /* ---------- Sections ---------- */
+  section { scroll-margin-top: 80px; }
+  .section { padding: 92px 0; }
+  .section-soft { background: var(--bg-soft); }
+  .section-head {
+    text-align: center;
+    max-width: 680px;
+    margin: 0 auto 56px;
+  }
+  .eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    font-size: 12.5px;
+    font-weight: 700;
+    color: var(--blue);
+    margin-bottom: 14px;
+  }
+  .section-head h2 {
+    font-size: clamp(1.7rem, 3.5vw, 2.5rem);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin-bottom: 14px;
+  }
+  .section-head p {
+    color: var(--muted);
+    font-size: 1.04rem;
+  }
+
+  /* ---------- Card grid ---------- */
+  .grid {
+    display: grid;
+    gap: 22px;
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .grid-2 { grid-template-columns: repeat(2, 1fr); }
+
+  .card {
+    position: relative;
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    padding: 28px;
+    transition: transform 0.2s ease;
+  }
+  .card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(135deg, var(--red), var(--blue));
+    -webkit-mask: linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+    pointer-events: none;
+  }
+  .card:hover { transform: translateY(-4px); }
+  .card:hover::before { opacity: 1; }
+
+  .icon-box {
+    width: 46px; height: 46px;
+    border-radius: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg,
+      rgba(231, 68, 59, 0.16), rgba(59, 130, 246, 0.16));
+    border: 1px solid var(--card-border);
+    margin-bottom: 18px;
+  }
+  .icon-box svg { width: 23px; height: 23px; }
+  .card h3 {
+    font-size: 1.12rem;
+    font-weight: 700;
+    margin-bottom: 9px;
+  }
+  .card p {
+    color: var(--muted);
+    font-size: 0.96rem;
+  }
+
+  /* ---------- Datenbanken ---------- */
+  .db-card { padding: 32px; }
+  .db-head {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 8px;
+  }
+  .db-head h3 { font-size: 1.32rem; font-weight: 800; }
+  .db-card > p.db-sub {
+    color: var(--muted);
+    margin-bottom: 20px;
+    font-size: 0.97rem;
+  }
+  .check-list { list-style: none; display: grid; gap: 12px; }
+  .check-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 11px;
+    font-size: 0.96rem;
+    color: var(--fg);
+  }
+  .check-list svg {
+    flex-shrink: 0;
+    width: 19px; height: 19px;
+    margin-top: 2px;
+  }
+  .check-list .ck-label { color: var(--muted); }
+  .check-list .ck-label strong { color: var(--fg); font-weight: 600; }
+
+  /* ---------- Pipeline ---------- */
+  .pipeline {
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    gap: 0;
+    flex-wrap: wrap;
+  }
+  .pstep {
+    flex: 1;
+    min-width: 168px;
+    max-width: 210px;
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 14px;
+    padding: 22px 16px;
+    text-align: center;
+  }
+  .pstep .pnum {
+    width: 30px; height: 30px;
+    margin: 0 auto 12px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--red), var(--blue));
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .pstep h4 { font-size: 1rem; font-weight: 700; margin-bottom: 6px; }
+  .pstep p { font-size: 0.85rem; color: var(--muted); }
+  .parrow {
+    display: flex;
+    align-items: center;
+    color: var(--faint);
+    padding: 0 4px;
+  }
+  .parrow svg { width: 26px; height: 26px; }
+
+  .formats {
+    margin-top: 40px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+  }
+  .fmt {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 10px;
+    padding: 10px 18px;
+    font-size: 14px;
+  }
+  .fmt strong { color: var(--fg); }
+  .fmt span { color: var(--faint); }
+
+  /* ---------- Terminal ---------- */
+  .terminal {
+    max-width: 720px;
+    margin: 48px auto 0;
+    background: #0a0f1d;
+    border: 1px solid var(--card-border);
+    border-radius: 13px;
+    overflow: hidden;
+    box-shadow: 0 24px 60px -24px rgba(0, 0, 0, 0.8);
+  }
+  .term-bar {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--card-border);
+  }
+  .term-bar i {
+    width: 11px; height: 11px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .term-bar i:nth-child(1) { background: #ef4444; }
+  .term-bar i:nth-child(2) { background: #eab308; }
+  .term-bar i:nth-child(3) { background: #22c55e; }
+  .term-bar span {
+    margin-left: 8px;
+    font-size: 12.5px;
+    color: var(--faint);
+  }
+  .term-body {
+    padding: 20px 22px;
+    font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+    font-size: 13.5px;
+    line-height: 1.85;
+    white-space: pre-wrap;
+    color: #cbd5e1;
+  }
+  .term-body .c-prompt { color: var(--blue); }
+  .term-body .c-cmd { color: #fff; }
+  .term-body .c-warn { color: #fbbf24; }
+  .term-body .c-bad { color: #f87171; }
+  .term-body .c-ok { color: #4ade80; }
+  .term-body .c-dim { color: var(--faint); }
+
+  /* ---------- Footer ---------- */
+  footer {
+    border-top: 1px solid var(--card-border);
+    padding: 48px 0 40px;
+  }
+  .footer-grid {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 32px;
+    flex-wrap: wrap;
+  }
+  .footer-grid img { height: 44px; margin-bottom: 14px; }
+  .footer-about { max-width: 360px; }
+  .footer-about p { color: var(--muted); font-size: 0.92rem; }
+  .footer-links {
+    display: flex;
+    gap: 56px;
+    flex-wrap: wrap;
+  }
+  .footer-col h5 {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--faint);
+    margin-bottom: 14px;
+  }
+  .footer-col a {
+    display: block;
+    color: var(--muted);
+    font-size: 0.94rem;
+    margin-bottom: 9px;
+    transition: color 0.16s ease;
+  }
+  .footer-col a:hover { color: var(--fg); }
+  .footer-bottom {
+    margin-top: 40px;
+    padding-top: 24px;
+    border-top: 1px solid var(--card-border);
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    color: var(--faint);
+    font-size: 0.86rem;
+  }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 880px) {
+    .grid, .grid-2 { grid-template-columns: 1fr; }
+    .nav-burger { display: flex; }
+    .nav-links {
+      position: fixed;
+      top: 68px; left: 0; right: 0;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0;
+      background: rgba(11, 17, 32, 0.98);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--card-border);
+      padding: 8px 24px 18px;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.28s ease;
+    }
+    #nav-toggle:checked ~ .nav-links { max-height: 360px; }
+    .nav-links li { width: 100%; }
+    .nav-links a, .nav-links .nav-cta {
+      display: block;
+      width: 100%;
+      padding: 13px 0;
+    }
+    .nav-links .nav-cta {
+      justify-content: center;
+      margin-top: 8px;
+      padding: 12px 0;
+    }
+    .parrow { transform: rotate(90deg); padding: 6px 0; }
+    .pstep { max-width: none; }
+    .pipeline { flex-direction: column; align-items: center; }
+    .pstep { width: 100%; max-width: 320px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ================= Navbar ================= -->
+<nav class="navbar">
+  <div class="container">
+    <a href="#top" class="nav-logo" aria-label="ACI Startseite">
+      <img src="assets/aci-logo.png" alt="ACI &ndash; Automated Code Inspection" />
+    </a>
+    <input type="checkbox" id="nav-toggle" />
+    <label for="nav-toggle" class="nav-burger" aria-label="Menü">
+      <svg viewBox="0 0 24 24" width="26" height="26" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <line x1="3" y1="6" x2="21" y2="6" />
+        <line x1="3" y1="12" x2="21" y2="12" />
+        <line x1="3" y1="18" x2="21" y2="18" />
+      </svg>
+    </label>
+    <ul class="nav-links">
+      <li><a href="#funktionen">Funktionen</a></li>
+      <li><a href="#datenbanken">Datenbanken</a></li>
+      <li><a href="#sicherheit">Sicherheit</a></li>
+      <li><a href="#funktionsweise">Funktionsweise</a></li>
+      <li>
+        <a class="nav-cta" href="ACI_Dokumentation.html">
+          Dokumentation
+        </a>
+      </li>
+    </ul>
+  </div>
+</nav>
+
+<!-- ================= Hero ================= -->
+<header class="hero" id="top">
+  <div class="container hero-inner">
+    <img class="hero-shield" src="assets/aci-shield.png"
+      alt="ACI Wappen &ndash; Datenbank-Sicherheitsscanner" />
+    <h1>
+      Automatisierte <span class="gradient-text">Sicherheitsprüfung</span><br />
+      für Oracle- und PostgreSQL-Code
+    </h1>
+    <p class="lead">
+      ACI &ndash; Automated Code Inspection &ndash; ist ein heuristischer
+      Scanner, der PL/SQL- und PL/pgSQL-Quelltext auf Sicherheitslücken und
+      Verstöße gegen Coding-Guidelines prüft &ndash; ganz ohne
+      Datenbankverbindung.
+    </p>
+    <div class="badges">
+      <span class="badge">Python 3.9+</span>
+      <span class="badge">Oracle PL/SQL</span>
+      <span class="badge">PostgreSQL PL/pgSQL</span>
+      <span class="badge">SARIF 2.1.0</span>
+      <span class="badge">CI/CD-fähig</span>
+      <span class="badge">MIT-Lizenz</span>
+    </div>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="ACI_Dokumentation.html">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+        </svg>
+        Dokumentation öffnen
+      </a>
+      <a class="btn btn-ghost" href="#funktionsweise">So funktioniert ACI</a>
+    </div>
+    <div class="version-pill">
+      <span class="dot"></span>
+      Version 2.20.1 &middot; MIT-Lizenz &middot; 1057 Tests grün
+    </div>
+  </div>
+</header>
+
+<!-- ================= Funktionen ================= -->
+<section class="section" id="funktionen">
+  <div class="container">
+    <div class="section-head">
+      <div class="eyebrow">Funktionen</div>
+      <h2>Was ACI für Sie prüft</h2>
+      <p>
+        Eine statische Analyse, die Schwachstellen und
+        Guideline-Verstöße findet, bevor der Code in Produktion geht.
+      </p>
+    </div>
+    <div class="grid">
+
+      <div class="card">
+        <div class="icon-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="url(#g1)"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <defs><linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#e7443b"/>
+              <stop offset="1" stop-color="#3b82f6"/>
+            </linearGradient></defs>
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            <path d="m9 12 2 2 4-4" />
+          </svg>
+        </div>
+        <h3>SQL-Injection-Erkennung</h3>
+        <p>
+          Taint-Analyse verfolgt nicht vertrauenswürdige Eingaben durch
+          Variablen und Routinen bis in dynamisches SQL &ndash;
+          <code>EXECUTE IMMEDIATE</code>, <code>EXECUTE</code> und
+          <code>format()</code> inklusive.
+        </p>
+      </div>
+
+      <div class="card">
+        <div class="icon-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="url(#g1)"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m7.5 4.27 9 5.15" />
+            <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
+            <path d="m3.3 7 8.7 5 8.7-5" />
+            <path d="M12 22V12" />
+          </svg>
+        </div>
+        <h3>Coding-Guideline-Prüfung</h3>
+        <p>
+          Oracle-Regeln aus den Trivadis PL/SQL &amp; SQL Coding Guidelines,
+          für PostgreSQL ein eigenes Regelwerk &ndash; Namenskonventionen,
+          Struktur und gute Praxis.
+        </p>
+      </div>
+
+      <div class="card">
+        <div class="icon-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="url(#g1)"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="22" y1="12" x2="18" y2="12" />
+            <line x1="6" y1="12" x2="2" y2="12" />
+            <line x1="12" y1="6" x2="12" y2="2" />
+            <line x1="12" y1="22" x2="12" y2="18" />
+          </svg>
+        </div>
+        <h3>MITRE-ATT&amp;CK-Indikatoren</h3>
+        <p>
+          Auffällige Muster werden Techniken des MITRE-ATT&amp;CK-Frameworks
+          zugeordnet &ndash; getrennte Regelsätze für Oracle und PostgreSQL.
+        </p>
+      </div>
+
+      <div class="card">
+        <div class="icon-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="url(#g1)"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+            <path d="M14 2v6h6" />
+            <line x1="8" y1="13" x2="16" y2="13" />
+            <line x1="8" y1="17" x2="14" y2="17" />
+          </svg>
+        </div>
+        <h3>Vier Report-Formate</h3>
+        <p>
+          Befunde als farbige Konsolenausgabe, als JSON, als eigenständiger
+          HTML-Report oder als SARIF 2.1.0 für die Integration in
+          Code-Scanning-Werkzeuge.
+        </p>
+      </div>
+
+      <div class="card">
+        <div class="icon-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="url(#g1)"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="6" y1="3" x2="6" y2="15" />
+            <circle cx="18" cy="6" r="3" />
+            <circle cx="6" cy="18" r="3" />
+            <path d="M18 9a9 9 0 0 1-9 9" />
+          </svg>
+        </div>
+        <h3>CI/CD-Profile</h3>
+        <p>
+          Fünf vorkonfigurierte Profile &ndash; <code>advisory</code>,
+          <code>ci</code>, <code>strict</code>, <code>audit</code> und
+          <code>apex</code> &ndash; steuern Exit-Code und Schweregradschwelle
+          in der Pipeline.
+        </p>
+      </div>
+
+      <div class="card">
+        <div class="icon-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="url(#g1)"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 10v4" />
+            <path d="M2 12a10 10 0 0 1 14-9.2" />
+            <path d="M5 19.5C5.5 18 6 15 6 12a6 6 0 0 1 .34-2" />
+            <path d="M17.29 21.02c.12-.6.43-2.3.5-3.02" />
+            <path d="M8.65 22c.21-.66.45-1.32.57-2" />
+            <path d="M14 13.12c0 2.38 0 6.38-1 8.88" />
+            <path d="M18 11.5a6 6 0 0 0-9.33-5" />
+            <path d="M12 8a3 3 0 0 1 3 3v1" />
+          </svg>
+        </div>
+        <h3>Waiver &amp; Regelintegrität</h3>
+        <p>
+          Inhaltsgebundene Fingerprints erlauben dokumentierte Ausnahmen über
+          <code>--waivers</code>; mit <code>--require-trusted-rules</code>
+          werden nur signierte Regeldateien akzeptiert.
+        </p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ================= Datenbanken ================= -->
+<section class="section section-soft" id="datenbanken">
+  <div class="container">
+    <div class="section-head">
+      <div class="eyebrow">Datenbanken</div>
+      <h2>Zwei Plattformen, ein Werkzeug</h2>
+      <p>
+        ACI versteht die Dialekte beider Welten und prüft sie mit jeweils
+        passenden Regelsätzen &ndash; rein statisch auf dem Quelltext.
+      </p>
+    </div>
+    <div class="grid grid-2">
+
+      <div class="card db-card">
+        <div class="db-head">
+          <div class="icon-box" style="margin-bottom:0;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#e7443b"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <ellipse cx="12" cy="5" rx="9" ry="3" />
+              <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+              <path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3" />
+            </svg>
+          </div>
+          <h3>Oracle</h3>
+        </div>
+        <p class="db-sub">PL/SQL-Pakete, Prozeduren, Funktionen und Trigger.</p>
+        <ul class="check-list">
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="#22c55e"
+              stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12" /></svg>
+            <span class="ck-label"><strong>Dynamisches SQL</strong> über
+              <code>EXECUTE IMMEDIATE</code> und <code>DBMS_SQL</code></span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="#22c55e"
+              stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12" /></svg>
+            <span class="ck-label">Riskante Pakete wie
+              <code>UTL_FILE</code>, <code>UTL_HTTP</code> und
+              <code>DBMS_*</code></span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="#22c55e"
+              stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12" /></svg>
+            <span class="ck-label">DDL und Rechtevergabe
+              (<code>GRANT</code>) im Laufzeitcode</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="#22c55e"
+              stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12" /></svg>
+            <span class="ck-label"><strong>Trivadis-Guidelines</strong> &ndash;
+              Namen, Struktur und gute Praxis</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="#22c55e"
+              stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12" /></svg>
+            <span class="ck-label"><strong>Remote-Skripte</strong> über
+              SQL*Plus <code>@</code>/<code>@@</code>/<code>START</code>
+              (HTTP/FTP/UNC)</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="card db-card">
+        <div class="db-head">
+          <div class="icon-box" style="margin-bottom:0;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#3b82f6"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <ellipse cx="12" cy="5" rx="9" ry="3" />
+              <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+              <path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3" />
+            </svg>
+          </div>
+          <h3>PostgreSQL</h3>
+        </div>
+        <p class="db-sub">PL/pgSQL-Funktionen, Prozeduren und EDB-Erweiterungen.</p>
+        <ul class="check-list">
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="#22c55e"
+              stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12" /></svg>
+            <span class="ck-label"><strong>Dynamisches SQL</strong> über
+              <code>EXECUTE</code> und <code>format()</code></span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="#22c55e"
+              stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12" /></svg>
+            <span class="ck-label">Riskante Erweiterungen und
+              <code>COPY</code>-Dateisystemzugriffe</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="#22c55e"
+              stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12" /></svg>
+            <span class="ck-label">DDL und <code>GRANT</code> in
+              Funktionskörpern und Datenblöcken</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="#22c55e"
+              stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12" /></svg>
+            <span class="ck-label"><strong>Eigenes Guideline-Regelwerk</strong>
+              speziell für PL/pgSQL</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="#22c55e"
+              stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12" /></svg>
+            <span class="ck-label"><strong>EPAS-Audit-Tampering</strong> und
+              privilegierte <code>SECURITY DEFINER</code>-Routinen</span>
+          </li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ================= Sicherheit ================= -->
+<section class="section" id="sicherheit">
+  <div class="container">
+    <div class="section-head">
+      <div class="eyebrow">Sicherheit</div>
+      <h2>Fünf Sicherheitsprüfungen</h2>
+      <p>
+        Jeder Lauf durchsucht den Code nach diesen Schwachstellenklassen &ndash;
+        ergänzt um inhaltsgebundene Fingerprints für reproduzierbare Befunde.
+      </p>
+    </div>
+    <div class="grid">
+
+      <div class="card">
+        <div class="icon-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="url(#g1)"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.3-4.3" />
+          </svg>
+        </div>
+        <h3>SQL-Injection</h3>
+        <p>
+          Verkettung nicht vertrauenswürdiger Werte in dynamisch
+          ausgeführtes SQL &ndash; mit interprozeduraler Taint-Verfolgung
+          und Verweisen auf die Quelle der Eingabe.
+        </p>
+      </div>
+
+      <div class="card">
+        <div class="icon-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="url(#g1)"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16.5 9.4 7.55 4.24" />
+            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+            <path d="M3.27 6.96 12 12.01l8.73-5.05" />
+            <path d="M12 22.08V12" />
+          </svg>
+        </div>
+        <h3>Unerwünschte Pakete</h3>
+        <p>
+          Aufrufe sicherheitskritischer Pakete und Erweiterungen &ndash;
+          Datei-, Netzwerk- und Betriebssystemzugriffe, die in Datenbankcode
+          selten gerechtfertigt sind.
+        </p>
+      </div>
+
+      <div class="card">
+        <div class="icon-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="url(#g1)"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+            <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
+            <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61" />
+            <line x1="2" y1="2" x2="22" y2="22" />
+          </svg>
+        </div>
+        <h3>Obfuskierter Code</h3>
+        <p>
+          Hex- und Base64-kodierte Zeichenketten sowie verschleierte
+          Konstrukte, die Schadlogik vor einer Sichtprüfung verbergen sollen.
+        </p>
+      </div>
+
+      <div class="card">
+        <div class="icon-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="url(#g1)"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <ellipse cx="12" cy="5" rx="9" ry="3" />
+            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
+            <path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3" />
+          </svg>
+        </div>
+        <h3>DDL im Code</h3>
+        <p>
+          <code>CREATE</code>, <code>ALTER</code>, <code>DROP</code> und
+          <code>GRANT</code> innerhalb von Laufzeitlogik &ndash; häufig ein
+          Hinweis auf Rechteausweitung.
+        </p>
+      </div>
+
+      <div class="card">
+        <div class="icon-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="url(#g1)"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2H2v10l9.29 9.29a1 1 0 0 0 1.42 0l8.58-8.58a1 1 0 0 0 0-1.42z" />
+            <line x1="7" y1="7" x2="7.01" y2="7" />
+          </svg>
+        </div>
+        <h3>Namenskonventionen</h3>
+        <p>
+          Bezeichner für Variablen, Parameter und Objekte werden gegen die
+          Guideline-Konventionen geprüft &ndash; für einheitlichen,
+          wartbaren Code.
+        </p>
+      </div>
+
+      <div class="card">
+        <div class="icon-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="url(#g1)"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 10v4" />
+            <path d="M2 12a10 10 0 0 1 14-9.2" />
+            <path d="M5 19.5C5.5 18 6 15 6 12a6 6 0 0 1 .34-2" />
+            <path d="M17.29 21.02c.12-.6.43-2.3.5-3.02" />
+            <path d="M8.65 22c.21-.66.45-1.32.57-2" />
+            <path d="M14 13.12c0 2.38 0 6.38-1 8.88" />
+            <path d="M18 11.5a6 6 0 0 0-9.33-5" />
+          </svg>
+        </div>
+        <h3>Fingerprints &amp; Waiver</h3>
+        <p>
+          Jeder Befund erhält einen inhaltsgebundenen Fingerprint &ndash;
+          stabile Wiedererkennung über Läufe hinweg und Grundlage für
+          dokumentierte Ausnahmen.
+        </p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ================= Funktionsweise ================= -->
+<section class="section section-soft" id="funktionsweise">
+  <div class="container">
+    <div class="section-head">
+      <div class="eyebrow">Funktionsweise</div>
+      <h2>Vom Quelltext zum Report</h2>
+      <p>
+        ACI arbeitet rein statisch &ndash; ohne Datenbankverbindung, ohne
+        Codeausführung. Eine schlanke Pipeline aus reinem Python (nur
+        Standardbibliothek).
+      </p>
+    </div>
+
+    <div class="pipeline">
+      <div class="pstep">
+        <div class="pnum">1</div>
+        <h4>Quelltext</h4>
+        <p>Oracle- oder PostgreSQL-Skripte werden eingelesen.</p>
+      </div>
+      <div class="parrow">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="5" y1="12" x2="19" y2="12" />
+          <polyline points="12 5 19 12 12 19" />
+        </svg>
+      </div>
+      <div class="pstep">
+        <div class="pnum">2</div>
+        <h4>Lexer</h4>
+        <p>Der Code wird in Token zerlegt &ndash; dialektbewusst.</p>
+      </div>
+      <div class="parrow">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="5" y1="12" x2="19" y2="12" />
+          <polyline points="12 5 19 12 12 19" />
+        </svg>
+      </div>
+      <div class="pstep">
+        <div class="pnum">3</div>
+        <h4>Parser / IR</h4>
+        <p>Routinen, Anweisungen und Ausdrücke als Zwischendarstellung.</p>
+      </div>
+      <div class="parrow">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="5" y1="12" x2="19" y2="12" />
+          <polyline points="12 5 19 12 12 19" />
+        </svg>
+      </div>
+      <div class="pstep">
+        <div class="pnum">4</div>
+        <h4>Checks</h4>
+        <p>Sicherheits- und Guideline-Prüfungen samt Taint-Analyse.</p>
+      </div>
+      <div class="parrow">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="5" y1="12" x2="19" y2="12" />
+          <polyline points="12 5 19 12 12 19" />
+        </svg>
+      </div>
+      <div class="pstep">
+        <div class="pnum">5</div>
+        <h4>Report</h4>
+        <p>Befunde als Konsole, JSON, HTML oder SARIF.</p>
+      </div>
+    </div>
+
+    <div class="formats">
+      <div class="fmt"><strong>Konsole</strong> &nbsp;<span>farbig, sofort lesbar</span></div>
+      <div class="fmt"><strong>JSON</strong> &nbsp;<span>maschinenlesbar</span></div>
+      <div class="fmt"><strong>HTML</strong> &nbsp;<span>eigenständiger Report</span></div>
+      <div class="fmt"><strong>SARIF 2.1.0</strong> &nbsp;<span>Code-Scanning</span></div>
+    </div>
+
+    <div class="terminal">
+      <div class="term-bar">
+        <i></i><i></i><i></i><span>aci &mdash; Terminal</span>
+      </div>
+      <div class="term-body"><span class="c-prompt">$</span> <span class="c-cmd">aci scan paket_kunde.sql --profile ci --format sarif</span>
+
+ACI 2.20.1 &middot; Automated Code Inspection
+<span class="c-dim">Prüfe paket_kunde.sql (Oracle PL/SQL) ...</span>
+
+  <span class="c-bad">HIGH</span>   ACI-SQLI   Zeile 42  Dynamisches SQL aus nicht
+                              vertrauenswürdiger Eingabe
+  <span class="c-warn">MEDIUM</span> ACI-PKG    Zeile 71  Aufruf von UTL_HTTP.REQUEST
+  <span class="c-warn">MEDIUM</span> ACI-DDL    Zeile 96  GRANT im Laufzeitcode
+
+<span class="c-dim">3 Befunde &middot; 1 hoch &middot; 2 mittel &middot; Report: aci_report.sarif</span>
+<span class="c-bad">Exit-Code 2</span> <span class="c-dim">(Profil ci: Schwelle bei HIGH erreicht)</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= Footer ================= -->
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-about">
+        <img src="assets/aci-logo.png" alt="ACI" />
+        <p>
+          Automated Code Inspection &ndash; ein heuristischer Sicherheits- und
+          Coding-Guidelines-Scanner für Oracle-PL/SQL- und
+          PostgreSQL-PL/pgSQL-Code.
+        </p>
+      </div>
+      <div class="footer-links">
+        <div class="footer-col">
+          <h5>Produkt</h5>
+          <a href="#funktionen">Funktionen</a>
+          <a href="#datenbanken">Datenbanken</a>
+          <a href="#sicherheit">Sicherheit</a>
+          <a href="#funktionsweise">Funktionsweise</a>
+        </div>
+        <div class="footer-col">
+          <h5>Ressourcen</h5>
+          <a href="ACI_Dokumentation.html">Dokumentation</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2026 ACI &ndash; Automated Code Inspection &middot; Version 2.20.1</span>
+      <span>
+        MIT-Lizenz (eigener Code) &middot; Apache-2.0 (Trivadis-Guideline-Regeln)
+      </span>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

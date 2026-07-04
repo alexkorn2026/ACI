@@ -1,0 +1,86 @@
+{
+  "category": "DML & SQL",
+  "description": "Trivadis Coding Guidelines, Kategorie 3 - DML & SQL. Quelle: Trivadis PL/SQL & SQL Coding Guidelines v4.4 (Apache-2.0).",
+  "rules": [
+    {
+      "id": "G-3110",
+      "title": "Zielspalten bei INSERT immer angeben",
+      "severity": "Major",
+      "characteristics": "Maintainability, Reliability",
+      "message": "INSERT ohne explizite Spaltenliste (INSERT INTO tabelle VALUES ...).",
+      "recommendation": "Zielspalten explizit angeben; sonst bricht der INSERT bei Strukturänderungen der Tabelle.",
+      "url": "https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/3-dml-and-sql/1-general/g-3110/",
+      "enabled": true,
+      "detector": {"type": "regex", "target": "code", "pattern": "\\bINSERT\\s+INTO\\s+(?:\"[^\"]+\"|[A-Za-z_][\\w$#.]*)\\s+VALUES\\b"}
+    },
+    {
+      "id": "G-3145",
+      "title": "Kein SELECT * aus Tabelle oder View",
+      "severity": "Major",
+      "characteristics": "Maintainability, Reliability",
+      "message": "Verwendung von SELECT * .",
+      "recommendation": "Benötigte Spalten explizit aufzählen.",
+      "url": "https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/3-dml-and-sql/1-general/g-3145/",
+      "enabled": true,
+      "detector": {"type": "regex", "target": "code", "pattern": "\\bSELECT\\s+\\*"}
+    },
+    {
+      "id": "G-3185",
+      "title": "ROWNUM nicht auf derselben Ebene wie ORDER BY verwenden",
+      "severity": "Major",
+      "characteristics": "Reliability",
+      "message": "ROWNUM und ORDER BY in derselben Abfrage - ROWNUM wird vor der Sortierung vergeben.",
+      "recommendation": "Für Top-N-Abfragen eine Inline-View mit ORDER BY oder FETCH FIRST n ROWS verwenden.",
+      "url": "https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/3-dml-and-sql/1-general/g-3185/",
+      "enabled": true,
+      "detector": {"type": "builtin", "name": "rownum_order_by"}
+    },
+    {
+      "id": "G-3190",
+      "title": "NATURAL JOIN vermeiden",
+      "severity": "Major",
+      "characteristics": "Maintainability, Reliability",
+      "message": "Verwendung von NATURAL JOIN.",
+      "recommendation": "Join-Bedingungen explizit angeben (ON ...); NATURAL JOIN reagiert unkontrolliert auf Spaltenänderungen.",
+      "url": "https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/3-dml-and-sql/1-general/g-3190/",
+      "enabled": true,
+      "detector": {"type": "regex", "target": "code", "pattern": "\\bNATURAL\\s+JOIN\\b"}
+    },
+    {
+      "id": "G-3310",
+      "title": "Kein COMMIT innerhalb einer Schleife",
+      "severity": "Critical",
+      "characteristics": "Efficiency, Reliability",
+      "message": "COMMIT bzw. ROLLBACK innerhalb einer Schleife.",
+      "recommendation": "Transaktionssteuerung aus der Schleife herausziehen; häufige COMMITs sind langsam und können Cursor invalidieren.",
+      "url": "https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/3-dml-and-sql/3-transaction-control/g-3310/",
+      "enabled": true,
+      "detector": {"type": "builtin", "name": "commit_in_loop"}
+    },
+    {
+      "id": "G-3330",
+      "title": "Autonome Transaktionen vermeiden",
+      "severity": "Major",
+      "characteristics": "Reliability",
+      "message": "Verwendung von PRAGMA AUTONOMOUS_TRANSACTION.",
+      "recommendation": "Autonome Transaktionen nur sehr gezielt einsetzen (z.B. Logging); sie umgehen die Transaktionsklammer des Aufrufers.",
+      "url": "https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/3-dml-and-sql/3-transaction-control/g-3330/",
+      "enabled": true,
+      "detector": {"type": "regex", "target": "code", "pattern": "\\bPRAGMA\\s+AUTONOMOUS_TRANSACTION\\b"}
+    },
+    {"id": "G-3115", "title": "Keine Selbstzuweisung einer Spalte", "severity": "Minor", "enabled": false, "coverage": "needs-parser"},
+    {"id": "G-3120", "title": "Tabellen-Aliase bei mehreren Quellen verwenden", "severity": "Major", "enabled": false, "coverage": "needs-parser"},
+    {"id": "G-3130", "title": "ANSI-SQL-92-Join-Syntax verwenden", "severity": "Minor", "enabled": false, "coverage": "needs-parser"},
+    {"id": "G-3140", "title": "Anchored Records als Cursor-Ziel verwenden", "severity": "Minor", "enabled": false, "coverage": "needs-parser"},
+    {"id": "G-3150", "title": "Identity Columns für Surrogatschlüssel", "severity": "Minor", "enabled": false, "coverage": "needs-parser"},
+    {"id": "G-3160", "title": "Keine sichtbaren virtuellen Spalten", "severity": "Minor", "enabled": false, "coverage": "needs-parser"},
+    {"id": "G-3170", "title": "DEFAULT ON NULL für Spalten-Defaults", "severity": "Minor", "enabled": false, "coverage": "needs-parser"},
+    {"id": "G-3180", "title": "Spaltennamen statt Positionen in ORDER BY", "severity": "Major", "enabled": false, "coverage": "needs-parser"},
+    {"id": "G-3182", "title": "Spaltennamen statt Positionen in GROUP BY", "severity": "Major", "enabled": false, "coverage": "needs-parser"},
+    {"id": "G-3183", "title": "Spalten-Aliase statt Ausdrücke in GROUP BY", "severity": "Major", "enabled": false, "coverage": "needs-parser"},
+    {"id": "G-3195", "title": "Wildcards in LIKE-Klausel verwenden", "severity": "Minor", "enabled": false, "coverage": "needs-parser"},
+    {"id": "G-3210", "title": "BULK-Operationen statt wiederholter DML", "severity": "Minor", "enabled": false, "coverage": "needs-parser"},
+    {"id": "G-3220", "title": "Gespeicherte Exceptions aus FORALL verarbeiten", "severity": "Major", "enabled": false, "coverage": "needs-parser"},
+    {"id": "G-3320", "title": "Transaktionen in Nicht-Cursor-Schleifen in Prozeduren", "severity": "Minor", "enabled": false, "coverage": "needs-parser"}
+  ]
+}

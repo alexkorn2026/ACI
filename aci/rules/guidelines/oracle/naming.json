@@ -1,0 +1,25 @@
+{
+  "category": "Namenskonventionen",
+  "description": "Trivadis-Namenskonventionen für PL/SQL-Bezeichner. Quelle: Trivadis PL/SQL & SQL Coding Guidelines v4.4 (Apache-2.0).",
+  "rules": [
+    {
+      "id": "G-NC-1010",
+      "title": "Bezeichner-Präfixe gemäß Namenskonvention verwenden",
+      "severity": "Minor",
+      "characteristics": "Maintainability",
+      "message": "Bezeichner folgt nicht der Trivadis-Namenskonvention.",
+      "recommendation": "Lokale Variablen mit 'l_', Konstanten mit 'co_' und Parameter mit 'in_'/'out_'/'io_'/'p_' präfixieren. Die Präfixe sind in dieser Regeldatei anpassbar.",
+      "url": "https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/2-naming-conventions/naming-conventions/",
+      "enabled": true,
+      "detector": {
+        "type": "builtin",
+        "name": "naming_prefix",
+        "params": {
+          "local": "l_",
+          "constant": "co_",
+          "parameter": ["in_", "out_", "io_", "p_"]
+        }
+      }
+    }
+  ]
+}

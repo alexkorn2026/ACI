@@ -1,0 +1,38 @@
+{
+  "category": "Allgemein",
+  "description": "Trivadis Coding Guidelines, Kategorie 1 - General. Quelle: Trivadis PL/SQL & SQL Coding Guidelines v4.4 (Apache-2.0).",
+  "rules": [
+    {
+      "id": "G-1070",
+      "title": "Verschachtelte Kommentarblöcke vermeiden",
+      "severity": "Minor",
+      "characteristics": "Maintainability",
+      "message": "Verschachtelter Blockkommentar (/* ... /* ... */ ...): das innere /* wird ignoriert, das äußere */ beendet den Kommentar vorzeitig.",
+      "recommendation": "Blockkommentare nicht verschachteln; zum Auskommentieren von Code Zeilenkommentare (--) verwenden.",
+      "url": "https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/1-general/g-1070/",
+      "enabled": true,
+      "detector": {"type": "builtin", "name": "nested_comments"}
+    },
+    {
+      "id": "G-1080",
+      "title": "Gleichen Ausdruck nicht auf beiden Seiten eines Vergleichs verwenden",
+      "severity": "Minor",
+      "characteristics": "Maintainability, Reliability",
+      "message": "Auf beiden Seiten des Operators steht derselbe Ausdruck - das Ergebnis ist konstant und vermutlich ein Fehler.",
+      "recommendation": "Vergleich prüfen und korrigieren.",
+      "url": "https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/1-general/g-1080/",
+      "enabled": true,
+      "detector": {
+        "type": "regex",
+        "target": "masked",
+        "pattern": "\\b([A-Za-z_][\\w$#]*)\\s*(?:=|<>|!=|<=|>=|<|>)\\s*\\1\\b"
+      }
+    },
+    {"id": "G-1010", "title": "Sub-Blöcke mit Labels versehen", "severity": "Minor", "enabled": false, "coverage": "needs-parser"},
+    {"id": "G-1020", "title": "Passendes Loop-/Block-Label verwenden", "severity": "Minor", "enabled": false, "coverage": "needs-parser"},
+    {"id": "G-1030", "title": "Keine unbenutzten Variablen definieren", "severity": "Minor", "enabled": false, "coverage": "needs-parser"},
+    {"id": "G-1040", "title": "Toten Code vermeiden", "severity": "Minor", "enabled": false, "coverage": "needs-parser"},
+    {"id": "G-1050", "title": "Literale im Code vermeiden", "severity": "Minor", "enabled": false, "coverage": "needs-parser"},
+    {"id": "G-1060", "title": "Keine ROWIDs/UROWIDs in Tabellen speichern", "severity": "Minor", "enabled": false, "coverage": "needs-parser"}
+  ]
+}

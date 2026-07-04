@@ -1,0 +1,123 @@
+{
+  "tactic": "TA0010 Exfiltration",
+  "tactic_id": "TA0010",
+  "description": "MITRE ATT&CK - Exfiltration: Code-Indikatoren für den Abfluss von Daten. Ergänzt die bereits vom Check 'Unerwünschte Packages' erfassten UTL_HTTP/UTL_SMTP/UTL_TCP. Quelle der Technikzuordnung: Oracle MITRE ATT&CK Defensive Guide v1.7.0.",
+  "rules": [
+    {
+      "id": "T1048",
+      "technique": "Exfiltration Over Alternative Protocol (E-Mail)",
+      "title": "E-Mail-Versand über UTL_MAIL",
+      "severity": "High",
+      "message": "Aufruf von UTL_MAIL - E-Mail-Versand aus der Datenbank, möglicher Exfiltrationskanal.",
+      "recommendation": "Empfänger und Inhalt prüfen; Mailversand aus der Datenbank einschränken.",
+      "url": "https://attack.mitre.org/techniques/T1048/",
+      "enabled": true,
+      "detector": {
+        "type": "regex",
+        "target": "code",
+        "pattern": "\\bUTL_MAIL\\s*\\."
+      }
+    },
+    {
+      "id": "T1048",
+      "technique": "Exfiltration Over Alternative Protocol (FTP/URI)",
+      "title": "Datenabfluss über FTPURITYPE / URIFACTORY",
+      "severity": "High",
+      "message": "Verwendung von FTPURITYPE bzw. URIFACTORY - ausgehender Datentransfer über FTP/URI.",
+      "recommendation": "Zieladressen und Notwendigkeit prüfen.",
+      "url": "https://attack.mitre.org/techniques/T1048/",
+      "enabled": true,
+      "detector": {
+        "type": "regex",
+        "target": "code",
+        "pattern": "\\b(?:FTPURITYPE|URIFACTORY)\\b"
+      }
+    },
+    {
+      "id": "T1071",
+      "technique": "Application Layer Protocol (Web)",
+      "title": "Ausgehender Web-Request über APEX_WEB_SERVICE",
+      "severity": "High",
+      "message": "Aufruf von APEX_WEB_SERVICE (z.B. MAKE_REST_REQUEST) - ausgehender HTTP-/REST-Aufruf.",
+      "recommendation": "Zieladressen prüfen; APEX_WEB_SERVICE umgeht teils klassische UTL_HTTP-Kontrollen.",
+      "url": "https://attack.mitre.org/techniques/T1071/",
+      "enabled": true,
+      "detector": {
+        "type": "regex",
+        "target": "code",
+        "pattern": "\\bAPEX_WEB_SERVICE\\s*\\."
+      }
+    },
+    {
+      "id": "T1567",
+      "technique": "Exfiltration Over Web Service",
+      "title": "Daten-/Objekttransfer über DBMS_CLOUD",
+      "severity": "Warning",
+      "message": "Aufruf von DBMS_CLOUD - Datenübertragung zu/von Cloud-Objektspeichern.",
+      "recommendation": "Prüfen, welche Daten in welchen Cloud-Speicher übertragen werden.",
+      "url": "https://attack.mitre.org/techniques/T1567/",
+      "enabled": true,
+      "detector": {
+        "type": "regex",
+        "target": "code",
+        "pattern": "\\bDBMS_CLOUD\\s*\\.\\s*(?!(?:RESIGNAL_USER_ERROR|GET_RESPONSE_TEXT|METHOD_GET|METHOD_POST|METHOD_PUT|METHOD_DELETE|METHOD_HEAD|REQ_HEADERS_T)\\b)"
+      }
+    },
+    {
+      "id": "T1562",
+      "technique": "Impair Defenses (Netzwerk-ACL)",
+      "title": "Änderung von Netzwerk-ACLs über DBMS_NETWORK_ACL_ADMIN",
+      "severity": "High",
+      "message": "Aufruf von DBMS_NETWORK_ACL_ADMIN (APPEND_HOST_ACE / CREATE_ACL / ASSIGN_ACL ...) - öffnet ausgehende Netzwerkverbindungen.",
+      "recommendation": "Sehr genau prüfen: Code, der sich selbst Netzwerk-Rechte einräumt, ist ein typischer Vorbereitungsschritt für Exfiltration.",
+      "url": "https://attack.mitre.org/techniques/T1562/",
+      "enabled": true,
+      "detector": {
+        "type": "regex",
+        "target": "code",
+        "pattern": "\\bDBMS_NETWORK_ACL_ADMIN\\s*\\.\\s*(?:APPEND_HOST_ACE|ADD_PRIVILEGE|CREATE_ACL|ASSIGN_ACL|ASSIGN_WALLET_ACL|APPEND_WALLET_ACE)"
+      }
+    },
+    {
+      "id": "T1567-DBMS-CLOUD-EXPORT",
+      "technique": "Exfiltration Over Web Service (Object Storage)",
+      "title": "Cloud-Datenexport über DBMS_CLOUD",
+      "severity": "High",
+      "message": "DBMS_CLOUD.EXPORT_DATA / PUT_OBJECT / GET_OBJECT / COPY_DATA / CREATE_EXTERNAL_TABLE überträgt Daten in bzw. aus einem Cloud-Objektspeicher.",
+      "recommendation": "Sehr genau prüfen, welche Daten in welchen Objektspeicher übertragen werden; Cloud-Datenbewegung gehört in einen kontrollierten, freigegebenen Prozess.",
+      "url": "https://attack.mitre.org/techniques/T1567/",
+      "enabled": true,
+      "detector": {
+        "type": "regex",
+        "target": "masked",
+        "pattern": "\\bDBMS_CLOUD\\s*\\.\\s*(?:EXPORT_DATA|PUT_OBJECT|GET_OBJECT|COPY_DATA|CREATE_EXTERNAL_TABLE)\\b"
+      }
+    },
+    {
+      "id": "T1048-CLOB2FILE",
+      "technique": "Exfiltration to Local File",
+      "title": "Serverseitiges Datei-Schreiben über DBMS_XSLPROCESSOR.CLOB2FILE",
+      "severity": "High",
+      "message": "DBMS_XSLPROCESSOR.CLOB2FILE schreibt einen CLOB in eine Datei im Dateisystem des Datenbankservers.",
+      "recommendation": "Serverseitiges Datei-Schreiben aus Anwendungscode vermeiden; DIRECTORY-Objekt, Zielpfad und Inhalt prüfen.",
+      "url": "https://attack.mitre.org/techniques/T1048/",
+      "enabled": true,
+      "detector": {
+        "type": "regex",
+        "target": "masked",
+        "pattern": "\\bDBMS_XSLPROCESSOR\\s*\\.\\s*CLOB2FILE\\b"
+      }
+    },
+    {
+      "id": "ACI-ORA-SQLPLUS-SPOOL",
+      "technique": "Exfiltration to Local File (SQL*Plus/edbplus SPOOL)",
+      "title": "Schreiben einer Datei ueber SPOOL",
+      "severity": "Warning",
+      "message": "SQL*Plus-/edbplus-Direktive SPOOL schreibt die Ausgabe (z.B. Abfrageergebnisse) in eine clientseitige Datei. In Deployment-/Reportskripten ein moeglicher Datenabfluss-Pfad.",
+      "recommendation": "SPOOL-Ziele kontrollieren; keine sensiblen Daten in ungesicherte Dateien schreiben und Pfade nicht aus Variablen bilden.",
+      "url": "https://attack.mitre.org/tactics/TA0010/",
+      "enabled": true,
+      "detector": {"type": "builtin", "name": "client_directive", "params": {"pattern": "(?m)^[ \\t]*SPOOL[ \\t]+(?!OFF\\b|OUT\\b)\\S"}}
+    }
+  ]
+}

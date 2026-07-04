@@ -1,0 +1,2 @@
+{"dialect":"oracle","group":"security",
+ "findings":[{"rule_ref":"ACI-ORA-SQLPLUS-SUBSTITUTION","severity":"Warning","line":2}]}

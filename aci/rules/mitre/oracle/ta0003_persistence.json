@@ -1,0 +1,73 @@
+{
+  "tactic": "TA0003 Persistence",
+  "tactic_id": "TA0003",
+  "description": "MITRE ATT&CK - Persistence: Code-Indikatoren für dauerhafte Verankerung im System. Quelle der Technikzuordnung: Oracle MITRE ATT&CK Defensive Guide v1.7.0.",
+  "rules": [
+    {
+      "id": "T1546",
+      "technique": "Event Triggered Execution (LOGON-Trigger)",
+      "title": "Datenbankweiter AFTER-LOGON-Trigger",
+      "severity": "Critical",
+      "message": "AFTER LOGON ON DATABASE/PLUGGABLE DATABASE/SCHEMA - klassischer Persistenz-/Backdoor-Mechanismus, der bei jeder Anmeldung Code ausführt.",
+      "recommendation": "Prüfen, was der Trigger tut. Datenbankweite LOGON-Trigger sind selten legitim; Trigger-Rumpf auf EXECUTE IMMEDIATE / Rechteänderungen kontrollieren.",
+      "url": "https://attack.mitre.org/techniques/T1546/",
+      "enabled": true,
+      "detector": {"type": "regex", "target": "code", "pattern": "\\bAFTER\\s+LOGON\\s+ON\\s+(?:DATABASE|PLUGGABLE\\s+DATABASE|SCHEMA)\\b"}
+    },
+    {
+      "id": "T1546",
+      "technique": "Event Triggered Execution (System-Trigger)",
+      "title": "System-Trigger auf STARTUP/SERVERERROR/SHUTDOWN",
+      "severity": "High",
+      "message": "System-Trigger auf Datenbankebene (AFTER STARTUP / SERVERERROR / DB_ROLE_CHANGE bzw. BEFORE SHUTDOWN) - möglicher Persistenz-Mechanismus.",
+      "recommendation": "Zweck des System-Triggers prüfen.",
+      "url": "https://attack.mitre.org/techniques/T1546/",
+      "enabled": true,
+      "detector": {"type": "regex", "target": "code", "pattern": "\\b(?:AFTER\\s+(?:STARTUP|SERVERERROR|DB_ROLE_CHANGE)|BEFORE\\s+SHUTDOWN)\\s+ON\\s+(?:DATABASE|PLUGGABLE\\s+DATABASE)\\b"}
+    },
+    {
+      "id": "T1053",
+      "technique": "Scheduled Task/Job (OS-Befehl)",
+      "title": "Scheduler-Job vom Typ EXECUTABLE",
+      "severity": "Critical",
+      "message": "DBMS_SCHEDULER-Job mit job_type => 'EXECUTABLE' - führt ein Betriebssystem-Programm aus.",
+      "recommendation": "Sehr kritisch: prüfen, welches OS-Programm gestartet wird. EXECUTABLE-Jobs in Produktion vermeiden.",
+      "url": "https://attack.mitre.org/techniques/T1053/",
+      "enabled": true,
+      "detector": {"type": "regex", "target": "code", "pattern": "job_type\\s*=>\\s*'EXECUTABLE'"}
+    },
+    {
+      "id": "T1098",
+      "technique": "Account Manipulation (Passwortprüfung)",
+      "title": "Änderung der Passwort-Prüffunktion (PASSWORD_VERIFY_FUNCTION)",
+      "severity": "High",
+      "message": "PASSWORD_VERIFY_FUNCTION in einem Profil wird gesetzt/entfernt - kann Passwortrichtlinien aushebeln (besonders bei Wert NULL).",
+      "recommendation": "Prüfen, ob die Passwort-Prüffunktion absichtlich geändert wird; NULL deaktiviert die Komplexitätsprüfung.",
+      "url": "https://attack.mitre.org/techniques/T1098/",
+      "enabled": true,
+      "detector": {"type": "regex", "target": "code", "pattern": "\\bPASSWORD_VERIFY_FUNCTION\\b"}
+    },
+    {
+      "id": "T1556",
+      "technique": "Modify Authentication Process",
+      "title": "Benutzer mit externer/globaler Authentifizierung",
+      "severity": "High",
+      "message": "IDENTIFIED EXTERNALLY/GLOBALLY - Authentifizierung wird aus der Datenbank ausgelagert (OS-/Verzeichnis-Authentifizierung).",
+      "recommendation": "Prüfen, ob die externe Authentifizierung beabsichtigt ist; sie kann zur Umgehung von Passwortkontrollen genutzt werden.",
+      "url": "https://attack.mitre.org/techniques/T1556/",
+      "enabled": true,
+      "detector": {"type": "regex", "target": "code", "pattern": "\\bIDENTIFIED\\s+(?:EXTERNALLY|GLOBALLY)\\b"}
+    },
+    {
+      "id": "T1505",
+      "technique": "Server Software Component (Package-Backdoor)",
+      "title": "Ersetzen eines Objekts in einem Oracle-Systemschema",
+      "severity": "Critical",
+      "message": "CREATE OR REPLACE eines Objekts in einem Oracle-Schema (SYS, SYSTEM, CTXSYS, ...) - mögliches Unterschieben einer Backdoor in Oracle-Code.",
+      "recommendation": "Sehr kritisch: Objekte in Oracle-Systemschemata dürfen nicht durch eigenen Code ersetzt werden.",
+      "url": "https://attack.mitre.org/techniques/T1505/",
+      "enabled": true,
+      "detector": {"type": "regex", "target": "code", "pattern": "\\bCREATE\\s+OR\\s+REPLACE\\s+(?:PACKAGE\\s+BODY|PACKAGE|PROCEDURE|FUNCTION|TRIGGER|TYPE\\s+BODY|TYPE|VIEW|SYNONYM)\\s+(?:SYS|SYSTEM|CTXSYS|MDSYS|XDB|DBSNMP|OUTLN|DVSYS|LBACSYS|AUDSYS|ORDSYS)\\s*\\."}
+    }
+  ]
+}

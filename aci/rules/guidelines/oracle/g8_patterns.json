@@ -1,0 +1,22 @@
+{
+  "category": "Patterns",
+  "description": "Trivadis Coding Guidelines, Kategorie 8 - Patterns. Quelle: Trivadis PL/SQL & SQL Coding Guidelines v4.4 (Apache-2.0).",
+  "rules": [
+    {
+      "id": "G-8110",
+      "title": "Kein SELECT COUNT(*) zur reinen Existenzprüfung",
+      "severity": "Major",
+      "characteristics": "Efficiency",
+      "message": "SELECT COUNT(*) gefunden. Wird nur die Existenz einer Zeile geprüft, ist COUNT(*) unnötig teuer.",
+      "recommendation": "Zur Existenzprüfung COUNT(*) vermeiden - stattdessen z.B. eine Abfrage mit FETCH FIRST 1 ROW oder ein EXISTS-Prädikat verwenden.",
+      "url": "https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/8-patterns/1-checking-the-number-of-rows/g-8110/",
+      "enabled": true,
+      "detector": {"type": "regex", "target": "code", "pattern": "\\bSELECT\\s+COUNT\\s*\\(\\s*\\*\\s*\\)"}
+    },
+    {"id": "G-8120", "title": "Existenz nicht prüfen, um danach zu erzeugen", "severity": "Major", "enabled": false, "coverage": "needs-parser"},
+    {"id": "G-8210", "title": "Synonyme für Objekte fremder Schemata verwenden", "severity": "Major", "enabled": false, "coverage": "needs-parser"},
+    {"id": "G-8310", "title": "Größe von Eingabeparametern validieren", "severity": "Minor", "enabled": false, "coverage": "needs-parser"},
+    {"id": "G-8410", "title": "Application Locks für einmalige Ausführung verwenden", "severity": "Minor", "enabled": false, "coverage": "needs-parser"},
+    {"id": "G-8510", "title": "DBMS_APPLICATION_INFO zum Fortschritts-Tracking nutzen", "severity": "Minor", "enabled": false, "coverage": "needs-parser"}
+  ]
+}

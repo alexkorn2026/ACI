@@ -1,0 +1,85 @@
+{
+  "tactic": "TA0009 Collection",
+  "tactic_id": "TA0009",
+  "description": "MITRE ATT&CK - Collection: PostgreSQL server-side file and replication indicators.",
+  "rules": [
+    {
+      "id": "ACI-PG-COPY-CLIENT-FILE",
+      "technique": "Data from Local System / psql \\copy",
+      "title": "Dateisystem-Zugriff mit copy",
+      "severity": "High",
+      "message": "Die psql-Meta-Anweisung \\copy greift auf das Dateisystem des Clients zu - sie liest bzw. schreibt eine Datei beim Aufrufer von psql.",
+      "recommendation": "Datei-Zugriffe ueber \\copy bewusst pruefen: Quelle bzw. Ziel, Pfad und Inhalt der Datei kontrollieren. Fuer automatisierte Ablaeufe kontrollierte Import-/Export-Mechanismen mit definierten Pfaden verwenden.",
+      "url": "https://attack.mitre.org/tactics/TA0009/",
+      "enabled": true,
+      "detector": {
+        "type": "regex",
+        "target": "masked",
+        "pattern": "(?m)^[ \\t]*\\\\copy\\b(?![^\\n]*\\bPROGRAM\\b)"
+      }
+    },
+    {
+      "id": "ACI-PG-COPY-SERVER-FILE-FROM",
+      "technique": "Data from Local System / COPY FROM file",
+      "title": "PostgreSQL COPY FROM server-side file",
+      "severity": "High",
+      "message": "COPY FROM a server-side file can read files from the database server context.",
+      "recommendation": "Avoid server-side COPY FROM files in application deployments; use controlled import mechanisms and DBA approval.",
+      "url": "https://attack.mitre.org/tactics/TA0009/",
+      "enabled": true,
+      "detector": {
+        "type": "builtin",
+        "name": "postgres_copy_server_file",
+        "params": {
+          "direction": "FROM"
+        }
+      }
+    },
+    {
+      "id": "ACI-PG-PUBLICATION-ALL-TABLES",
+      "technique": "Data Staged / Logical Replication Publication",
+      "title": "PostgreSQL CREATE PUBLICATION FOR ALL TABLES",
+      "severity": "High",
+      "message": "CREATE PUBLICATION FOR ALL TABLES exposes all current and future tables for logical replication.",
+      "recommendation": "Limit publications to explicit tables and manage replication through controlled DBA/security processes.",
+      "url": "https://attack.mitre.org/tactics/TA0009/",
+      "enabled": true,
+      "detector": {
+        "type": "builtin",
+        "name": "regex_static_and_dynamic",
+        "params": {
+          "pattern": "\\bCREATE\\s+PUBLICATION\\b[\\s\\S]*?\\bFOR\\s+ALL\\s+TABLES\\b"
+        }
+      }
+    },
+    {
+      "id": "ACI-PG-PSQL-OUTPUT-FILE",
+      "technique": "Data from Local System (psql Ausgabe in Datei)",
+      "title": "Umlenken der Ausgabe in eine Datei (\\o / \\out)",
+      "severity": "Warning",
+      "message": "Die psql-Meta-Anweisung \\o / \\out schreibt die Ausgabe (z.B. Abfrageergebnisse) in eine clientseitige Datei. In Deployment-/Reportskripten ein moeglicher Datenabfluss-Pfad.",
+      "recommendation": "Ausgabeziele kontrollieren; keine sensiblen Daten in ungesicherte Dateien schreiben.",
+      "url": "https://attack.mitre.org/tactics/TA0009/",
+      "enabled": true,
+      "detector": {"type": "builtin", "name": "psql_meta_command", "params": {"commands": ["o", "out"], "requires": "file_target"}}
+    },
+    {
+      "id": "ACI-EPAS-UTL-FILE",
+      "technique": "Data from Local System (EPAS UTL_FILE)",
+      "title": "EPAS Server-Dateizugriff ueber UTL_FILE",
+      "severity": "High",
+      "message": "UTL_FILE liest oder schreibt Dateien im Kontext des Datenbankservers (EPAS Oracle-Kompatibilitaet) - ein moeglicher Datei-Lese-/Sammelpfad.",
+      "recommendation": "Serverseitige Dateizugriffe aus Anwendungscode vermeiden; Rechte auf UTL_FILE und die erlaubten Verzeichnisse streng begrenzen.",
+      "url": "https://attack.mitre.org/techniques/T1005/",
+      "cwe": "CWE-73",
+      "enabled": true,
+      "detector": {
+        "type": "builtin",
+        "name": "regex_static_and_dynamic",
+        "params": {
+          "pattern": "\\bUTL_FILE\\s*\\."
+        }
+      }
+    }
+  ]
+}

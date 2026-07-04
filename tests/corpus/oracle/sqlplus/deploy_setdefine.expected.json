@@ -1,0 +1,6 @@
+{"dialect":"oracle","group":"security","findings":[
+  {"rule_ref":"ACI-ORA-SQLPLUS-SUBSTITUTION","severity":"Warning","line":5},
+  {"rule_ref":"ACI-ORA-SQLPLUS-RUN-SCRIPT-VAR","severity":"High","line":6},
+  {"rule_ref":"ACI-ORA-SQLPLUS-WHENEVER-CONTINUE","severity":"Warning","line":7},
+  {"rule_ref":"T1059","severity":"High","line":8}
+]}

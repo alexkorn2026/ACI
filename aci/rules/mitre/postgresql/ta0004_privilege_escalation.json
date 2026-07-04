@@ -1,0 +1,200 @@
+{
+  "tactic": "TA0004 Privilege Escalation",
+  "tactic_id": "TA0004",
+  "description": "MITRE ATT&CK - Privilege Escalation: Code-Indikatoren fuer Rechteausweitung in PostgreSQL.",
+  "rules": [
+    {
+      "id": "T1098",
+      "technique": "Account Manipulation (Berechtigung an PUBLIC)",
+      "title": "GRANT an die Rolle PUBLIC",
+      "severity": "High",
+      "message": "GRANT ... TO PUBLIC vergibt ein Recht an alle Datenbankrollen (PUBLIC) und verletzt das Least-Privilege-Prinzip.",
+      "recommendation": "Rechte an eng gefasste, anwendungseigene Rollen statt an PUBLIC vergeben. Auch ALTER DEFAULT PRIVILEGES ... TO PUBLIC vermeiden.",
+      "url": "https://attack.mitre.org/techniques/T1098/",
+      "enabled": true,
+      "detector": {
+        "type": "regex",
+        "target": "masked",
+        "pattern": "\\bGRANT\\b[^;]*?\\bTO\\b[^;]*?\\bPUBLIC\\b"
+      }
+    },
+    {
+      "id": "T1098-DEFAULT-PUBLIC",
+      "technique": "Account Manipulation (Default Privileges an PUBLIC)",
+      "title": "ALTER DEFAULT PRIVILEGES mit GRANT an PUBLIC",
+      "severity": "High",
+      "message": "ALTER DEFAULT PRIVILEGES ... GRANT ... TO PUBLIC vergibt zukuenftige Rechte an alle Rollen.",
+      "recommendation": "Default Privileges nur an eng gefasste Anwendungsrollen vergeben, nicht an PUBLIC.",
+      "url": "https://attack.mitre.org/techniques/T1098/",
+      "enabled": true,
+      "detector": {
+        "type": "regex",
+        "target": "masked",
+        "pattern": "\\bALTER\\s+DEFAULT\\s+PRIVILEGES\\b[^;]*?\\bGRANT\\b[^;]*?\\bTO\\b[^;]*?\\bPUBLIC\\b"
+      }
+    },
+    {
+      "id": "ACI-PG-ADMIN-CREATE-ROLE-PRIVILEGED",
+      "technique": "Account Manipulation / Privileged Role Creation",
+      "title": "PostgreSQL privileged CREATE ROLE/USER",
+      "severity": "Critical",
+      "message": "CREATE ROLE/USER with administrative or security-sensitive attributes must not be done in normal CI/CD deployment scripts.",
+      "recommendation": "Move PostgreSQL role administration to a controlled DBA/IAM/security approval process.",
+      "url": "https://attack.mitre.org/techniques/T1098/",
+      "enabled": true,
+      "detector": {
+        "type": "builtin",
+        "name": "regex_static_and_dynamic",
+        "params": {
+          "pattern": "\\bCREATE\\s+(?:ROLE|USER)\\b[\\s\\S]*?\\b(?:SUPERUSER|CREATEROLE|BYPASSRLS|REPLICATION|CREATEDB)\\b"
+        }
+      }
+    },
+    {
+      "id": "ACI-PG-ADMIN-ALTER-ROLE-PRIVILEGED",
+      "technique": "Account Manipulation / Privileged Role Change",
+      "title": "PostgreSQL privileged ALTER ROLE/USER",
+      "severity": "Critical",
+      "message": "ALTER ROLE/USER changes administrative or security-sensitive attributes and must not be done in normal CI/CD deployment scripts.",
+      "recommendation": "Move PostgreSQL role administration to a controlled DBA/IAM/security approval process.",
+      "url": "https://attack.mitre.org/techniques/T1098/",
+      "enabled": true,
+      "detector": {
+        "type": "builtin",
+        "name": "regex_static_and_dynamic",
+        "params": {
+          "pattern": "\\bALTER\\s+(?:ROLE|USER)\\b[\\s\\S]*?\\b(?:SUPERUSER|NOSUPERUSER|CREATEROLE|NOCREATEROLE|BYPASSRLS|NOBYPASSRLS|REPLICATION|NOREPLICATION|CREATEDB|NOCREATEDB)\\b"
+        }
+      }
+    },
+    {
+      "id": "ACI-PG-ADMIN-GRANT-SYSTEM-ROLE",
+      "technique": "Account Manipulation / Predefined Role Grant",
+      "title": "PostgreSQL predefined/system role grant",
+      "severity": "Critical",
+      "message": "Granting PostgreSQL predefined/system roles must not be done in normal CI/CD deployment scripts.",
+      "recommendation": "Move PostgreSQL system role grants to a controlled DBA/IAM/security approval process.",
+      "url": "https://attack.mitre.org/techniques/T1098/",
+      "enabled": true,
+      "detector": {
+        "type": "builtin",
+        "name": "regex_static_and_dynamic",
+        "params": {
+          "pattern": "\\bGRANT\\b[\\s\\S]*?\\b(?:pg_execute_server_program|pg_read_server_files|pg_write_server_files|pg_read_all_data|pg_write_all_data|pg_monitor|pg_signal_backend|pg_read_all_settings|pg_read_all_stats|pg_stat_scan_tables|pg_database_owner|pg_checkpoint|pg_maintain|pg_create_subscription|pg_signal_autovacuum_worker|pg_use_reserved_connections)\\b[\\s\\S]*?\\bTO\\b"
+        }
+      }
+    },
+    {
+      "id": "ACI-PG-ADMIN-REVOKE-SYSTEM-ROLE",
+      "technique": "Account Manipulation / Predefined Role Revoke",
+      "title": "PostgreSQL predefined/system role revoke",
+      "severity": "Critical",
+      "message": "Revoking PostgreSQL predefined/system roles must not be done in normal CI/CD deployment scripts.",
+      "recommendation": "Move PostgreSQL system role revocations to a controlled DBA/IAM/security approval process.",
+      "url": "https://attack.mitre.org/techniques/T1098/",
+      "enabled": true,
+      "detector": {
+        "type": "builtin",
+        "name": "regex_static_and_dynamic",
+        "params": {
+          "pattern": "\\bREVOKE\\b[\\s\\S]*?\\b(?:pg_execute_server_program|pg_read_server_files|pg_write_server_files|pg_read_all_data|pg_write_all_data|pg_monitor|pg_signal_backend|pg_read_all_settings|pg_read_all_stats|pg_stat_scan_tables|pg_database_owner|pg_checkpoint|pg_maintain|pg_create_subscription|pg_signal_autovacuum_worker|pg_use_reserved_connections)\\b[\\s\\S]*?\\bFROM\\b"
+        }
+      }
+    },
+    {
+      "id": "ACI-PG-SECURITY-DEFINER-SEARCH-PATH",
+      "technique": "Abuse Elevation Control Mechanism (SECURITY DEFINER)",
+      "title": "SECURITY-DEFINER-Funktion ohne festen search_path",
+      "severity": "High",
+      "message": "Eine SECURITY-DEFINER-Funktion ohne 'SET search_path' läuft mit den Rechten des Eigentümers und ist anfällig für search_path-Angriffe.",
+      "recommendation": "Bei SECURITY DEFINER stets einen festen, minimalen 'SET search_path = ...' setzen.",
+      "url": "https://attack.mitre.org/techniques/T1548/",
+      "enabled": true,
+      "detector": {
+        "type": "builtin",
+        "name": "security_definer_search_path"
+      }
+    },
+    {
+      "id": "ACI-PG-SECURITY-DEFINER-DYNAMIC-SQL",
+      "technique": "Abuse Elevation Control Mechanism (SECURITY DEFINER + dyn. SQL)",
+      "title": "SECURITY-DEFINER-Funktion mit dynamischem EXECUTE",
+      "severity": "Critical",
+      "message": "Eine SECURITY-DEFINER-Funktion führt dynamisches SQL aus - mit den Rechten des Eigentümers eine starke Privilege-Escalation-Kombination.",
+      "recommendation": "Dynamisches SQL in SECURITY-DEFINER-Funktionen vermeiden oder Eingaben streng validieren und Bezeichner schemaqualifizieren.",
+      "url": "https://attack.mitre.org/techniques/T1548/",
+      "enabled": true,
+      "detector": {
+        "type": "builtin",
+        "name": "security_definer_dynamic_execute"
+      }
+    },
+    {
+      "id": "ACI-PG-GRANT-WITH-OPTION",
+      "technique": "Account Manipulation (Weitergaberecht)",
+      "title": "GRANT mit WITH GRANT OPTION / WITH ADMIN OPTION",
+      "severity": "High",
+      "message": "GRANT ... WITH GRANT OPTION bzw. WITH ADMIN OPTION erlaubt dem Empfänger, das Recht selbst weiterzugeben - die Rechtekette wird unkontrollierbar.",
+      "recommendation": "Weitergaberechte nur sehr gezielt und über einen kontrollierten DBA-/Security-Prozess vergeben.",
+      "url": "https://attack.mitre.org/techniques/T1098/",
+      "enabled": true,
+      "detector": {
+        "type": "builtin",
+        "name": "regex_static_and_dynamic",
+        "params": {
+          "pattern": "\\bGRANT\\b[\\s\\S]*?\\bWITH\\s+(?:GRANT|ADMIN)\\s+OPTION\\b"
+        }
+      }
+    },
+    {
+      "id": "ACI-PG-REASSIGN-OWNED",
+      "technique": "Account Manipulation / Ownership Transfer",
+      "title": "PostgreSQL REASSIGN OWNED BY",
+      "severity": "High",
+      "message": "REASSIGN OWNED BY uebertraegt das Eigentum an allen Objekten einer Rolle auf eine andere Rolle - ein moeglicher Schritt zur Rechteausweitung oder Objektuebernahme.",
+      "recommendation": "Eigentumsuebertragungen nur ueber kontrollierte DBA-/Security-Prozesse durchfuehren und Quell-/Zielrolle pruefen.",
+      "url": "https://attack.mitre.org/techniques/T1098/",
+      "cwe": "CWE-269",
+      "enabled": true,
+      "detector": {
+        "type": "builtin",
+        "name": "regex_static_and_dynamic",
+        "params": {
+          "pattern": "\\bREASSIGN\\s+OWNED\\s+BY\\b"
+        }
+      }
+    },
+    {
+      "id": "ACI-EPAS-SECURITY-DEFINER-ROLE-CREATION",
+      "technique": "Abuse Elevation Control Mechanism (SECURITY DEFINER + privilegierte DDL)",
+      "title": "SECURITY-DEFINER-Routine mit privilegierter Account-/System-DDL",
+      "severity": "Critical",
+      "message": "SECURITY DEFINER routine contains privileged role/account or system-changing operations.",
+      "recommendation": "Do not place account management, privilege changes, ALTER SYSTEM, or extension/FDW operations inside SECURITY DEFINER routines unless strictly controlled and reviewed.",
+      "url": "https://attack.mitre.org/techniques/T1548/",
+      "cwe": "CWE-269",
+      "category": "privilege-escalation",
+      "enabled": true,
+      "detector": {
+        "type": "builtin",
+        "name": "security_definer_privileged_ddl"
+      }
+    },
+    {
+      "id": "ACI-EPAS-FUNCTION-CALL-AUDIT-BYPASS-CANDIDATE",
+      "technique": "Abuse Elevation Control Mechanism (Audit-Bypass ueber Funktionsaufruf)",
+      "title": "Aufruf einer privilegierten SECURITY-DEFINER-Routine (Audit-Bypass-Kandidat)",
+      "severity": "High",
+      "message": "Potential EPAS audit bypass pattern: privileged operation hidden behind SECURITY DEFINER function call.",
+      "recommendation": "Review SECURITY DEFINER routines that perform privileged operations and are invoked from scripts; the privileged action may not be visible in statement-level audit logs.",
+      "url": "https://attack.mitre.org/techniques/T1548/",
+      "cwe": "CWE-269",
+      "category": "privilege-escalation",
+      "enabled": true,
+      "detector": {
+        "type": "builtin",
+        "name": "secdef_call_bypass_candidate"
+      }
+    }
+  ]
+}

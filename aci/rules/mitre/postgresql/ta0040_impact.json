@@ -1,0 +1,24 @@
+{
+  "tactic": "TA0040 Impact",
+  "tactic_id": "TA0040",
+  "description": "MITRE ATT&CK - Impact: PostgreSQL administrative functions that can disrupt service.",
+  "rules": [
+    {
+      "id": "ACI-PG-IMPACT-BACKEND-CONTROL",
+      "technique": "Service Stop / Backend Termination",
+      "title": "PostgreSQL backend termination/cancel function",
+      "severity": "High",
+      "message": "pg_terminate_backend or pg_cancel_backend can disrupt active database sessions.",
+      "recommendation": "Avoid session termination functions in application deployments unless explicitly approved and audited.",
+      "url": "https://attack.mitre.org/tactics/TA0040/",
+      "enabled": true,
+      "detector": {
+        "type": "builtin",
+        "name": "regex_static_and_dynamic",
+        "params": {
+          "pattern": "\\b(?:pg_terminate_backend|pg_cancel_backend)\\s*\\("
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+{"dialect":"postgresql","group":"security","findings":[
+  {"rule_ref":"ACI-PG-PSQL-SET-BACKTICK","severity":"High","line":1},
+  {"rule_ref":"ACI-PG-PSQL-COPY-PROGRAM","severity":"High","line":2},
+  {"rule_ref":"ACI-PG-PSQL-GEXEC","severity":"High","line":5},
+  {"rule_ref":"ACI-PG-PSQL-SHELL","severity":"High","line":6}
+]}

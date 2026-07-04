@@ -1,0 +1,3 @@
+-- Deployment notes: nutze HOST fuer OS-Befehle, &myvar Substitution, \copy ...
+/* SET DEFINE OFF; GRANT dba TO &x; \! rm -rf / -- alles nur Doku */
+SELECT 1 FROM dual;

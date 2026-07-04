@@ -1,0 +1,51 @@
+{
+  "tactic": "TA0040 Impact",
+  "tactic_id": "TA0040",
+  "description": "MITRE ATT&CK - Impact: Code-Indikatoren für Manipulation, Störung und Zerstörung. Quelle der Technikzuordnung: Oracle MITRE ATT&CK Defensive Guide v1.7.0.",
+  "rules": [
+    {
+      "id": "T1565",
+      "technique": "Data Manipulation (Query Rewrite)",
+      "title": "Abfrage-Umschreibung über DBMS_ADVANCED_REWRITE",
+      "severity": "High",
+      "message": "DBMS_ADVANCED_REWRITE - Abfragen können transparent auf andere Ergebnisse umgeschrieben werden, ohne dass der Aufrufer es bemerkt.",
+      "recommendation": "Sehr genau prüfen: Query-Rewrite-Equivalences können Daten fälschen, ohne Audit-Spur in der Anwendung.",
+      "url": "https://attack.mitre.org/techniques/T1565/",
+      "enabled": true,
+      "detector": {"type": "regex", "target": "code", "pattern": "\\bDBMS_ADVANCED_REWRITE\\s*\\."}
+    },
+    {
+      "id": "T1565",
+      "technique": "Data Manipulation (SQL Patch)",
+      "title": "SQL-Patch über DBMS_SQLDIAG.CREATE_SQL_PATCH",
+      "severity": "High",
+      "message": "DBMS_SQLDIAG.CREATE_SQL_PATCH - kann das Verhalten einzelner SQL-Anweisungen dauerhaft verändern.",
+      "recommendation": "Prüfen, welche Anweisung gepatcht wird und mit welchem Ziel.",
+      "url": "https://attack.mitre.org/techniques/T1565/",
+      "enabled": true,
+      "detector": {"type": "regex", "target": "code", "pattern": "\\bDBMS_SQLDIAG\\s*\\.\\s*CREATE_SQL_PATCH"}
+    },
+    {
+      "id": "T1565",
+      "technique": "Data Manipulation (SQL Plan Management)",
+      "title": "Plan-Manipulation über DBMS_SPM",
+      "severity": "Warning",
+      "message": "DBMS_SPM - SQL Plan Baselines können das Ausführungsverhalten von Abfragen beeinflussen.",
+      "recommendation": "Prüfen, ob die Plan-Verwaltung beabsichtigt ist.",
+      "url": "https://attack.mitre.org/techniques/T1565/",
+      "enabled": true,
+      "detector": {"type": "regex", "target": "code", "pattern": "\\bDBMS_SPM\\s*\\."}
+    },
+    {
+      "id": "T1059",
+      "technique": "Command and Scripting Interpreter (EXTPROC)",
+      "title": "Erstellung einer externen Library (CREATE LIBRARY)",
+      "severity": "High",
+      "message": "CREATE LIBRARY - bindet eine externe Bibliothek (.so/.dll) ein und ermöglicht über EXTPROC die Ausführung von Betriebssystem-Code.",
+      "recommendation": "Sehr genau prüfen: CREATE LIBRARY ist ein klassischer Pfad zur OS-Befehlsausführung.",
+      "url": "https://attack.mitre.org/techniques/T1059/",
+      "enabled": true,
+      "detector": {"type": "regex", "target": "code", "pattern": "\\bCREATE\\s+(?:OR\\s+REPLACE\\s+)?LIBRARY\\b"}
+    }
+  ]
+}

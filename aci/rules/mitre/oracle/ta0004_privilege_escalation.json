@@ -1,0 +1,73 @@
+{
+  "tactic": "TA0004 Privilege Escalation",
+  "tactic_id": "TA0004",
+  "description": "MITRE ATT&CK - Privilege Escalation: Code-Indikatoren für Rechteausweitung. Quelle der Technikzuordnung: Oracle MITRE ATT&CK Defensive Guide v1.7.0.",
+  "rules": [
+    {
+      "id": "T1548",
+      "technique": "Abuse Elevation Control Mechanism (Definer Rights)",
+      "title": "Programmeinheit mit AUTHID DEFINER",
+      "severity": "Warning",
+      "message": "AUTHID DEFINER - die Einheit läuft mit den Rechten des Eigentümers. In Kombination mit dynamischem SQL oder DDL ein klassischer Pfad zur Rechteausweitung.",
+      "recommendation": "Prüfen, ob DEFINER-Rechte nötig sind. Privilegierte DEFINER-Einheiten, die Parameter in dynamisches SQL übernehmen, mit DBMS_ASSERT absichern oder auf AUTHID CURRENT_USER umstellen.",
+      "url": "https://attack.mitre.org/techniques/T1548/",
+      "enabled": true,
+      "detector": {"type": "regex", "target": "code", "pattern": "\\bAUTHID\\s+DEFINER\\b"}
+    },
+    {
+      "id": "T1098",
+      "technique": "Account Manipulation (Hash-Injektion)",
+      "title": "Setzen eines Passwort-Hashes (IDENTIFIED BY VALUES)",
+      "severity": "Critical",
+      "message": "IDENTIFIED BY VALUES - es wird direkt ein Passwort-Hash gesetzt. Wird genutzt, um ein Passwort zu übernehmen und nach Missbrauch unauffällig zurückzusetzen.",
+      "recommendation": "Sehr kritisch: IDENTIFIED BY VALUES gehört nicht in regulären Anwendungscode.",
+      "url": "https://attack.mitre.org/techniques/T1098/",
+      "enabled": true,
+      "detector": {"type": "regex", "target": "code", "pattern": "\\bIDENTIFIED\\s+BY\\s+VALUES\\b"}
+    },
+    {
+      "id": "T1098",
+      "technique": "Account Manipulation (Passwort setzen/ändern)",
+      "title": "Passwort im Code setzen oder ändern (IDENTIFIED BY)",
+      "severity": "High",
+      "message": "IDENTIFIED BY <Passwort> - im Code wird ein Datenbank-Passwort gesetzt oder geändert (CREATE USER / ALTER USER / GRANT ... IDENTIFIED BY). Wird das Passwort konkateniert, ist es ein SQL-Injection-Vektor; Klartext-Passwörter im Code sind zudem ungesicherte Zugangsdaten.",
+      "recommendation": "Passwörter nicht im Anwendungscode setzen. Eingaben vor CREATE/ALTER USER mit DBMS_ASSERT prüfen und keine Passwörter per String-Konkatenation übergeben.",
+      "url": "https://attack.mitre.org/techniques/T1098/",
+      "enabled": true,
+      "detector": {"type": "regex", "target": "code", "pattern": "\\bIDENTIFIED\\s+BY\\s+(?!VALUES\\b)"}
+    },
+    {
+      "id": "T1098",
+      "technique": "Account Manipulation (Berechtigung an PUBLIC)",
+      "title": "GRANT an die Rolle PUBLIC",
+      "severity": "High",
+      "message": "GRANT ... TO PUBLIC vergibt ein Recht an alle Datenbankbenutzer (Rolle PUBLIC) und verletzt das Least-Privilege-Prinzip. Objekt- oder Systemprivilegien an PUBLIC vergrößern die Angriffsfläche erheblich.",
+      "recommendation": "Rechte nicht an PUBLIC, sondern an eng gefasste, anwendungseigene Rollen vergeben. Bestehende PUBLIC-Grants in DBA_TAB_PRIVS/DBA_SYS_PRIVS prüfen und widerrufen.",
+      "url": "https://attack.mitre.org/techniques/T1098/",
+      "enabled": true,
+      "detector": {"type": "regex", "target": "code", "pattern": "\\bGRANT\\b[^;]*?\\bTO\\b[^;]*?\\bPUBLIC\\b"}
+    },
+    {
+      "id": "T1548-DYNAMIC-SQL",
+      "technique": "Abuse Elevation Control Mechanism (Definer Rights + dynamisches SQL)",
+      "title": "AUTHID DEFINER kombiniert mit dynamischem SQL",
+      "severity": "High",
+      "message": "Eine Routine mit AUTHID DEFINER fuehrt dynamisches SQL aus. Eingeschleustes SQL laeuft dann mit den (hoeheren) Rechten des Eigentuemers statt des Aufrufers - ein klassischer Rechteausweitungs-Pfad. Hoeheres Signal als die blosse AUTHID-DEFINER-Deklaration.",
+      "recommendation": "Auf AUTHID CURRENT_USER umstellen, falls Definer-Rechte nicht zwingend noetig sind. Andernfalls jede in dynamisches SQL einfliessende Eingabe mit DBMS_ASSERT absichern und Bindevariablen verwenden.",
+      "url": "https://attack.mitre.org/techniques/T1548/",
+      "enabled": true,
+      "detector": {"type": "builtin", "name": "definer_dynamic_sql"}
+    },
+    {
+      "id": "T1548-SET-ROLE",
+      "technique": "Abuse Elevation Control Mechanism (Rollenwechsel)",
+      "title": "Rollenaktivierung ueber DBMS_SESSION.SET_ROLE",
+      "severity": "High",
+      "message": "DBMS_SESSION.SET_ROLE aktiviert zur Laufzeit Rollen (ggf. passwortgeschuetzte). In Anwendungscode - besonders in DEFINER-Einheiten oder mit konkateniertem Rollennamen - ein moeglicher Rechteausweitungs-/Umgehungspfad.",
+      "recommendation": "Rollenwechsel im Anwendungscode vermeiden bzw. streng kontrollieren; Rollennamen niemals aus ungeprueften Eingaben zusammensetzen.",
+      "url": "https://attack.mitre.org/techniques/T1548/",
+      "enabled": true,
+      "detector": {"type": "regex", "target": "masked", "pattern": "\\bDBMS_SESSION\\s*\\.\\s*SET_ROLE\\b"}
+    }
+  ]
+}

@@ -1,0 +1,281 @@
+{
+  "tactic": "TA0005 Defense Evasion",
+  "tactic_id": "TA0005",
+  "description": "MITRE ATT&CK - Defense Evasion: PostgreSQL code indicators for role switching and configuration changes.",
+  "rules": [
+    {
+      "id": "ACI-PG-SESSION-SET-ROLE",
+      "technique": "Valid Accounts / Role Switching",
+      "title": "PostgreSQL SET ROLE or SET SESSION AUTHORIZATION",
+      "severity": "High",
+      "message": "SET ROLE or SET SESSION AUTHORIZATION changes the effective security context inside a script.",
+      "recommendation": "Avoid role switching in application deployment scripts unless explicitly approved and audited.",
+      "url": "https://attack.mitre.org/tactics/TA0005/",
+      "enabled": true,
+      "detector": {
+        "type": "builtin",
+        "name": "regex_static_and_dynamic",
+        "params": {
+          "pattern": "\\bSET\\s+(?:ROLE|SESSION\\s+AUTHORIZATION)\\b"
+        }
+      }
+    },
+    {
+      "id": "ACI-PG-CONFIG-CRITICAL-PRELOAD-OR-ARCHIVE",
+      "technique": "Impair Defenses / Server Configuration Manipulation",
+      "title": "Critical PostgreSQL ALTER SYSTEM parameter",
+      "severity": "Critical",
+      "message": "ALTER SYSTEM changes a critical preload/archive parameter that can enable code loading or command execution.",
+      "recommendation": "Manage shared_preload_libraries, session/local_preload_libraries and archive_command only through controlled DBA/ops processes.",
+      "url": "https://attack.mitre.org/tactics/TA0005/",
+      "enabled": true,
+      "detector": {
+        "type": "builtin",
+        "name": "regex_static_and_dynamic",
+        "params": {
+          "pattern": "\\bALTER\\s+SYSTEM\\s+SET\\s+(?:shared_preload_libraries|session_preload_libraries|local_preload_libraries|archive_command)\\b"
+        }
+      }
+    },
+    {
+      "id": "ACI-PG-RLS-DISABLE",
+      "technique": "Impair Defenses (Row Level Security)",
+      "title": "Abschalten von Row Level Security",
+      "severity": "Critical",
+      "message": "ALTER TABLE ... DISABLE ROW LEVEL SECURITY bzw. NO FORCE ROW LEVEL SECURITY schaltet eine zeilenbasierte Zugriffskontrolle ab.",
+      "recommendation": "Sehr kritisch: RLS nicht aus Anwendungscode abschalten. Änderungen an RLS gehören in einen Security-Review.",
+      "url": "https://attack.mitre.org/tactics/TA0005/",
+      "enabled": true,
+      "detector": {
+        "type": "builtin",
+        "name": "regex_static_and_dynamic",
+        "params": {
+          "pattern": "\\bALTER\\s+TABLE\\b[\\s\\S]*?\\b(?:DISABLE\\s+ROW\\s+LEVEL\\s+SECURITY|NO\\s+FORCE\\s+ROW\\s+LEVEL\\s+SECURITY)\\b"
+        }
+      }
+    },
+    {
+      "id": "ACI-PG-RLS-POLICY-CHANGE",
+      "technique": "Impair Defenses (RLS-Policy)",
+      "title": "Ändern von Row-Level-Security-Policies",
+      "severity": "High",
+      "message": "CREATE/ALTER/DROP POLICY verändert eine Row-Level-Security-Policy und damit die zeilenbasierte Zugriffskontrolle.",
+      "recommendation": "RLS-Policy-Änderungen gehören in einen Security-Review, nicht in reguläre Deployment-Skripte.",
+      "url": "https://attack.mitre.org/tactics/TA0005/",
+      "enabled": true,
+      "detector": {
+        "type": "builtin",
+        "name": "regex_static_and_dynamic",
+        "params": {
+          "pattern": "\\b(?:CREATE|ALTER|DROP)\\s+POLICY\\b"
+        }
+      }
+    },
+    {
+      "id": "ACI-PG-DISABLE-TRIGGER",
+      "technique": "Impair Defenses (Trigger-Deaktivierung)",
+      "title": "Deaktivieren von Triggern",
+      "severity": "High",
+      "message": "ALTER TABLE ... DISABLE TRIGGER bzw. ALTER EVENT TRIGGER ... DISABLE schaltet einen Trigger ab - so können Audit- oder Kontroll-Trigger umgangen werden.",
+      "recommendation": "Prüfen, welcher Trigger deaktiviert wird; das Abschalten von Audit-/Kontroll-Triggern ist ein Verschleierungsschritt.",
+      "url": "https://attack.mitre.org/tactics/TA0005/",
+      "enabled": true,
+      "detector": {
+        "type": "builtin",
+        "name": "regex_static_and_dynamic",
+        "params": {
+          "pattern": "\\bALTER\\s+TABLE\\b[\\s\\S]*?\\bDISABLE\\s+TRIGGER\\b|\\bALTER\\s+EVENT\\s+TRIGGER\\b[\\s\\S]*?\\bDISABLE\\b"
+        }
+      }
+    },
+    {
+      "id": "ACI-PG-ALTER-SYSTEM-RESET",
+      "technique": "Impair Defenses (Konfiguration zurücksetzen)",
+      "title": "PostgreSQL ALTER SYSTEM RESET",
+      "severity": "High",
+      "message": "ALTER SYSTEM RESET bzw. RESET ALL setzt persistente Serverparameter zurück - dabei können Sicherheits-/Logging-Einstellungen verloren gehen.",
+      "recommendation": "Serverkonfiguration über kontrollierte DBA-/Betriebsprozesse verwalten; das Zurücksetzen sicherheitsrelevanter Parameter prüfen.",
+      "url": "https://attack.mitre.org/tactics/TA0005/",
+      "enabled": true,
+      "detector": {
+        "type": "regex",
+        "target": "masked",
+        "pattern": "\\bALTER\\s+SYSTEM\\s+RESET\\b"
+      }
+    },
+    {
+      "id": "ACI-PG-SESSION-REPLICATION-ROLE",
+      "technique": "Impair Defenses (session_replication_role)",
+      "title": "Setzen von session_replication_role",
+      "severity": "High",
+      "message": "SET session_replication_role = replica/local deaktiviert die Ausfuehrung normaler Trigger (inkl. Fremdschluessel- und Audit-Trigger) fuer die Sitzung - ein Verschleierungs-/Kontrollumgehungsschritt.",
+      "recommendation": "session_replication_role nicht aus Anwendungscode setzen; das Abschalten von Triggern/Constraints gehoert in einen kontrollierten, geprueften Ablauf.",
+      "url": "https://attack.mitre.org/tactics/TA0005/",
+      "cwe": "CWE-693",
+      "enabled": true,
+      "detector": {
+        "type": "builtin",
+        "name": "regex_static_and_dynamic",
+        "params": {
+          "pattern": "\\bSET\\s+session_replication_role\\b"
+        }
+      }
+    },
+    {
+      "id": "ACI-PG-SET-ROW-SECURITY-OFF",
+      "technique": "Impair Defenses (row_security off)",
+      "title": "Abschalten von row_security fuer die Sitzung",
+      "severity": "High",
+      "message": "SET row_security = off/false schaltet die Durchsetzung von Row-Level-Security-Policies fuer die Sitzung ab und umgeht so die zeilenbasierte Zugriffskontrolle.",
+      "recommendation": "row_security nicht aus Anwendungscode abschalten; RLS-Umgehungen gehoeren in einen Security-Review.",
+      "url": "https://attack.mitre.org/tactics/TA0005/",
+      "cwe": "CWE-693",
+      "enabled": true,
+      "detector": {
+        "type": "builtin",
+        "name": "regex_static_and_dynamic",
+        "params": {
+          "pattern": "\\bSET\\s+row_security\\s*(?:=|\\bTO\\b)\\s*(?:off|false)\\b"
+        }
+      }
+    },
+    {
+      "id": "ACI-EPAS-AUDIT-DISABLE-ALTER-SYSTEM",
+      "technique": "Impair Defenses / Disable or Modify Tools (EPAS Audit)",
+      "title": "EPAS-Auditierung ueber ALTER SYSTEM abgeschaltet",
+      "severity": "Critical",
+      "message": "EPAS auditing is disabled through ALTER SYSTEM.",
+      "recommendation": "Do not disable EPAS auditing in application deployment scripts. Require DBA/security approval and ensure independent audit evidence exists.",
+      "url": "https://attack.mitre.org/techniques/T1562/",
+      "cwe": "CWE-778",
+      "category": "audit",
+      "enabled": true,
+      "detector": {
+        "type": "regex",
+        "target": "code",
+        "pattern": "\\bALTER\\s+SYSTEM\\s+SET\\s+edb_audit(?:_statement)?\\b\\s*(?:=|TO)\\s*'?\\s*(?:none|off)\\b"
+      }
+    },
+    {
+      "id": "ACI-EPAS-AUDIT-WEAKEN-ALTER-SYSTEM",
+      "technique": "Impair Defenses / Reduce Audit Scope (EPAS Audit)",
+      "title": "EPAS-Audit-Umfang ueber ALTER SYSTEM geschwaecht",
+      "severity": "High",
+      "message": "EPAS audit settings are weakened through ALTER SYSTEM.",
+      "recommendation": "Audit scope changes should be reviewed outside the application CI/CD path and correlated with independent logs.",
+      "url": "https://attack.mitre.org/techniques/T1562/",
+      "cwe": "CWE-778",
+      "category": "audit",
+      "enabled": true,
+      "detector": {
+        "type": "regex",
+        "target": "code",
+        "pattern": "\\bALTER\\s+SYSTEM\\s+SET\\s+edb_audit_statement\\b\\s*(?:=|TO)\\s*'?\\s*(?:ddl|mod)\\b"
+      }
+    },
+    {
+      "id": "ACI-PG-AUDIT-LOGGING-DISABLE-ALTER-SYSTEM",
+      "technique": "Impair Defenses / Disable or Modify Tools (Logging)",
+      "title": "PostgreSQL-Logging ueber ALTER SYSTEM abgeschaltet",
+      "severity": "Critical",
+      "message": "PostgreSQL audit/logging is disabled through ALTER SYSTEM.",
+      "recommendation": "Do not disable logging parameters (log_statement, logging_collector, log_destination, log_min_duration_statement, log_connections/disconnections) in deployment scripts. Require DBA/security approval.",
+      "url": "https://attack.mitre.org/techniques/T1562/",
+      "cwe": "CWE-778",
+      "category": "audit",
+      "enabled": true,
+      "detector": {
+        "type": "regex",
+        "target": "code",
+        "pattern": "\\bALTER\\s+SYSTEM\\s+SET\\s+(?:log_statement\\s*(?:=|TO)\\s*'?\\s*none\\b|logging_collector\\s*(?:=|TO)\\s*'?\\s*off\\b|log_destination\\s*(?:=|TO)\\s*''|log_min_duration_statement\\s*(?:=|TO)\\s*-1\\b|log_connections\\s*(?:=|TO)\\s*'?\\s*off\\b|log_disconnections\\s*(?:=|TO)\\s*'?\\s*off\\b)"
+      }
+    },
+    {
+      "id": "ACI-PG-AUDIT-LOGGING-WEAKEN-SET",
+      "technique": "Impair Defenses / Session-level Logging Change",
+      "title": "PostgreSQL-Logging ueber SET / set_config geschwaecht",
+      "severity": "High",
+      "message": "PostgreSQL logging is disabled at session level via SET / set_config.",
+      "recommendation": "Avoid disabling log_statement at session level in deployment scripts; such statements weaken audit evidence and should be reviewed.",
+      "url": "https://attack.mitre.org/techniques/T1562/",
+      "cwe": "CWE-778",
+      "category": "audit",
+      "enabled": true,
+      "detector": {
+        "type": "regex",
+        "target": "code",
+        "pattern": "\\bSET\\s+log_statement\\s*(?:=|TO)\\s*'?\\s*none\\b|\\bset_config\\s*\\(\\s*'log_statement'\\s*,\\s*'none'"
+      }
+    },
+    {
+      "id": "ACI-EPAS-AUDIT-CONFIG-RELOAD",
+      "technique": "Impair Defenses / Configuration Reload",
+      "title": "pg_reload_conf() (Konfigurations-Reload)",
+      "severity": "High",
+      "message": "Server configuration is reloaded via pg_reload_conf().",
+      "recommendation": "Treat pg_reload_conf() in deployment scripts as a configuration-changing operation and review which parameters take effect.",
+      "url": "https://attack.mitre.org/techniques/T1562/",
+      "cwe": "CWE-693",
+      "category": "configuration",
+      "enabled": true,
+      "detector": {
+        "type": "builtin",
+        "name": "pg_reload_conf_plain"
+      }
+    },
+    {
+      "id": "ACI-EPAS-AUDIT-RELOAD-AFTER-AUDIT-CHANGE",
+      "technique": "Impair Defenses / Reload after audit-sensitive change",
+      "title": "pg_reload_conf() nach audit-/sicherheitsrelevanter Aenderung",
+      "severity": "Critical",
+      "message": "Server configuration is reloaded after audit/security-sensitive configuration changes.",
+      "recommendation": "Treat pg_reload_conf() after audit/logging/security parameter changes as a high-risk operation. Require independent approval and audit correlation.",
+      "url": "https://attack.mitre.org/techniques/T1562/",
+      "cwe": "CWE-778",
+      "category": "audit",
+      "enabled": true,
+      "detector": {
+        "type": "builtin",
+        "name": "pg_reload_conf_after_sensitive"
+      }
+    },
+    {
+      "id": "ACI-EPAS-AUDIT-CONFIG-FILE-TAMPERING",
+      "technique": "Indicator Removal / Modify Configuration File",
+      "title": "Manipulation von postgresql.auto.conf aus einem Skript",
+      "severity": "Critical",
+      "message": "postgresql.auto.conf is modified from a deployment script or psql shell escape.",
+      "recommendation": "Do not edit postgresql.auto.conf manually from deployment scripts. Use controlled DBA procedures and correlate file timestamps with ALTER SYSTEM audit events.",
+      "url": "https://attack.mitre.org/techniques/T1070/",
+      "cwe": "CWE-284",
+      "category": "defense-evasion",
+      "enabled": true,
+      "detector": {
+        "type": "builtin",
+        "name": "config_file_tampering",
+        "params": {
+          "files": ["postgresql.auto.conf"]
+        }
+      }
+    },
+    {
+      "id": "ACI-PG-CONFIG-FILE-TAMPERING",
+      "technique": "Indicator Removal / Modify Configuration File",
+      "title": "Manipulation einer PostgreSQL-Konfigurationsdatei aus einem Skript",
+      "severity": "High",
+      "message": "A PostgreSQL configuration file (postgresql.conf / pg_hba.conf / pg_ident.conf) is modified from a deployment script or psql shell escape.",
+      "recommendation": "Do not edit PostgreSQL configuration files from deployment scripts. Use controlled DBA procedures and file integrity monitoring.",
+      "url": "https://attack.mitre.org/techniques/T1070/",
+      "cwe": "CWE-284",
+      "category": "defense-evasion",
+      "enabled": true,
+      "detector": {
+        "type": "builtin",
+        "name": "config_file_tampering",
+        "params": {
+          "files": ["postgresql.conf", "pg_hba.conf", "pg_ident.conf"]
+        }
+      }
+    }
+  ]
+}

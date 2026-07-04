@@ -1,0 +1,413 @@
+{
+  "dialect": "oracle",
+  "version": "1.0",
+  "description": "ACI-Regelsatz für Oracle PL/SQL. Alle Wortlisten, Pakete, DDL-Schlüsselworte und Muster können hier ohne Code-Änderung gepflegt werden.",
+  "file_extensions": [
+    ".sql", ".pks", ".pkb", ".prc", ".fnc", ".trg",
+    ".pls", ".plb", ".bdy", ".tps", ".pkg", ".pck"
+  ],
+  "checks": {
+    "naming_conventions": {
+      "id": "ACI-NAME",
+      "name": "Namenskonventionen",
+      "enabled": true,
+      "level": "Warning",
+      "max_identifier_length": 128,
+      "flag_quoted_reserved": true,
+      "reserved_words": [
+        "ACCESS", "ADD", "ALL", "ALTER", "AND", "ANY", "AS", "ASC", "AUDIT",
+        "BETWEEN", "BY", "CHAR", "CHECK", "CLUSTER", "COLUMN", "COLUMN_VALUE",
+        "COMMENT", "COMPRESS", "CONNECT", "CREATE", "CURRENT", "DATE",
+        "DECIMAL", "DEFAULT", "DELETE", "DESC", "DISTINCT", "DROP", "ELSE",
+        "EXCLUSIVE", "EXISTS", "FILE", "FLOAT", "FOR", "FROM", "GRANT",
+        "GROUP", "HAVING", "IDENTIFIED", "IMMEDIATE", "IN", "INCREMENT",
+        "INDEX", "INITIAL", "INSERT", "INTEGER", "INTERSECT", "INTO", "IS",
+        "LEVEL", "LIKE", "LOCK", "LONG", "MAXEXTENTS", "MINUS", "MLSLABEL",
+        "MODE", "MODIFY", "NESTED_TABLE_ID", "NOAUDIT", "NOCOMPRESS", "NOT",
+        "NOWAIT", "NULL", "NUMBER", "OF", "OFFLINE", "ON", "ONLINE", "OPTION",
+        "OR", "ORDER", "PCTFREE", "PRIOR", "PUBLIC", "RAW", "RENAME",
+        "RESOURCE", "REVOKE", "ROW", "ROWID", "ROWNUM", "ROWS", "SELECT",
+        "SESSION", "SET", "SHARE", "SIZE", "SMALLINT", "START", "SUCCESSFUL",
+        "SYNONYM", "SYSDATE", "TABLE", "THEN", "TO", "TRIGGER", "UID",
+        "UNION", "UNIQUE", "UPDATE", "USER", "VALIDATE", "VALUES", "VARCHAR",
+        "VARCHAR2", "VIEW", "WHENEVER", "WHERE", "WITH"
+      ]
+    },
+    "undesired_packages": {
+      "id": "ACI-PKG",
+      "name": "Unerwünschte Packages",
+      "enabled": true,
+      "items": [
+        {
+          "name": "dbms_crypto",
+          "level": "High",
+          "message": "Verwendung des kryptografischen Pakets DBMS_CRYPTO.",
+          "recommendation": "Prüfen, ob Verschlüsselung an dieser Stelle vorgesehen ist. Schlüsselverwaltung, Algorithmus und Betriebsmodus kontrollieren.",
+          "ignore_members": [
+            "des_cbc_pkcs5", "des3_cbc_pkcs5", "aes_cbc_pkcs5",
+            "encrypt_des", "encrypt_3des", "encrypt_aes", "encrypt_aes128", "encrypt_aes192", "encrypt_aes256",
+            "chain_cbc", "chain_ecb", "chain_cfb", "chain_ofb",
+            "pad_pkcs5", "pad_none", "pad_zero", "pad_orcl",
+            "hash_md5", "hash_md4", "hash_sh1", "hash_sh224", "hash_sh256", "hash_sh384", "hash_sh512",
+            "hmac_md5", "hmac_sh1", "hmac_sh256",
+            "sign_pkcs1_5", "sign_x931",
+            "key_length_56", "key_length_112", "key_length_128", "key_length_168", "key_length_192", "key_length_256"
+          ]
+        },
+        {
+          "name": "dbms_obfuscation_toolkit",
+          "level": "Critical",
+          "message": "Verwendung des veralteten Pakets DBMS_OBFUSCATION_TOOLKIT (schwache, überholte Verschlüsselung).",
+          "recommendation": "Durch DBMS_CRYPTO mit einem starken Algorithmus ersetzen."
+        },
+        {
+          "name": "utl_file",
+          "level": "High",
+          "message": "Dateisystemzugriff über UTL_FILE.",
+          "recommendation": "Directory-Objekt und Pfade prüfen; Dateizugriff aus der Datenbank minimieren.",
+          "ignore_members": ["file_type", "fclose", "fclose_all", "fgetattr", "fflush", "write_error", "read_error", "access_denied", "is_open", "invalid_operation", "invalid_mode", "invalid_maxlinesize", "internal_error", "invalid_path", "invalid_filehandle"]
+        },
+        {
+          "name": "dbms_advisor.create_file",
+          "level": "High",
+          "message": "Dateierzeugung über DBMS_ADVISOR.CREATE_FILE - schreibt einen CLOB/Puffer in eine Datei im Dateisystem des Datenbankservers.",
+          "recommendation": "DBMS_ADVISOR.CREATE_FILE kann zum Schreiben beliebiger Dateien (z.B. Skripte) in ein DIRECTORY-Objekt missbraucht werden. Directory-Objekt, Zielpfad und Inhalt prüfen; Ausführungsrechte einschränken."
+        },
+        {
+          "name": "bfilename",
+          "level": "High",
+          "message": "Dateisystemzugriff über BFILENAME - öffnet eine BFILE-Referenz auf eine Datei im Dateisystem des Datenbankservers (Pfad-Traversal / Lesen beliebiger Dateien möglich).",
+          "recommendation": "Directory-Objektnamen mit DBMS_ASSERT.SIMPLE_SQL_NAME prüfen und gegen eine Whitelist erlaubter Directory-Objekte (sys.all_directories) validieren; Dateinamen auf Pfadtrenner kontrollieren."
+        },
+        {
+          "name": "dbms_assert.noop",
+          "level": "High",
+          "message": "DBMS_ASSERT.NOOP führt KEINE Prüfung durch ('No Operation') - der Wert wird unverändert zurückgegeben. In dynamischem SQL deaktiviert das die Eingabevalidierung explizit.",
+          "recommendation": "DBMS_ASSERT.NOOP durch eine echte Prüfung ersetzen (SIMPLE_SQL_NAME, ENQUOTE_NAME, ENQUOTE_LITERAL) oder sicherstellen, dass der Wert ausschließlich aus einer vertrauenswürdigen, statischen Quelle stammt.",
+          "track_taint": true
+        },
+        {
+          "name": "utl_http",
+          "level": "High",
+          "message": "Ausgehende HTTP-Verbindung über UTL_HTTP (mögliche Datenexfiltration / SSRF).",
+          "recommendation": "Zieladressen und Notwendigkeit der Netzwerkverbindung prüfen; ACLs einschränken.",
+          "ignore_members": ["req", "resp", "cookie", "cookie_table", "connection", "html_pieces", "set_transfer_timeout", "set_header", "end_of_body", "end_response", "too_many_requests", "request_failed", "read_raw", "get_response", "get_header", "get_header_by_name", "get_header_count"]
+        },
+        {
+          "name": "utl_tcp",
+          "level": "High",
+          "message": "Rohe TCP-Verbindung über UTL_TCP.",
+          "recommendation": "Netzwerkzugriff aus der Datenbank vermeiden bzw. per ACL einschränken.",
+          "ignore_members": ["network_error", "close_connection", "crlf"]
+        },
+        {
+          "name": "utl_smtp",
+          "level": "High",
+          "message": "E-Mail-Versand über UTL_SMTP (mögliche Datenexfiltration).",
+          "recommendation": "Empfänger und Inhalt prüfen; Mailversand aus der Datenbank einschränken."
+        },
+        {
+          "name": "utl_inaddr",
+          "level": "Warning",
+          "message": "DNS-Auflösung über UTL_INADDR (klassischer Kanal zur Exfiltration bei SQL-Injection).",
+          "recommendation": "Verwendung prüfen; UTL_INADDR wird häufig in Out-of-Band-Angriffen genutzt."
+        },
+        {
+          "name": "dbms_sql",
+          "level": "Warning",
+          "message": "Dynamisches SQL über DBMS_SQL.",
+          "recommendation": "Prüfen, ob das SQL mit Bindevariablen aufgebaut wird (DBMS_SQL.BIND_VARIABLE).",
+          "ignore_members": ["number_table", "varchar2_table", "varchar2a", "date_table", "blob_table", "clob_table", "bfile_table", "binary_float_table", "binary_double_table", "urowid_table", "time_table", "timestamp_table", "desc_tab", "desc_tab2", "desc_tab3", "desc_tab4", "desc_rec", "desc_rec2", "desc_rec3", "desc_rec4", "native", "describe_columns2", "define_column", "close_cursor", "to_cursor_number", "fetch_rows", "column_value"]
+        },
+        {
+          "name": "dbms_java",
+          "level": "Critical",
+          "message": "Java-Ausführung in der Datenbank über DBMS_JAVA (mögliche Betriebssystem-Befehlsausführung).",
+          "recommendation": "Verwendung streng prüfen; Java in der Datenbank ermöglicht Zugriff auf das Betriebssystem."
+        },
+        {
+          "name": "dbms_scheduler",
+          "level": "High",
+          "message": "Job-/Programmausführung über DBMS_SCHEDULER (kann externe Betriebssystembefehle starten).",
+          "recommendation": "Job-Typ prüfen; EXTERNAL-Jobs können Betriebssystembefehle ausführen.",
+          "ignore_members": ["generate_job_name"]
+        },
+        {
+          "name": "dbms_job",
+          "level": "Warning",
+          "message": "Verzögerte Codeausführung über DBMS_JOB.",
+          "recommendation": "Prüfen, ob hier ggf. eine versteckte/verzögerte Ausführung eingerichtet wird."
+        },
+        {
+          "name": "dbms_sys_sql",
+          "level": "Critical",
+          "message": "Undokumentiertes Paket DBMS_SYS_SQL (Ausführung mit fremden Rechten - Privilege Escalation).",
+          "recommendation": "DBMS_SYS_SQL nicht verwenden; klassischer Vektor für Rechteausweitung."
+        },
+        {
+          "name": "dbms_backup_restore",
+          "level": "Critical",
+          "message": "Undokumentiertes Paket DBMS_BACKUP_RESTORE (Dateisystemzugriff, in Exploits verwendet).",
+          "recommendation": "Verwendung prüfen; DBMS_BACKUP_RESTORE erlaubt Zugriff auf das Dateisystem."
+        },
+        {
+          "name": "dbms_jvm_exp_perms",
+          "level": "Critical",
+          "message": "DBMS_JVM_EXP_PERMS - Manipulation von Java-Berechtigungen (Privilege Escalation).",
+          "recommendation": "Nicht verwenden; bekannter Vektor zur Rechteausweitung."
+        },
+        {
+          "name": "dbms_ldap",
+          "level": "High",
+          "message": "LDAP-Zugriff über DBMS_LDAP (mögliche Datenexfiltration / SSRF).",
+          "recommendation": "Zielverzeichnis und Notwendigkeit prüfen.",
+          "ignore_members": ["string_collection", "message", "session", "ber_element", "next_entry", "use_exception", "port", "ssl_port", "scope_subtree", "scope_base", "scope_onelevel"]
+        },
+        {
+          "name": "httpuritype",
+          "level": "High",
+          "message": "Netzwerkzugriff über HTTPURITYPE (mögliche SSRF / Datenexfiltration).",
+          "recommendation": "Zieladressen prüfen; HTTPURITYPE umgeht teils UTL_HTTP-ACLs."
+        },
+        {
+          "name": "dbms_pipe",
+          "level": "Warning",
+          "message": "Sitzungsübergreifende Kommunikation über DBMS_PIPE.",
+          "recommendation": "Verwendung prüfen.",
+          "ignore_members": ["reset_buffer", "pack_message", "unpack_message", "purge"]
+        },
+        {
+          "name": "dbms_lob",
+          "level": "Warning",
+          "message": "LOB-/Dateizugriff über DBMS_LOB (BFILE-Zugriff möglich).",
+          "recommendation": "Bei BFILE-Nutzung das Directory-Objekt prüfen.",
+          "ignore_members": ["instr", "substr", "default_csid", "default_lang_ctx", "fileclose", "filecloseall", "freetemporary", "createtemporary", "istemporary", "getlength", "getchunksize", "append", "copy", "writeappend", "session", "call", "fileexists", "isopen", "close", "operation_failed", "converttoclob", "lobmaxsize", "trim"]
+        },
+        {
+          "name": "owa_util",
+          "level": "Warning",
+          "message": "Verwendung von OWA_UTIL.",
+          "recommendation": "OWA_UTIL.CELLSPRINT u.ä. können für Informationspreisgabe missbraucht werden.",
+          "ignore_members": ["http_header_close", "mime_header"]
+        },
+        {
+          "name": "dbms_datapump",
+          "level": "High",
+          "message": "Daten-/Metadaten-Bewegung über DBMS_DATAPUMP (Data Pump) - möglicher Massendaten-Export.",
+          "recommendation": "Prüfen, welche Daten/Objekte wohin exportiert werden; Data Pump gehört nicht in regulären Anwendungscode."
+        },
+        {
+          "name": "dbms_credential",
+          "level": "Critical",
+          "message": "Verwaltung persistenter Zugangsdaten über DBMS_CREDENTIAL (OS-/Cloud-/Scheduler-Credentials).",
+          "recommendation": "Credential-Verwaltung über kontrollierte DBA-/Security-Prozesse, nicht im Anwendungscode."
+        },
+        {
+          "name": "dbms_rls",
+          "level": "High",
+          "message": "Row-Level-Security-Policies über DBMS_RLS - die Zugriffskontrolle wird verändert.",
+          "recommendation": "Anlegen/Ändern/Entfernen von RLS-Policies streng prüfen; gehört in einen Security-Review."
+        },
+        {
+          "name": "dbms_redact",
+          "level": "High",
+          "message": "Daten-Redaction-Policies über DBMS_REDACT - die Maskierung sensibler Daten wird verändert.",
+          "recommendation": "Änderungen an Redaction-Policies streng prüfen."
+        },
+        {
+          "name": "dbms_fga",
+          "level": "High",
+          "message": "Fine-Grained-Auditing über DBMS_FGA - die Audit-Konfiguration wird verändert.",
+          "recommendation": "Anlegen/Entfernen von FGA-Policies prüfen; das Abschalten von Auditing ist ein Verschleierungsschritt."
+        }
+      ]
+    },
+    "obfuscation": {
+      "id": "ACI-OBF",
+      "name": "Verschlüsselter / Obfuskierter Code",
+      "enabled": true,
+      "detect_wrapped": true,
+      "wrapped_level": "High",
+      "detect_chr_chain": true,
+      "chr_chain_min": 4,
+      "chr_chain_level": "High",
+      "patterns": [
+        {
+          "id": "base64-blob",
+          "regex": "(?!([A-Za-z0-9+/])\\1{59,})[A-Za-z0-9+/]{60,}={0,2}",
+          "target": "string",
+          "level": "Warning",
+          "skip_in_insert": true,
+          "message": "Langer Base64-ähnlicher Block in einem String-Literal - möglicherweise kodierter/verschleierter Inhalt.",
+          "recommendation": "Inhalt dekodieren und prüfen. Kodierte Blöcke werden zur Verschleierung von Code oder Daten genutzt."
+        },
+        {
+          "id": "hex-blob",
+          "regex": "(?:0x)?(?!([0-9A-Fa-f])\\1{99,})[0-9A-Fa-f]{100,}",
+          "target": "string",
+          "level": "Warning",
+          "skip_in_insert": true,
+          "message": "Langer Hex-Block in einem String-Literal - möglicherweise kodierter/verschleierter Inhalt.",
+          "recommendation": "Inhalt dekodieren und prüfen."
+        },
+        {
+          "id": "base64-decode-call",
+          "regex": "\\b(utl_encode\\s*\\.\\s*base64_decode|utl_encode\\s*\\.\\s*base64_encode)\\b",
+          "target": "code",
+          "level": "Warning",
+          "message": "Aufruf einer Base64-Dekodier-/Kodierfunktion (UTL_ENCODE) - häufig zur Code-/Datenverschleierung.",
+          "recommendation": "Prüfen, was de-/kodiert wird; Base64 wird oft genutzt, um schädliche Nutzlasten zu verbergen."
+        },
+        {
+          "id": "dynamic-decode-exec",
+          "regex": "\\bexecute\\s+immediate\\b[^;]*\\b(utl_encode|dbms_crypto|convert)\\b",
+          "target": "code",
+          "level": "Critical",
+          "message": "Dynamisches SQL wird aus de-/kodiertem oder entschlüsseltem Inhalt ausgeführt.",
+          "recommendation": "Sehr kritisch: zur Laufzeit dekodierter Code, der direkt ausgeführt wird. Herkunft und Zweck zwingend klären."
+        }
+      ]
+    },
+    "sql_injection": {
+      "id": "ACI-SQLI",
+      "name": "SQL Injection",
+      "enabled": true,
+      "tainted_level": "Critical",
+      "plsql_injection_level": "Critical",
+      "literal_only_level": "Warning",
+      "sanitized_level": "Warning",
+      "unknown_dynamic_level": "High",
+      "interprocedural": true,
+      "interprocedural_level": "Critical",
+      "sanitizers": [
+        "dbms_assert.", "sys.dbms_assert.", "dbms_assert .", "sys.dbms_assert ."
+      ],
+      "apex_taint_patterns": [
+        ":P\\d+_\\w+", ":APP_\\w+", ":G_\\w+",
+        "\\bN?V\\s*\\(\\s*'", "\\bAPEX_UTIL\\s*\\.\\s*GET_SESSION_STATE\\s*\\("
+      ]
+    },
+    "ddl_in_code": {
+      "id": "ACI-DDL",
+      "name": "DDL im Code",
+      "enabled": true,
+      "detect_in_dynamic_sql": true,
+      "detect_standalone": true,
+      "skip_object_definitions": true,
+      "harmless_object_privileges": ["SELECT", "READ", "INSERT", "UPDATE", "DELETE"],
+      "keywords": [
+        {
+          "keyword": "GRANT",
+          "level": "Critical",
+          "message": "Vergabe von Rechten (GRANT).",
+          "recommendation": "GRANT im Code kann zu Rechteausweitung führen. Prüfen, welche Rechte an wen vergeben werden."
+        },
+        {
+          "keyword": "REVOKE",
+          "level": "High",
+          "message": "Entzug von Rechten (REVOKE).",
+          "recommendation": "Prüfen, ob der Rechteentzug beabsichtigt ist."
+        },
+        {
+          "keyword": "CREATE",
+          "level": "High",
+          "message": "Erzeugung eines Datenbankobjekts (CREATE).",
+          "recommendation": "Prüfen, ob das Objekt zur Laufzeit erzeugt werden soll (z.B. CREATE USER, CREATE DIRECTORY, CREATE DATABASE LINK)."
+        },
+        {
+          "keyword": "ALTER",
+          "level": "High",
+          "message": "Änderung eines Datenbankobjekts oder der Sitzung/System (ALTER).",
+          "recommendation": "Prüfen, ob die Änderung beabsichtigt ist (ALTER USER/SYSTEM/SESSION besonders sensibel)."
+        },
+        {
+          "keyword": "DROP",
+          "level": "High",
+          "message": "Löschen eines Datenbankobjekts (DROP).",
+          "recommendation": "Prüfen, ob das Löschen beabsichtigt ist."
+        },
+        {
+          "keyword": "TRUNCATE",
+          "level": "High",
+          "message": "Leeren einer Tabelle (TRUNCATE).",
+          "recommendation": "TRUNCATE ist nicht zurückrollbar. Prüfen, ob beabsichtigt."
+        },
+        {
+          "keyword": "RENAME",
+          "level": "Warning",
+          "message": "Umbenennung eines Objekts (RENAME).",
+          "recommendation": "Prüfen, ob die Umbenennung beabsichtigt ist."
+        }
+      ],
+      "allowed_statements": [
+        "COMMIT",
+        "CREATE TABLE",
+        "CREATE VIEW",
+        "CREATE SEQUENCE",
+        "CREATE INDEX",
+        "CREATE PROCEDURE",
+        "CREATE PACKAGE",
+        "CREATE PACKAGE BODY",
+        "ALTER TABLE",
+        "ALTER VIEW",
+        "ALTER SEQUENCE",
+        "ALTER INDEX",
+        "ALTER PROCEDURE",
+        "ALTER PACKAGE",
+        "DROP TABLE",
+        "DROP VIEW",
+        "DROP SEQUENCE",
+        "DROP INDEX",
+        "DROP PROCEDURE",
+        "DROP PACKAGE"
+      ],
+      "external_table": {
+        "level": "High",
+        "message": "Externe Tabelle (CREATE TABLE ... ORGANIZATION EXTERNAL) - liest Daten aus einer Datei im Dateisystem des Datenbankservers.",
+        "recommendation": "Externe Tabellen greifen über ein DIRECTORY-Objekt auf das Dateisystem des Datenbankservers zu. Quelle, DIRECTORY-Rechte und Inhalt prüfen - auch wenn CREATE TABLE sonst in CI/CD erlaubt ist."
+      },
+      "critical_statements": [
+        {
+          "statement": "ALTER USER",
+          "level": "Critical",
+          "message": "ALTER USER ändert einen Datenbankbenutzer (Passwort, Quota, Profil, Kontosperre, Default-Rolle/-Tablespace). Benutzerverwaltung gehört nicht in normale CI/CD-Deployment-Skripte.",
+          "recommendation": "Oracle-Benutzerverwaltung über einen kontrollierten DBA-/IAM-/Security-Prozess steuern, nicht über normale CI/CD-Deployments."
+        }
+      ],
+      "privilege_grant": {
+        "level": "Critical",
+        "system_message": "GRANT/REVOKE eines Oracle-Systemprivilegs. Systemprivilegien dürfen nicht über normale CI/CD-Deployment-Skripte vergeben oder entzogen werden.",
+        "role_message": "GRANT/REVOKE einer Oracle-Standardrolle. Standardrollen dürfen nicht über normale CI/CD-Deployment-Skripte vergeben oder entzogen werden.",
+        "recommendation": "Oracle-Benutzerverwaltung, Systemprivilegien und Standardrollen über einen kontrollierten DBA-/IAM-/Security-Prozess steuern, nicht über normale CI/CD-Deployments."
+      },
+      "system_privileges": [
+        "ALTER USER", "CREATE USER", "DROP USER", "CREATE SESSION",
+        "CREATE PROCEDURE", "CREATE ANY PROCEDURE", "ALTER ANY PROCEDURE",
+        "DROP ANY PROCEDURE", "CREATE ROLE", "DROP ANY ROLE",
+        "GRANT ANY ROLE", "GRANT ANY PRIVILEGE", "GRANT ANY OBJECT PRIVILEGE",
+        "CREATE TABLE", "CREATE ANY TABLE", "ALTER ANY TABLE",
+        "DROP ANY TABLE", "CREATE VIEW", "CREATE ANY VIEW",
+        "CREATE SEQUENCE", "CREATE ANY SEQUENCE", "CREATE TRIGGER",
+        "CREATE ANY TRIGGER", "CREATE SYNONYM", "CREATE ANY SYNONYM",
+        "CREATE PUBLIC SYNONYM", "CREATE DATABASE LINK",
+        "CREATE PUBLIC DATABASE LINK", "CREATE DIRECTORY", "CREATE LIBRARY",
+        "CREATE JOB", "CREATE ANY JOB", "MANAGE SCHEDULER", "ALTER SYSTEM",
+        "ALTER SESSION", "ALTER DATABASE", "SELECT ANY TABLE",
+        "INSERT ANY TABLE", "UPDATE ANY TABLE", "DELETE ANY TABLE",
+        "EXECUTE ANY PROCEDURE", "SELECT ANY DICTIONARY", "BECOME USER",
+        "UNLIMITED TABLESPACE", "SYSDBA", "SYSOPER"
+      ],
+      "standard_roles": [
+        "CONNECT", "RESOURCE", "DBA", "EXP_FULL_DATABASE",
+        "IMP_FULL_DATABASE", "SELECT_CATALOG_ROLE", "EXECUTE_CATALOG_ROLE",
+        "DELETE_CATALOG_ROLE", "AQ_ADMINISTRATOR_ROLE", "AQ_USER_ROLE",
+        "DATAPUMP_EXP_FULL_DATABASE", "DATAPUMP_IMP_FULL_DATABASE",
+        "SCHEDULER_ADMIN", "HS_ADMIN_SELECT_ROLE", "HS_ADMIN_EXECUTE_ROLE",
+        "HS_ADMIN_ROLE", "OEM_ADVISOR", "OEM_MONITOR",
+        "RECOVERY_CATALOG_OWNER", "GATHER_SYSTEM_STATISTICS",
+        "LOGSTDBY_ADMINISTRATOR", "XDBADMIN", "JAVAUSERPRIV", "JAVASYSPRIV",
+        "JAVADEBUGPRIV", "EJBCLIENT", "CTXAPP"
+      ]
+    }
+  }
+}

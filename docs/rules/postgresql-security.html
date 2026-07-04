@@ -1,0 +1,572 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ACI-Regeln &amp;ndash; PostgreSQL Sicherheit</title>
+<style>
+:root{--blocker:#7f1d1d;--critical:#b91c1c;--high:#c2410c;--major:#b45309;
+--warning:#a16207;--minor:#0e7490;--info:#6b7280;--bg:#f4f5f7;--card:#fff;
+--ink:#1f2933;--muted:#6b7280;--border:#e3e6ea;--accent:#2563eb;}
+*{box-sizing:border-box;}html{scroll-behavior:smooth;}
+body{margin:0;background:var(--bg);color:var(--ink);font-size:15px;
+line-height:1.6;font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,
+sans-serif;}
+header{background:#111827;color:#fff;padding:30px 40px;}
+header h1{margin:0 0 6px;font-size:23px;}
+header .sub{color:#9ca3af;font-size:13.5px;}
+header a{color:#9ca3af;}
+.wrap{max-width:1100px;margin:0 auto;padding:28px 40px 80px;}
+section{background:var(--card);border:1px solid var(--border);
+border-radius:12px;padding:22px 28px;margin-bottom:20px;}
+h2{font-size:19px;margin:2px 0 6px;padding-bottom:8px;
+border-bottom:2px solid var(--border);}
+h3{font-size:15px;margin:0;}
+p{margin:7px 0;}
+p.lead{color:var(--muted);}
+code{background:#eef2f7;color:#b91c5b;padding:1px 5px;border-radius:4px;
+font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:12.5px;
+word-break:break-word;}
+table{width:100%;border-collapse:collapse;margin:10px 0;font-size:13.5px;}
+th{text-align:left;background:#f9fafb;padding:8px 11px;
+border-bottom:2px solid var(--border);font-size:11px;text-transform:uppercase;
+letter-spacing:.04em;color:var(--muted);}
+td{padding:8px 11px;border-bottom:1px solid var(--border);
+vertical-align:top;}
+.badge{display:inline-block;padding:2px 9px;border-radius:999px;color:#fff;
+font-size:10.5px;font-weight:700;text-transform:uppercase;}
+.badge.blocker{background:var(--blocker);}.badge.critical{background:var(--critical);}
+.badge.high{background:var(--high);}.badge.major{background:var(--major);}
+.badge.warning{background:var(--warning);}.badge.minor{background:var(--minor);}
+.badge.info{background:var(--info);}
+.rule{border:1px solid var(--border);border-radius:10px;padding:14px 18px;
+margin:12px 0;}
+.rule.off{opacity:.6;}
+.rule-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.rid{font-family:ui-monospace,Menlo,monospace;font-size:12px;font-weight:700;
+background:#1f2933;color:#fff;padding:2px 8px;border-radius:5px;}
+.tag{font-size:10.5px;border:1px solid var(--border);border-radius:999px;
+padding:1px 8px;color:var(--muted);}
+.rule .msg{margin:8px 0;}
+.meta{font-size:13px;color:var(--muted);margin:4px 0;}
+.meta b{color:var(--ink);}
+.chips{display:flex;flex-wrap:wrap;gap:5px;margin:6px 0;}
+.chip{background:#eef2f7;border-radius:5px;padding:2px 7px;font-size:12px;
+font-family:ui-monospace,Menlo,monospace;}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+gap:14px;}
+.cards a{display:block;text-decoration:none;color:inherit;border:1px solid
+var(--border);border-radius:10px;padding:16px 18px;background:#fff;}
+.cards a:hover{border-color:var(--accent);}
+.cards h3{color:var(--accent);margin-bottom:4px;}
+.toc{font-size:13.5px;}
+.toc a{color:var(--accent);text-decoration:none;margin-right:14px;}
+.examples{margin-top:14px;}
+.ex{border-top:1px dashed var(--border);margin-top:14px;padding-top:12px;}
+.ex.first{border-top:none;margin-top:8px;}
+.exname{font-weight:700;margin:0 0 2px;font-size:13.5px;}
+.exname code{background:#1f2933;color:#fff;}
+.exnote{color:var(--muted);font-size:12.5px;margin:2px 0 6px;}
+.exlabel{font-size:10.5px;font-weight:700;text-transform:uppercase;
+letter-spacing:.04em;margin:9px 0 3px;}
+.exlabel.bad{color:var(--critical);}
+.exlabel.bad::before{content:"\2718  ";}
+.exlabel.good{color:#15803d;}
+.exlabel.good::before{content:"\2714  ";}
+pre.code{margin:0;padding:10px 13px;border-radius:7px;overflow-x:auto;
+font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:12px;
+line-height:1.55;white-space:pre;}
+pre.code.bad{background:#fef2f2;border:1px solid #fecaca;color:#7f1d1d;}
+pre.code.good{background:#f0fdf4;border:1px solid #bbf7d0;color:#14532d;}
+footer{max-width:1100px;margin:0 auto;padding:0 40px 50px;color:var(--muted);
+font-size:12.5px;}
+</style>
+</head>
+<body>
+<header>
+<h1>ACI-Regeln &amp;ndash; PostgreSQL Sicherheit</h1>
+<div class="sub">Detaillierte Beschreibung der Prüfregeln &middot; <a href="index.html">Übersicht</a></div>
+</header>
+<div class="wrap">
+<section><h2>Regelsatz &bdquo;Sicherheit&ldquo; &ndash; PostgreSQL</h2>
+<p class="lead">ACI-Regelsatz für PostgreSQL / PL/pgSQL. Alle Wortlisten, Funktionen, DDL-Schlüsselworte und Muster können hier ohne Code-Änderung gepflegt werden.</p>
+<table><tr><td><b>Dialekt</b></td><td>postgresql</td></tr><tr><td><b>Version</b></td><td>1.0</td></tr><tr><td><b>Dateiendungen</b></td><td><div class="chips"><span class="chip">.sql</span><span class="chip">.pgsql</span><span class="chip">.plpgsql</span><span class="chip">.psql</span><span class="chip">.ddl</span><span class="chip">.func</span><span class="chip">.pck</span></div></td></tr><tr><td><b>Checks</b></td><td>5</td></tr></table>
+<p class="toc"><a href="#ACI-NAME">Namenskonventionen</a> <a href="#ACI-PKG">Unerwünschte Funktionen / Erweiterungen</a> <a href="#ACI-OBF">Verschlüsselter / Obfuskierter Code</a> <a href="#ACI-SQLI">SQL Injection</a> <a href="#ACI-DDL">DDL im Code</a></p></section>
+<section id="ACI-NAME"><h2>Namenskonventionen <span class="rid">ACI-NAME</span></h2>
+<p class="meta">Konfigurationsschlüssel <code>naming_conventions</code> &middot; Status: aktiv</p>
+<table><tr><td><b>Schweregrad</b></td><td>Warning</td></tr><tr><td><b>Max. Bezeichnerlänge</b></td><td>63</td></tr><tr><td><b>Reservierte Worte in Quotes melden</b></td><td>True</td></tr></table>
+<h3>Reservierte Worte (78)</h3>
+<div class="chips"><span class="chip">ALL</span><span class="chip">ANALYSE</span><span class="chip">ANALYZE</span><span class="chip">AND</span><span class="chip">ANY</span><span class="chip">ARRAY</span><span class="chip">AS</span><span class="chip">ASC</span><span class="chip">ASYMMETRIC</span><span class="chip">BOTH</span><span class="chip">CASE</span><span class="chip">CAST</span><span class="chip">CHECK</span><span class="chip">COLLATE</span><span class="chip">COLUMN</span><span class="chip">CONSTRAINT</span><span class="chip">CREATE</span><span class="chip">CURRENT_CATALOG</span><span class="chip">CURRENT_DATE</span><span class="chip">CURRENT_ROLE</span><span class="chip">CURRENT_TIME</span><span class="chip">CURRENT_TIMESTAMP</span><span class="chip">CURRENT_USER</span><span class="chip">DEFAULT</span><span class="chip">DEFERRABLE</span><span class="chip">DESC</span><span class="chip">DISTINCT</span><span class="chip">DO</span><span class="chip">ELSE</span><span class="chip">END</span><span class="chip">EXCEPT</span><span class="chip">FALSE</span><span class="chip">FETCH</span><span class="chip">FOR</span><span class="chip">FOREIGN</span><span class="chip">FROM</span><span class="chip">GRANT</span><span class="chip">GROUP</span><span class="chip">HAVING</span><span class="chip">IN</span><span class="chip">INITIALLY</span><span class="chip">INTERSECT</span><span class="chip">INTO</span><span class="chip">LATERAL</span><span class="chip">LEADING</span><span class="chip">LIMIT</span><span class="chip">LOCALTIME</span><span class="chip">LOCALTIMESTAMP</span><span class="chip">NOT</span><span class="chip">NULL</span><span class="chip">OFFSET</span><span class="chip">ON</span><span class="chip">ONLY</span><span class="chip">OR</span><span class="chip">ORDER</span><span class="chip">PLACING</span><span class="chip">PRIMARY</span><span class="chip">REFERENCES</span><span class="chip">RETURNING</span><span class="chip">SELECT</span><span class="chip">SESSION_USER</span><span class="chip">SOME</span><span class="chip">SYMMETRIC</span><span class="chip">SYSTEM_USER</span><span class="chip">TABLE</span><span class="chip">THEN</span><span class="chip">TO</span><span class="chip">TRAILING</span><span class="chip">TRUE</span><span class="chip">UNION</span><span class="chip">UNIQUE</span><span class="chip">USER</span><span class="chip">USING</span><span class="chip">VARIADIC</span><span class="chip">WHEN</span><span class="chip">WHERE</span><span class="chip">WINDOW</span><span class="chip">WITH</span></div>
+<h3>Code-Beispiele (verwundbar / sicher)</h3>
+<div class="examples">
+<div class="ex first"><p class="exname">Reserviertes Wort als Bezeichner</p>
+<p class="exnote">Ein reserviertes Wort als Objekt-/Bezeichnername ist nur gequotet möglich und führt zu Mehrdeutigkeiten.</p>
+<div class="exlabel bad">Verwundbar</div>
+<pre class="code bad">-- 'user' ist ein reserviertes Wort (nur gequotet als Name nutzbar)
+CREATE TABLE "user" (
+  id    integer PRIMARY KEY,
+  name  text
+);</pre>
+<div class="exlabel good">Sicher</div>
+<pre class="code good">CREATE TABLE app_user (
+  id    integer PRIMARY KEY,
+  name  text
+);</pre></div>
+<div class="ex"><p class="exname">Zu langer Bezeichner (&gt; 63 Zeichen)</p>
+<p class="exnote">PostgreSQL kürzt Bezeichner über 63 Zeichen still ab - das kann Namen kollidieren lassen.</p>
+<div class="exlabel bad">Verwundbar</div>
+<pre class="code bad">DECLARE
+  -- 67 Zeichen: überschreitet die Maximallänge von 63
+  v_aggregated_monthly_revenue_per_region_and_product_category_result numeric;
+BEGIN
+  v_aggregated_monthly_revenue_per_region_and_product_category_result := 0;
+END;</pre>
+<div class="exlabel good">Sicher</div>
+<pre class="code good">DECLARE
+  v_monthly_revenue numeric;
+BEGIN
+  v_monthly_revenue := 0;
+END;</pre></div>
+</div>
+</section>
+<section id="ACI-PKG"><h2>Unerwünschte Funktionen / Erweiterungen <span class="rid">ACI-PKG</span></h2>
+<p class="meta">Konfigurationsschlüssel <code>undesired_packages</code> &middot; Status: aktiv</p>
+<h3>Unerwünschte Pakete/Objekte</h3>
+<table><tr><th>Name</th><th>Schweregrad</th><th>Beschreibung</th><th>Empfehlung</th></tr><tr><td><code>dblink</code></td><td><span class="badge high">High</span></td><td>Datenbank-/Netzwerkverbindung über die Erweiterung dblink.</td><td>Zielserver und Notwendigkeit prüfen; dblink ermöglicht ausgehende Verbindungen.</td></tr><tr><td><code>dblink_exec</code></td><td><span class="badge high">High</span></td><td>Ausführung von Anweisungen auf einer Fremddatenbank über dblink_exec.</td><td>Verwendung streng prüfen.</td></tr><tr><td><code>pg_read_file</code></td><td><span class="badge critical">Critical</span></td><td>Lesen beliebiger Serverdateien über pg_read_file.</td><td>Sehr kritisch: ermöglicht das Auslesen von Dateien des Datenbankservers.</td></tr><tr><td><code>pg_read_binary_file</code></td><td><span class="badge critical">Critical</span></td><td>Lesen beliebiger (binärer) Serverdateien über pg_read_binary_file.</td><td>Sehr kritisch: ermöglicht das Auslesen von Dateien des Datenbankservers.</td></tr><tr><td><code>pg_ls_dir</code></td><td><span class="badge high">High</span></td><td>Auflisten von Serververzeichnissen über pg_ls_dir.</td><td>Verwendung prüfen; gibt Verzeichnisinhalte des Servers preis.</td></tr><tr><td><code>pg_stat_file</code></td><td><span class="badge high">High</span></td><td>Metadaten von Serverdateien über pg_stat_file.</td><td>Verwendung prüfen.</td></tr><tr><td><code>lo_import</code></td><td><span class="badge high">High</span></td><td>Import einer Serverdatei als Large Object (lo_import).</td><td>Dateizugriff aus der Datenbank prüfen.</td></tr><tr><td><code>lo_export</code></td><td><span class="badge high">High</span></td><td>Export eines Large Object in eine Serverdatei (lo_export).</td><td>Dateizugriff aus der Datenbank prüfen.</td></tr><tr><td><code>plpython3u</code></td><td><span class="badge critical">Critical</span></td><td>Verwendung der nicht vertrauenswürdigen Sprache PL/Python3U (Betriebssystemzugriff möglich).</td><td>Untrusted Languages können Betriebssystembefehle ausführen. Verwendung streng prüfen.</td></tr><tr><td><code>plpythonu</code></td><td><span class="badge critical">Critical</span></td><td>Verwendung der nicht vertrauenswürdigen Sprache PL/PythonU (Betriebssystemzugriff möglich).</td><td>Untrusted Languages können Betriebssystembefehle ausführen. Verwendung streng prüfen.</td></tr><tr><td><code>plperlu</code></td><td><span class="badge critical">Critical</span></td><td>Verwendung der nicht vertrauenswürdigen Sprache PL/PerlU (Betriebssystemzugriff möglich).</td><td>Untrusted Languages können Betriebssystembefehle ausführen. Verwendung streng prüfen.</td></tr><tr><td><code>pltclu</code></td><td><span class="badge critical">Critical</span></td><td>Verwendung der nicht vertrauenswürdigen Sprache PL/TclU (Betriebssystemzugriff möglich).</td><td>Untrusted Languages können Betriebssystembefehle ausführen. Verwendung streng prüfen.</td></tr><tr><td><code>plr</code></td><td><span class="badge critical">Critical</span></td><td>Verwendung der nicht vertrauenswürdigen Sprache PL/R (Betriebssystemzugriff möglich).</td><td>Untrusted Languages können Betriebssystembefehle ausführen. Verwendung streng prüfen.</td></tr><tr><td><code>pg_file_write</code></td><td><span class="badge critical">Critical</span></td><td>Schreiben beliebiger Serverdateien über pg_file_write (adminpack).</td><td>Sehr kritisch: ermöglicht das Schreiben von Dateien auf dem Datenbankserver. Verwendung streng prüfen.</td></tr><tr><td><code>pg_file_unlink</code></td><td><span class="badge critical">Critical</span></td><td>Löschen beliebiger Serverdateien über pg_file_unlink (adminpack).</td><td>Sehr kritisch: ermöglicht das Löschen von Dateien auf dem Datenbankserver.</td></tr><tr><td><code>pg_file_rename</code></td><td><span class="badge high">High</span></td><td>Umbenennen von Serverdateien über pg_file_rename (adminpack).</td><td>Dateizugriff auf den Datenbankserver prüfen.</td></tr><tr><td><code>pg_logdir_ls</code></td><td><span class="badge high">High</span></td><td>Auflisten des Server-Logverzeichnisses über pg_logdir_ls (adminpack).</td><td>Verwendung prüfen; gibt Logdateien des Servers preis.</td></tr><tr><td><code>dblink_connect</code></td><td><span class="badge high">High</span></td><td>Aufbau einer ausgehenden Datenbankverbindung über dblink_connect.</td><td>Zielserver und Notwendigkeit prüfen; ausgehende Verbindungen einschränken.</td></tr><tr><td><code>dblink_connect_u</code></td><td><span class="badge critical">Critical</span></td><td>Ausgehende Verbindung über dblink_connect_u - umgeht die Authentifizierungsbeschränkungen von dblink.</td><td>Sehr kritisch: dblink_connect_u ist Nicht-Superusern normalerweise entzogen. Verwendung streng prüfen.</td></tr><tr><td><code>pg_terminate_backend</code></td><td><span class="badge warning">Warning</span></td><td>Beenden fremder Datenbanksitzungen über pg_terminate_backend (möglicher Denial of Service).</td><td>Prüfen, ob das gezielte Beenden von Sitzungen beabsichtigt ist.</td></tr><tr><td><code>pg_cancel_backend</code></td><td><span class="badge warning">Warning</span></td><td>Abbrechen fremder Abfragen über pg_cancel_backend.</td><td>Prüfen, ob der Abbruch fremder Sitzungen beabsichtigt ist.</td></tr><tr><td><code>pg_reload_conf</code></td><td><span class="badge warning">Warning</span></td><td>Neueinlesen der Serverkonfiguration über pg_reload_conf.</td><td>Konfigurationsänderungen zur Laufzeit prüfen.</td></tr><tr><td><code>set_config</code></td><td><span class="badge warning">Warning</span></td><td>Änderung von Laufzeitparametern über set_config (z.B. search_path).</td><td>Prüfen, welche Parameter gesetzt werden; das Manipulieren von search_path kann Sicherheitsmechanismen umgehen.</td></tr><tr><td><code>pg_authid</code></td><td><span class="badge warning">Warning</span></td><td>Zugriff auf den Katalog pg_authid (enthält Passwort-Hashes der Rollen).</td><td>Lesezugriff auf pg_authid prüfen - klassischer Indikator für Credential-Access.</td></tr><tr><td><code>utl_http</code></td><td><span class="badge high">High</span></td><td>Ausgehende HTTP-Verbindung über UTL_HTTP (EPAS) - mögliche SSRF / Datenexfiltration.</td><td>Zieladressen und Notwendigkeit der Netzwerkverbindung prüfen.</td></tr><tr><td><code>utl_smtp</code></td><td><span class="badge high">High</span></td><td>E-Mail-Versand über UTL_SMTP (EPAS) - mögliche Datenexfiltration.</td><td>Empfänger und Inhalt prüfen; Mailversand aus der Datenbank einschränken.</td></tr><tr><td><code>utl_mail</code></td><td><span class="badge high">High</span></td><td>E-Mail-Versand über UTL_MAIL (EPAS) - mögliche Datenexfiltration.</td><td>Mailversand aus der Datenbank einschränken; Empfänger und Inhalt prüfen.</td></tr><tr><td><code>utl_url</code></td><td><span class="badge warning">Warning</span></td><td>URL-Verarbeitung über UTL_URL (EPAS) - häufig Baustein für Netzwerkzugriffe/SSRF.</td><td>Im Zusammenhang mit UTL_HTTP prüfen; Zieladressen validieren.</td></tr><tr><td><code>utl_encode</code></td><td><span class="badge warning">Warning</span></td><td>Kodierung über UTL_ENCODE (EPAS) - Base64/Hex kann zur Verschleierung dienen.</td><td>Prüfen, ob hier Inhalte verschleiert oder Daten exfiltriert werden.</td></tr><tr><td><code>utl_file</code></td><td><span class="badge high">High</span></td><td>Dateisystemzugriff über UTL_FILE (EPAS).</td><td>Verzeichnis und Pfade prüfen; Dateizugriff aus der Datenbank minimieren.</td></tr><tr><td><code>dbms_scheduler</code></td><td><span class="badge high">High</span></td><td>Job-/Programmausführung über DBMS_SCHEDULER (EPAS) - kann externe Betriebssystembefehle starten.</td><td>Job-Typ prüfen; EXTERNAL-Jobs können Betriebssystembefehle ausführen.</td></tr><tr><td><code>dbms_job</code></td><td><span class="badge warning">Warning</span></td><td>Verzögerte Codeausführung über DBMS_JOB (EPAS).</td><td>Prüfen, ob hier eine versteckte/verzögerte Ausführung eingerichtet wird.</td></tr><tr><td><code>dbms_sql</code></td><td><span class="badge warning">Warning</span></td><td>Dynamisches SQL über DBMS_SQL (EPAS).</td><td>Prüfen, ob das SQL mit Bindevariablen aufgebaut wird.</td></tr><tr><td><code>dbms_lob</code></td><td><span class="badge warning">Warning</span></td><td>LOB-Zugriff über DBMS_LOB (EPAS) - kann u.a. mit serverseitigen Dateien/BFILEs interagieren.</td><td>Verwendung prüfen, insbesondere Datei-/BFILE-Operationen.</td></tr><tr><td><code>dbms_pipe</code></td><td><span class="badge warning">Warning</span></td><td>Sitzungsübergreifende Kommunikation über DBMS_PIPE (EPAS).</td><td>Verwendung prüfen.</td></tr><tr><td><code>dbms_crypto</code></td><td><span class="badge high">High</span></td><td>Verwendung des kryptografischen Pakets DBMS_CRYPTO (EPAS).</td><td>Schlüsselverwaltung, Algorithmus und Betriebsmodus kontrollieren.</td></tr><tr><td><code>dbms_rls</code></td><td><span class="badge high">High</span></td><td>Row-Level-Security-Policies über DBMS_RLS (EPAS) - die Zugriffskontrolle wird verändert.</td><td>Änderungen an RLS-Policies streng prüfen.</td></tr><tr><td><code>dbms_redact</code></td><td><span class="badge high">High</span></td><td>Daten-Redaction über DBMS_REDACT (EPAS) - die Maskierung sensibler Daten wird verändert.</td><td>Änderungen an Redaction-Policies streng prüfen.</td></tr></table>
+<h3>Code-Beispiele (verwundbar / sicher)</h3>
+<div class="examples">
+
+<div class="ex first"><p class="exname"><code>dblink</code></p>
+<p class="exnote">Datenbank-/Netzwerkverbindung über die Erweiterung dblink.</p>
+<div class="exlabel bad">Verwundbar</div>
+<pre class="code bad">-- Abfrage gegen eine Fremddatenbank, Host aus Eingabe
+SELECT s INTO v_secret
+  FROM dblink('host=' || p_host || ' dbname=app',
+              'SELECT secret FROM vault') AS t(s text);</pre>
+<div class="exlabel good">Sicher</div>
+<pre class="code good">-- Lokale Abfrage statt einer Verbindung zu einer Fremddatenbank
+SELECT secret INTO v_secret FROM vault WHERE id = p_id;</pre></div>
+
+<div class="ex"><p class="exname"><code>dblink_exec</code></p>
+<p class="exnote">Ausführung von Anweisungen auf einer Fremddatenbank.</p>
+<div class="exlabel bad">Verwundbar</div>
+<pre class="code bad">-- Schreibende Anweisung auf einer Fremddatenbank
+PERFORM dblink_exec('myconn', 'DELETE FROM app_log');</pre>
+<div class="exlabel good">Sicher</div>
+<pre class="code good">-- Keine Fernausführung; lokale, transaktionssichere DML
+DELETE FROM app_log WHERE created_at &lt; now() - interval '30 days';</pre></div>
+
+<div class="ex"><p class="exname"><code>pg_read_file</code></p>
+<p class="exnote">Lesen beliebiger Serverdateien.</p>
+<div class="exlabel bad">Verwundbar</div>
+<pre class="code bad">-- Beliebige Serverdatei lesen, Pfad aus Eingabe
+v_content := pg_read_file(p_path);</pre>
+<div class="exlabel good">Sicher</div>
+<pre class="code good">-- Keine Serverdateien lesen; Daten aus einer Tabelle beziehen
+SELECT content INTO v_content FROM app_documents WHERE id = p_doc_id;</pre></div>
+
+<div class="ex"><p class="exname"><code>pg_read_binary_file</code></p>
+<p class="exnote">Lesen beliebiger binärer Serverdateien.</p>
+<div class="exlabel bad">Verwundbar</div>
+<pre class="code bad">v_bytes := pg_read_binary_file(p_path);</pre>
+<div class="exlabel good">Sicher</div>
+<pre class="code good">-- Binärdaten als bytea-Spalte vorhalten, keinen Serverdateizugriff
+SELECT data INTO v_bytes FROM app_blobs WHERE id = p_blob_id;</pre></div>
+
+<div class="ex"><p class="exname"><code>pg_ls_dir</code></p>
+<p class="exnote">Auflisten von Serververzeichnissen.</p>
+<div class="exlabel bad">Verwundbar</div>
+<pre class="code bad">-- Verzeichnisinhalt des Servers preisgeben
+SELECT array_agg(f) INTO v_files FROM pg_ls_dir('/etc') AS f;</pre>
+<div class="exlabel good">Sicher</div>
+<pre class="code good">-- Dateilisten in einer Anwendungstabelle führen, nicht aus dem FS
+SELECT array_agg(name) INTO v_files
+  FROM app_files WHERE owner = p_user;</pre></div>
+
+<div class="ex"><p class="exname"><code>pg_stat_file</code></p>
+<p class="exnote">Metadaten von Serverdateien.</p>
+<div class="exlabel bad">Verwundbar</div>
+<pre class="code bad">v_meta := pg_stat_file(p_path);</pre>
+<div class="exlabel good">Sicher</div>
+<pre class="code good">-- Datei-Metadaten in der Anwendungstabelle pflegen
+SELECT size, modified INTO v_size, v_mod
+  FROM app_files WHERE id = p_file_id;</pre></div>
+
+<div class="ex"><p class="exname"><code>lo_import</code></p>
+<p class="exnote">Import einer Serverdatei als Large Object.</p>
+<div class="exlabel bad">Verwundbar</div>
+<pre class="code bad">-- Serverdatei als Large Object importieren
+v_oid := lo_import(p_path);</pre>
+<div class="exlabel good">Sicher</div>
+<pre class="code good">-- Daten als bytea über die Anwendung übergeben, kein FS-Zugriff
+INSERT INTO app_blobs(id, data) VALUES (p_id, p_payload);</pre></div>
+
+<div class="ex"><p class="exname"><code>lo_export</code></p>
+<p class="exnote">Export eines Large Object in eine Serverdatei.</p>
+<div class="exlabel bad">Verwundbar</div>
+<pre class="code bad">PERFORM lo_export(v_oid, p_path);</pre>
+<div class="exlabel good">Sicher</div>
+<pre class="code good">-- Export über die Anwendung (bytea zurückgeben), kein Server-FS
+SELECT data INTO v_payload FROM app_blobs WHERE id = p_id;</pre></div>
+
+<div class="ex"><p class="exname"><code>plpython3u</code></p>
+<p class="exnote">Untrusted Language - Betriebssystemzugriff möglich.</p>
+<div class="exlabel bad">Verwundbar</div>
+<pre class="code bad">-- Untrusted Language führt Betriebssystembefehle aus
+CREATE FUNCTION run_cmd(cmd text) RETURNS text
+LANGUAGE plpython3u AS $$
+    import os
+    return os.popen(cmd).read()
+$$;</pre>
+<div class="exlabel good">Sicher</div>
+<pre class="code good">-- Fachlogik in der vertrauenswürdigen Sprache PL/pgSQL
+CREATE FUNCTION normalize_name(p text) RETURNS text
+LANGUAGE plpgsql AS $$
+BEGIN
+    RETURN lower(trim(p));
+END;
+$$;</pre></div>
+
+<div class="ex"><p class="exname"><code>plpythonu</code></p>
+<p class="exnote">Untrusted Language (PL/PythonU) - Betriebssystemzugriff möglich.</p>
+<div class="exlabel bad">Verwundbar</div>
+<pre class="code bad">CREATE FUNCTION read_secret() RETURNS text
+LANGUAGE plpythonu AS $$
+    return open('/etc/passwd').read()
+$$;</pre>
+<div class="exlabel good">Sicher</div>
+<pre class="code good">-- PL/pgSQL statt einer untrusted Language
+CREATE FUNCTION read_secret() RETURNS text
+LANGUAGE plpgsql AS $$
+BEGIN
+    RETURN (SELECT value FROM app_config WHERE key = 'secret');
+END;
+$$;</pre></div>
+
+<div class="ex"><p class="exname"><code>plperlu</code></p>
+<p class="exnote">Untrusted Language (PL/PerlU) - Betriebssystemzugriff möglich.</p>
+<div class="exlabel bad">Verwundbar</div>
+<pre class="code bad">CREATE FUNCTION run_cmd(cmd text) RETURNS integer
+LANGUAGE plperlu AS $$
+    return system($_[0]);
+$$;</pre>
+<div class="exlabel good">Sicher</div>
+<pre class="code good">-- Trusted Language plperl (ohne 'u') bzw. PL/pgSQL
+CREATE FUNCTION clean_text(p text) RETURNS text
+LANGUAGE plpgsql AS $$
+BEGIN
+    RETURN regexp_replace(p, '\s+', ' ', 'g');
+END;
+$$;</pre></div>
+
+<div class="ex"><p class="exname"><code>pltclu</code></p>
+<p class="exnote">Untrusted Language (PL/TclU) - Betriebssystemzugriff möglich.</p>
+<div class="exlabel bad">Verwundbar</div>
+<pre class="code bad">CREATE FUNCTION run_cmd(cmd text) RETURNS text
+LANGUAGE pltclu AS $$
+    return [exec /bin/sh -c $1]
+$$;</pre>
+<div class="exlabel good">Sicher</div>
+<pre class="code good">-- Trusted Language pltcl (ohne 'u') bzw. PL/pgSQL
+CREATE FUNCTION clean_text(p text) RETURNS text
+LANGUAGE plpgsql AS $$
+BEGIN
+    RETURN btrim(p);
+END;
+$$;</pre></div>
+
+<div class="ex"><p class="exname"><code>plr</code></p>
+<p class="exnote">Untrusted Language (PL/R) - Betriebssystemzugriff möglich.</p>
+<div class="exlabel bad">Verwundbar</div>
+<pre class="code bad">CREATE FUNCTION run_r(cmd text) RETURNS text
+LANGUAGE plr AS $$
+    system(arg1, intern = TRUE)
+$$;</pre>
+<div class="exlabel good">Sicher</div>
+<pre class="code good">-- Statistische Berechnung mit SQL-Aggregaten statt PL/R
+SELECT avg(value) INTO v_mean
+  FROM measurements WHERE batch = p_batch;</pre></div>
+
+<div class="ex"><p class="exname"><code>pg_file_write</code></p>
+<p class="exnote">Schreiben beliebiger Serverdateien (adminpack).</p>
+<div class="exlabel bad">Verwundbar</div>
+<pre class="code bad">-- Beliebige Serverdatei schreiben
+PERFORM pg_catalog.pg_file_write(p_path, p_content, false);</pre>
+<div class="exlabel good">Sicher</div>
+<pre class="code good">-- Ausgaben in eine Tabelle schreiben, nicht ins Server-Dateisystem
+INSERT INTO app_reports(name, body) VALUES (p_name, p_content);</pre></div>
+
+<div class="ex"><p class="exname"><code>pg_file_unlink</code></p>
+<p class="exnote">Löschen beliebiger Serverdateien (adminpack).</p>
+<div class="exlabel bad">Verwundbar</div>
+<pre class="code bad">PERFORM pg_catalog.pg_file_unlink(p_path);</pre>
+<div class="exlabel good">Sicher</div>
+<pre class="code good">-- Datensätze löschen statt Serverdateien
+DELETE FROM app_reports WHERE id = p_report_id;</pre></div>
+
+<div class="ex"><p class="exname"><code>pg_file_rename</code></p>
+<p class="exnote">Umbenennen von Serverdateien (adminpack).</p>
+<div class="exlabel bad">Verwundbar</div>
+<pre class="code bad">PERFORM pg_catalog.pg_file_rename(p_old, p_new);</pre>
+<div class="exlabel good">Sicher</div>
+<pre class="code good">-- Keine Dateioperationen; Metadaten in der Tabelle aktualisieren
+UPDATE app_reports SET name = p_new WHERE id = p_report_id;</pre></div>
+
+<div class="ex"><p class="exname"><code>pg_logdir_ls</code></p>
+<p class="exnote">Auflisten des Server-Logverzeichnisses (adminpack).</p>
+<div class="exlabel bad">Verwundbar</div>
+<pre class="code bad">-- Logdateien des Servers auflisten
+FOR r IN SELECT * FROM pg_catalog.pg_logdir_ls() LOOP
+  RAISE NOTICE '%', r;
+END LOOP;</pre>
+<div class="exlabel good">Sicher</div>
+<pre class="code good">-- Anwendungs-Audit aus einer eigenen Logtabelle lesen
+FOR r IN SELECT event, ts FROM app_audit_log ORDER BY ts LOOP
+  RAISE NOTICE '%', r.event;
+END LOOP;</pre></div>
+
+<div class="ex"><p class="exname"><code>dblink_connect</code></p>
+<p class="exnote">Aufbau einer ausgehenden Datenbankverbindung.</p>
+<div class="exlabel bad">Verwundbar</div>
+<pre class="code bad">-- Ausgehende Verbindung zu einem aufrufergesteuerten Server
+PERFORM dblink_connect('myconn', 'host=' || p_host || ' dbname=app');</pre>
+<div class="exlabel good">Sicher</div>
+<pre class="code good">-- Keine ausgehende Verbindung; lokal arbeiten
+SELECT * INTO v_row FROM app_data WHERE id = p_id;</pre></div>
+
+<div class="ex"><p class="exname"><code>dblink_connect_u</code></p>
+<p class="exnote">Umgeht die Authentifizierungsbeschränkungen von dblink.</p>
+<div class="exlabel bad">Verwundbar</div>
+<pre class="code bad">-- Die _u-Variante umgeht die Authentifizierungsbeschränkungen
+PERFORM dblink_connect_u('myconn', 'host=remote dbname=app');</pre>
+<div class="exlabel good">Sicher</div>
+<pre class="code good">-- Keine ausgehenden DB-Verbindungen aus dem Anwendungscode
+PERFORM process_locally(p_id);</pre></div>
+
+<div class="ex"><p class="exname"><code>pg_terminate_backend</code></p>
+<p class="exnote">Beenden fremder Datenbanksitzungen (möglicher Denial of Service).</p>
+<div class="exlabel bad">Verwundbar</div>
+<pre class="code bad">-- Fremde Sitzung gezielt beenden
+PERFORM pg_terminate_backend(p_pid);</pre>
+<div class="exlabel good">Sicher</div>
+<pre class="code good">-- Sitzungsverwaltung dem DBA überlassen
+RAISE NOTICE 'Sitzung % läuft noch', p_pid;</pre></div>
+
+<div class="ex"><p class="exname"><code>pg_cancel_backend</code></p>
+<p class="exnote">Abbrechen fremder Abfragen.</p>
+<div class="exlabel bad">Verwundbar</div>
+<pre class="code bad">PERFORM pg_cancel_backend(p_pid);</pre>
+<div class="exlabel good">Sicher</div>
+<pre class="code good">-- Lang laufende Abfragen über ein Timeout begrenzen,
+-- statt fremde Sitzungen abzubrechen
+SET LOCAL statement_timeout = '30s';</pre></div>
+
+<div class="ex"><p class="exname"><code>pg_reload_conf</code></p>
+<p class="exnote">Neueinlesen der Serverkonfiguration.</p>
+<div class="exlabel bad">Verwundbar</div>
+<pre class="code bad">-- Serverkonfiguration zur Laufzeit neu einlesen
+PERFORM pg_reload_conf();</pre>
+<div class="exlabel good">Sicher</div>
+<pre class="code good">-- Konfigurationsänderungen über kontrollierte DBA-Prozesse
+RAISE NOTICE 'Konfigurationsänderung beim DBA anfordern';</pre></div>
+
+<div class="ex"><p class="exname"><code>set_config</code></p>
+<p class="exnote">Änderung von Laufzeitparametern - search_path-Manipulation kann Schutzmechanismen umgehen.</p>
+<div class="exlabel bad">Verwundbar</div>
+<pre class="code bad">-- search_path aus Eingabe gesetzt
+PERFORM set_config('search_path', p_schema, false);</pre>
+<div class="exlabel good">Sicher</div>
+<pre class="code good">-- search_path fest in der Funktionsdefinition statt per set_config
+CREATE FUNCTION app.do_work() RETURNS void
+LANGUAGE plpgsql
+SET search_path = app, pg_temp
+AS $$ BEGIN PERFORM app.step(); END; $$;</pre></div>
+
+<div class="ex"><p class="exname"><code>pg_authid</code></p>
+<p class="exnote">Zugriff auf pg_authid - enthält die Passwort-Hashes der Rollen.</p>
+<div class="exlabel bad">Verwundbar</div>
+<pre class="code bad">-- Lesezugriff auf die Passwort-Hashes
+SELECT rolname, rolpassword INTO v_role, v_hash
+  FROM pg_authid WHERE rolname = p_role;</pre>
+<div class="exlabel good">Sicher</div>
+<pre class="code good">-- Rolleninformationen ohne Passwort-Hashes aus pg_roles lesen
+SELECT rolname INTO v_role FROM pg_roles WHERE rolname = p_role;</pre></div>
+
+</div>
+</section>
+<section id="ACI-OBF"><h2>Verschlüsselter / Obfuskierter Code <span class="rid">ACI-OBF</span></h2>
+<p class="meta">Konfigurationsschlüssel <code>obfuscation</code> &middot; Status: aktiv</p>
+<table><tr><td><b>Wrapped-Code erkennen</b></td><td>False</td></tr><tr><td><b>Level Wrapped</b></td><td>High</td></tr><tr><td><b>CHR-Ketten erkennen</b></td><td>True</td></tr><tr><td><b>Min. CHR-Kettenlänge</b></td><td>4</td></tr><tr><td><b>Level CHR-Kette</b></td><td>High</td></tr></table>
+<h3>Muster</h3>
+<table><tr><th>ID</th><th>Schweregrad</th><th>Ziel</th><th>Regex</th><th>Beschreibung</th><th>Empfehlung</th></tr><tr><td><code>base64-blob</code></td><td><span class="badge warning">Warning</span></td><td>string</td><td><code>(?!([A-Za-z0-9+/])\1{59,})[A-Za-z0-9+/]{60,}={0,2}</code></td><td>Langer Base64-ähnlicher Block in einem String-Literal - möglicherweise kodierter/verschleierter Inhalt.</td><td>Inhalt dekodieren und prüfen.</td></tr><tr><td><code>hex-blob</code></td><td><span class="badge warning">Warning</span></td><td>string</td><td><code>(?:\\x)?(?!([0-9A-Fa-f])\1{99,})[0-9A-Fa-f]{100,}</code></td><td>Langer Hex-Block in einem String-Literal - möglicherweise kodierter/verschleierter Inhalt.</td><td>Inhalt dekodieren und prüfen.</td></tr><tr><td><code>base64-decode-call</code></td><td><span class="badge warning">Warning</span></td><td>code</td><td><code>\b(decode\s*\([^;)]*,\s*&#x27;base64&#x27;\s*\)|convert_from\s*\()</code></td><td>Aufruf einer Dekodierfunktion (decode/convert_from) - häufig zur Code-/Datenverschleierung.</td><td>Prüfen, was dekodiert wird; Base64 wird oft genutzt, um Nutzlasten zu verbergen.</td></tr><tr><td><code>dynamic-decode-exec</code></td><td><span class="badge critical">Critical</span></td><td>code</td><td><code>\bexecute\b[^;]*\b(decode|convert_from|pgp_sym_decrypt|pgp_pub_decrypt)\b</code></td><td>Dynamisches SQL wird aus dekodiertem/entschlüsseltem Inhalt ausgeführt.</td><td>Sehr kritisch: zur Laufzeit dekodierter Code, der direkt ausgeführt wird. Herkunft und Zweck zwingend klären.</td></tr></table>
+<h3>Code-Beispiele (verwundbar / sicher)</h3>
+<div class="examples">
+
+<div class="ex first"><p class="exname">CHR()-Kette (<code>CHR-CHAIN</code>)</p>
+<p class="exnote">Lange chr()-Konkatenationen verbergen Schlüsselworte vor einer Prüfung.</p>
+<div class="exlabel bad">Verwundbar</div>
+<pre class="code bad">-- Verschleiertes Schlüsselwort 'SELECT'
+v_sql := chr(83)||chr(69)||chr(76)||chr(69)||chr(67)||chr(84);</pre>
+<div class="exlabel good">Sicher</div>
+<pre class="code good">-- Klartext - sofort lesbar und prüfbar
+v_sql := 'SELECT';</pre></div>
+
+<div class="ex"><p class="exname"><code>base64-blob</code></p>
+<p class="exnote">Langer Base64-Block in einem String-Literal - möglicher verschleierter Inhalt.</p>
+<div class="exlabel bad">Verwundbar</div>
+<pre class="code bad">-- 60+ Zeichen Base64 direkt im Code
+v_payload := 'VG8gZXhlY3V0ZSBhcmJpdHJhcnkgcGF5bG9hZCBmcm9tIHNvdXJjZSBkYXRh';</pre>
+<div class="exlabel good">Sicher</div>
+<pre class="code good">-- Wert aus einer geprüften Konfigurationstabelle
+SELECT value INTO v_payload FROM app_config WHERE key = 'report_tpl';</pre></div>
+
+<div class="ex"><p class="exname"><code>hex-blob</code></p>
+<p class="exnote">Langer Hex-Block in einem String-Literal - möglicher verschleierter Inhalt. (Hex-Blöcke in INSERT-Datenzeilen gelten als Daten und werden nicht gemeldet.)</p>
+<div class="exlabel bad">Verwundbar</div>
+<pre class="code bad">-- 100+ Hex-Zeichen direkt im Code
+v_data := '4f6e63652075706f6e20612074696d6520696e2061206'
+          || '36f646520726576696577206e6f626f6479206578706563';</pre>
+<div class="exlabel good">Sicher</div>
+<pre class="code good">-- Wert aus einer geprüften Quelle statt eines Hex-Blocks im Code
+SELECT value INTO v_data FROM app_config WHERE key = 'signature';</pre></div>
+
+<div class="ex"><p class="exname"><code>base64-decode-call</code></p>
+<p class="exnote">Aufruf einer Dekodierfunktion (decode/convert_from) - häufig zur Verschleierung.</p>
+<div class="exlabel bad">Verwundbar</div>
+<pre class="code bad">-- Zur Laufzeit dekodierter Inhalt unbekannter Herkunft
+v_raw := decode(p_encoded, 'base64');</pre>
+<div class="exlabel good">Sicher</div>
+<pre class="code good">-- Eingabe im Klartext annehmen und validieren
+PERFORM validate_input(p_value);
+v_text := p_value;</pre></div>
+
+<div class="ex"><p class="exname"><code>dynamic-decode-exec</code></p>
+<p class="exnote">Sehr kritisch: zur Laufzeit dekodierter/entschlüsselter Code, der direkt ausgeführt wird.</p>
+<div class="exlabel bad">Verwundbar</div>
+<pre class="code bad">-- Entschlüsselter Inhalt wird unmittelbar als SQL ausgeführt
+EXECUTE convert_from(pgp_sym_decrypt(p_blob, v_key), 'UTF8');</pre>
+<div class="exlabel good">Sicher</div>
+<pre class="code good">-- Kein dynamischer Code aus entschlüsselten Daten; statisches SQL
+UPDATE orders SET status = v_status WHERE id = p_id;</pre></div>
+
+</div>
+</section>
+<section id="ACI-SQLI"><h2>SQL Injection <span class="rid">ACI-SQLI</span></h2>
+<p class="meta">Konfigurationsschlüssel <code>sql_injection</code> &middot; Status: aktiv</p>
+<table><tr><td><b>Level ungeprüfte Konkatenation</b></td><td>Critical</td></tr><tr><td><b>plsql_injection_level</b></td><td>Critical</td></tr><tr><td><b>Level reine Literale</b></td><td>Warning</td></tr><tr><td><b>Level abgesichert</b></td><td>Warning</td></tr><tr><td><b>Level unbekannte Herkunft</b></td><td>High</td></tr><tr><td><b>session_taint_patterns</b></td><td>[&#x27;\\bcurrent_setting\\s*\\(&#x27;, &#x27;\\bset_config\\s*\\(&#x27;]</td></tr><tr><td><b>interprocedural</b></td><td>True</td></tr><tr><td><b>interprocedural_level</b></td><td>Critical</td></tr></table>
+<h3>Sanitizer (8)</h3>
+<div class="chips"><span class="chip">quote_ident(</span><span class="chip">quote_literal(</span><span class="chip">quote_nullable(</span><span class="chip">format(</span><span class="chip">quote_ident (</span><span class="chip">quote_literal (</span><span class="chip">quote_nullable (</span><span class="chip">format (</span></div>
+<h3>Code-Beispiele (verwundbar / sicher)</h3>
+<div class="examples">
+
+<div class="ex first"><p class="exname">Ungeprüfte Konkatenation (Critical)</p>
+<p class="exnote">Ein Wert wird direkt in den SQL-Text konkateniert - klassische SQL-Injection.</p>
+<div class="exlabel bad">Verwundbar</div>
+<pre class="code bad">-- Parameter direkt im SQL-Text
+EXECUTE 'SELECT salary FROM emp WHERE ename = ''' || p_name || ''''
+  INTO v_sal;</pre>
+<div class="exlabel good">Sicher</div>
+<pre class="code good">-- Parameter über USING binden ($1)
+EXECUTE 'SELECT salary FROM emp WHERE ename = $1'
+  INTO v_sal USING p_name;</pre></div>
+
+<div class="ex"><p class="exname">Unbekannte Herkunft (High)</p>
+<p class="exnote">Der SQL-Text stammt aus einer Variablen, deren Herkunft nicht nachvollziehbar ist.</p>
+<div class="exlabel bad">Verwundbar</div>
+<pre class="code bad">-- v_sql wurde z.B. aus einer Tabelle gelesen - Herkunft unklar
+EXECUTE v_sql;</pre>
+<div class="exlabel good">Sicher</div>
+<pre class="code good">-- Statisches SQL mit gebundenen Parametern
+EXECUTE 'UPDATE emp SET salary = $1 WHERE empno = $2'
+  USING p_salary, p_empno;</pre></div>
+
+<div class="ex"><p class="exname">Bezeichner im dynamischen SQL (abgesichert)</p>
+<p class="exnote">Tabellen-/Spaltennamen lassen sich nicht binden - sie müssen geprüft werden.</p>
+<div class="exlabel bad">Verwundbar</div>
+<pre class="code bad">-- Tabellenname ungeprüft konkateniert
+EXECUTE 'SELECT count(*) FROM ' || p_table INTO v_cnt;</pre>
+<div class="exlabel good">Sicher</div>
+<pre class="code good">-- Bezeichner über format() %I (quote_ident) absichern
+EXECUTE format('SELECT count(*) FROM %I', p_table) INTO v_cnt;</pre></div>
+
+</div>
+</section>
+<section id="ACI-DDL"><h2>DDL im Code <span class="rid">ACI-DDL</span></h2>
+<p class="meta">Konfigurationsschlüssel <code>ddl_in_code</code> &middot; Status: aktiv</p>
+<table><tr><td><b>DDL in dynamischem SQL erkennen</b></td><td>True</td></tr><tr><td><b>Eigenständige DDL erkennen</b></td><td>True</td></tr><tr><td><b>Objektdefinitionen überspringen</b></td><td>True</td></tr></table>
+<h3>DDL-Schlüsselworte</h3>
+<table><tr><th>Schlüsselwort</th><th>Schweregrad</th><th>Beschreibung</th><th>Empfehlung</th></tr><tr><td><code>GRANT</code></td><td><span class="badge critical">Critical</span></td><td>Vergabe von Rechten (GRANT).</td><td>GRANT im Code kann zu Rechteausweitung führen. Prüfen, welche Rechte an welche Rolle vergeben werden.</td></tr><tr><td><code>REVOKE</code></td><td><span class="badge high">High</span></td><td>Entzug von Rechten (REVOKE).</td><td>Prüfen, ob der Rechteentzug beabsichtigt ist.</td></tr><tr><td><code>CREATE</code></td><td><span class="badge high">High</span></td><td>Erzeugung eines Datenbankobjekts (CREATE).</td><td>Prüfen, ob das Objekt zur Laufzeit erzeugt werden soll (z.B. CREATE ROLE, CREATE EXTENSION).</td></tr><tr><td><code>ALTER</code></td><td><span class="badge high">High</span></td><td>Änderung eines Datenbankobjekts oder der Rolle/des Systems (ALTER).</td><td>Prüfen, ob die Änderung beabsichtigt ist (ALTER ROLE/SYSTEM besonders sensibel).</td></tr><tr><td><code>DROP</code></td><td><span class="badge high">High</span></td><td>Löschen eines Datenbankobjekts (DROP).</td><td>Prüfen, ob das Löschen beabsichtigt ist.</td></tr><tr><td><code>TRUNCATE</code></td><td><span class="badge high">High</span></td><td>Leeren einer Tabelle (TRUNCATE).</td><td>Prüfen, ob beabsichtigt.</td></tr><tr><td><code>RENAME</code></td><td><span class="badge warning">Warning</span></td><td>Umbenennung eines Objekts (RENAME).</td><td>Prüfen, ob die Umbenennung beabsichtigt ist.</td></tr></table>
+<h3>Harmlose Objektprivilegien (kein Finding) (5)</h3>
+<div class="chips"><span class="chip">SELECT</span><span class="chip">READ</span><span class="chip">INSERT</span><span class="chip">UPDATE</span><span class="chip">DELETE</span></div>
+<h3>Erlaubte Statements (20)</h3>
+<div class="chips"><span class="chip">COMMIT</span><span class="chip">CREATE TABLE</span><span class="chip">CREATE VIEW</span><span class="chip">CREATE SEQUENCE</span><span class="chip">CREATE INDEX</span><span class="chip">CREATE FUNCTION</span><span class="chip">CREATE PROCEDURE</span><span class="chip">CREATE SCHEMA</span><span class="chip">ALTER TABLE</span><span class="chip">ALTER VIEW</span><span class="chip">ALTER SEQUENCE</span><span class="chip">ALTER INDEX</span><span class="chip">ALTER FUNCTION</span><span class="chip">ALTER PROCEDURE</span><span class="chip">DROP TABLE</span><span class="chip">DROP VIEW</span><span class="chip">DROP SEQUENCE</span><span class="chip">DROP INDEX</span><span class="chip">DROP FUNCTION</span><span class="chip">DROP PROCEDURE</span></div>
+<h3>Code-Beispiele (verwundbar / sicher)</h3>
+<p class="exnote">Grundregel: kein DDL zur Laufzeit im Anwendungscode. Notwendige Objekte und Rechte werden einmalig über ein geprüftes Deployment-Skript angelegt; der Anwendungscode arbeitet nur mit DML.</p>
+<div class="examples">
+
+<div class="ex first"><p class="exname"><code>GRANT</code></p>
+<p class="exnote">Rechtevergabe zur Laufzeit kann zu Rechteausweitung führen.</p>
+<div class="exlabel bad">Verwundbar</div>
+<pre class="code bad">-- Rechtevergabe zur Laufzeit, Rolle aus Eingabe
+EXECUTE 'GRANT SELECT ON salaries TO ' || p_role;</pre>
+<div class="exlabel good">Sicher</div>
+<pre class="code good">-- Kein GRANT im Code; die Rolle wurde einmalig beim Deployment vergeben.
+SELECT salary INTO v_sal FROM salaries WHERE empno = p_empno;</pre></div>
+
+<div class="ex"><p class="exname"><code>REVOKE</code></p>
+<p class="exnote">Rechteentzug zur Laufzeit kann Anwendungen unbemerkt brechen.</p>
+<div class="exlabel bad">Verwundbar</div>
+<pre class="code bad">EXECUTE 'REVOKE SELECT ON reports FROM ' || p_role;</pre>
+<div class="exlabel good">Sicher</div>
+<pre class="code good">-- Rechtepflege ausschließlich über kontrollierte DBA-Skripte
+PERFORM process_report(p_report_id);</pre></div>
+
+<div class="ex"><p class="exname"><code>CREATE</code></p>
+<p class="exnote">Objekterzeugung zur Laufzeit (z.B. CREATE ROLE, CREATE EXTENSION).</p>
+<div class="exlabel bad">Verwundbar</div>
+<pre class="code bad">-- Erweiterung zur Laufzeit erzeugen, Name aus Eingabe
+EXECUTE 'CREATE EXTENSION ' || p_ext;</pre>
+<div class="exlabel good">Sicher</div>
+<pre class="code good">-- Objekte/Erweiterungen einmalig im Deployment anlegen; Code nutzt sie nur
+INSERT INTO import_log(file_name, loaded_at) VALUES (p_file, now());</pre></div>
+
+<div class="ex"><p class="exname"><code>ALTER</code></p>
+<p class="exnote">Änderung von Objekt, Rolle oder System (ALTER ROLE/SYSTEM besonders sensibel).</p>
+<div class="exlabel bad">Verwundbar</div>
+<pre class="code bad">-- Rolle zur Laufzeit privilegieren
+EXECUTE 'ALTER ROLE ' || p_role || ' SUPERUSER';</pre>
+<div class="exlabel good">Sicher</div>
+<pre class="code good">-- Keine ALTER-Anweisungen im Anwendungscode
+UPDATE app_user SET settings = p_settings WHERE id = p_user_id;</pre></div>
+
+<div class="ex"><p class="exname"><code>DROP</code></p>
+<p class="exnote">Löschen eines Datenbankobjekts zur Laufzeit.</p>
+<div class="exlabel bad">Verwundbar</div>
+<pre class="code bad">-- Objekt zur Laufzeit löschen, Name aus Eingabe
+EXECUTE 'DROP TABLE ' || p_table_name;</pre>
+<div class="exlabel good">Sicher</div>
+<pre class="code good">-- Daten statt Objekte löschen; mit Bindeparameter
+DELETE FROM staging_rows WHERE batch_id = p_batch_id;</pre></div>
+
+<div class="ex"><p class="exname"><code>TRUNCATE</code></p>
+<p class="exnote">Leeren einer Tabelle zur Laufzeit.</p>
+<div class="exlabel bad">Verwundbar</div>
+<pre class="code bad">EXECUTE 'TRUNCATE TABLE ' || p_table_name;</pre>
+<div class="exlabel good">Sicher</div>
+<pre class="code good">-- Gezieltes Löschen mit Bindeparameter statt TRUNCATE
+DELETE FROM staging_rows WHERE batch_id = p_batch_id;</pre></div>
+
+<div class="ex"><p class="exname"><code>RENAME</code></p>
+<p class="exnote">Umbenennung eines Objekts zur Laufzeit.</p>
+<div class="exlabel bad">Verwundbar</div>
+<pre class="code bad">EXECUTE 'ALTER TABLE ' || p_old || ' RENAME TO ' || p_new;</pre>
+<div class="exlabel good">Sicher</div>
+<pre class="code good">-- Keine Objektumbenennung zur Laufzeit; Schemaänderungen nur im Deployment
+PERFORM log_event('rename requested', p_old);</pre></div>
+
+</div>
+</section>
+</div>
+<footer>ACI &ndash; Automated Code Inspection &middot; Regeldokumentation &middot; generiert am 2026-07-03 von <code>docs/generate_rule_docs.py</code></footer>
+</body>
+</html>

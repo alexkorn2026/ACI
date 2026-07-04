@@ -1,0 +1,410 @@
+{
+  "dialect": "postgresql",
+  "version": "1.0",
+  "description": "ACI-Regelsatz für PostgreSQL / PL/pgSQL. Alle Wortlisten, Funktionen, DDL-Schlüsselworte und Muster können hier ohne Code-Änderung gepflegt werden.",
+  "file_extensions": [
+    ".sql", ".pgsql", ".plpgsql", ".psql", ".ddl", ".func", ".pck"
+  ],
+  "checks": {
+    "naming_conventions": {
+      "id": "ACI-NAME",
+      "name": "Namenskonventionen",
+      "enabled": true,
+      "level": "Warning",
+      "max_identifier_length": 63,
+      "flag_quoted_reserved": true,
+      "reserved_words": [
+        "ALL", "ANALYSE", "ANALYZE", "AND", "ANY", "ARRAY", "AS", "ASC",
+        "ASYMMETRIC", "BOTH", "CASE", "CAST", "CHECK", "COLLATE", "COLUMN",
+        "CONSTRAINT", "CREATE", "CURRENT_CATALOG", "CURRENT_DATE",
+        "CURRENT_ROLE", "CURRENT_TIME", "CURRENT_TIMESTAMP", "CURRENT_USER",
+        "DEFAULT", "DEFERRABLE", "DESC", "DISTINCT", "DO", "ELSE", "END",
+        "EXCEPT", "FALSE", "FETCH", "FOR", "FOREIGN", "FROM", "GRANT",
+        "GROUP", "HAVING", "IN", "INITIALLY", "INTERSECT", "INTO", "LATERAL",
+        "LEADING", "LIMIT", "LOCALTIME", "LOCALTIMESTAMP", "NOT", "NULL",
+        "OFFSET", "ON", "ONLY", "OR", "ORDER", "PLACING", "PRIMARY",
+        "REFERENCES", "RETURNING", "SELECT", "SESSION_USER", "SOME",
+        "SYMMETRIC", "SYSTEM_USER", "TABLE", "THEN", "TO", "TRAILING",
+        "TRUE", "UNION", "UNIQUE", "USER", "USING", "VARIADIC", "WHEN",
+        "WHERE", "WINDOW", "WITH"
+      ]
+    },
+    "undesired_packages": {
+      "id": "ACI-PKG",
+      "name": "Unerwünschte Funktionen / Erweiterungen",
+      "enabled": true,
+      "items": [
+        {
+          "name": "dblink",
+          "level": "High",
+          "message": "Datenbank-/Netzwerkverbindung über die Erweiterung dblink.",
+          "recommendation": "Zielserver und Notwendigkeit prüfen; dblink ermöglicht ausgehende Verbindungen."
+        },
+        {
+          "name": "dblink_exec",
+          "level": "High",
+          "message": "Ausführung von Anweisungen auf einer Fremddatenbank über dblink_exec.",
+          "recommendation": "Verwendung streng prüfen."
+        },
+        {
+          "name": "pg_read_file",
+          "level": "Critical",
+          "message": "Lesen beliebiger Serverdateien über pg_read_file.",
+          "recommendation": "Sehr kritisch: ermöglicht das Auslesen von Dateien des Datenbankservers."
+        },
+        {
+          "name": "pg_read_binary_file",
+          "level": "Critical",
+          "message": "Lesen beliebiger (binärer) Serverdateien über pg_read_binary_file.",
+          "recommendation": "Sehr kritisch: ermöglicht das Auslesen von Dateien des Datenbankservers."
+        },
+        {
+          "name": "pg_ls_dir",
+          "level": "High",
+          "message": "Auflisten von Serververzeichnissen über pg_ls_dir.",
+          "recommendation": "Verwendung prüfen; gibt Verzeichnisinhalte des Servers preis."
+        },
+        {
+          "name": "pg_stat_file",
+          "level": "High",
+          "message": "Metadaten von Serverdateien über pg_stat_file.",
+          "recommendation": "Verwendung prüfen."
+        },
+        {
+          "name": "lo_import",
+          "level": "High",
+          "message": "Import einer Serverdatei als Large Object (lo_import).",
+          "recommendation": "Dateizugriff aus der Datenbank prüfen."
+        },
+        {
+          "name": "lo_export",
+          "level": "High",
+          "message": "Export eines Large Object in eine Serverdatei (lo_export).",
+          "recommendation": "Dateizugriff aus der Datenbank prüfen."
+        },
+        {
+          "name": "plpython3u",
+          "level": "Critical",
+          "message": "Verwendung der nicht vertrauenswürdigen Sprache PL/Python3U (Betriebssystemzugriff möglich).",
+          "recommendation": "Untrusted Languages können Betriebssystembefehle ausführen. Verwendung streng prüfen."
+        },
+        {
+          "name": "plpythonu",
+          "level": "Critical",
+          "message": "Verwendung der nicht vertrauenswürdigen Sprache PL/PythonU (Betriebssystemzugriff möglich).",
+          "recommendation": "Untrusted Languages können Betriebssystembefehle ausführen. Verwendung streng prüfen."
+        },
+        {
+          "name": "plperlu",
+          "level": "Critical",
+          "message": "Verwendung der nicht vertrauenswürdigen Sprache PL/PerlU (Betriebssystemzugriff möglich).",
+          "recommendation": "Untrusted Languages können Betriebssystembefehle ausführen. Verwendung streng prüfen."
+        },
+        {
+          "name": "pltclu",
+          "level": "Critical",
+          "message": "Verwendung der nicht vertrauenswürdigen Sprache PL/TclU (Betriebssystemzugriff möglich).",
+          "recommendation": "Untrusted Languages können Betriebssystembefehle ausführen. Verwendung streng prüfen."
+        },
+        {
+          "name": "plr",
+          "level": "Critical",
+          "message": "Verwendung der nicht vertrauenswürdigen Sprache PL/R (Betriebssystemzugriff möglich).",
+          "recommendation": "Untrusted Languages können Betriebssystembefehle ausführen. Verwendung streng prüfen."
+        },
+        {
+          "name": "pg_file_write",
+          "level": "Critical",
+          "message": "Schreiben beliebiger Serverdateien über pg_file_write (adminpack).",
+          "recommendation": "Sehr kritisch: ermöglicht das Schreiben von Dateien auf dem Datenbankserver. Verwendung streng prüfen."
+        },
+        {
+          "name": "pg_file_unlink",
+          "level": "Critical",
+          "message": "Löschen beliebiger Serverdateien über pg_file_unlink (adminpack).",
+          "recommendation": "Sehr kritisch: ermöglicht das Löschen von Dateien auf dem Datenbankserver."
+        },
+        {
+          "name": "pg_file_rename",
+          "level": "High",
+          "message": "Umbenennen von Serverdateien über pg_file_rename (adminpack).",
+          "recommendation": "Dateizugriff auf den Datenbankserver prüfen."
+        },
+        {
+          "name": "pg_logdir_ls",
+          "level": "High",
+          "message": "Auflisten des Server-Logverzeichnisses über pg_logdir_ls (adminpack).",
+          "recommendation": "Verwendung prüfen; gibt Logdateien des Servers preis."
+        },
+        {
+          "name": "dblink_connect",
+          "level": "High",
+          "message": "Aufbau einer ausgehenden Datenbankverbindung über dblink_connect.",
+          "recommendation": "Zielserver und Notwendigkeit prüfen; ausgehende Verbindungen einschränken."
+        },
+        {
+          "name": "dblink_connect_u",
+          "level": "Critical",
+          "message": "Ausgehende Verbindung über dblink_connect_u - umgeht die Authentifizierungsbeschränkungen von dblink.",
+          "recommendation": "Sehr kritisch: dblink_connect_u ist Nicht-Superusern normalerweise entzogen. Verwendung streng prüfen."
+        },
+        {
+          "name": "pg_terminate_backend",
+          "level": "Warning",
+          "message": "Beenden fremder Datenbanksitzungen über pg_terminate_backend (möglicher Denial of Service).",
+          "recommendation": "Prüfen, ob das gezielte Beenden von Sitzungen beabsichtigt ist."
+        },
+        {
+          "name": "pg_cancel_backend",
+          "level": "Warning",
+          "message": "Abbrechen fremder Abfragen über pg_cancel_backend.",
+          "recommendation": "Prüfen, ob der Abbruch fremder Sitzungen beabsichtigt ist."
+        },
+        {
+          "name": "pg_reload_conf",
+          "level": "Warning",
+          "message": "Neueinlesen der Serverkonfiguration über pg_reload_conf.",
+          "recommendation": "Konfigurationsänderungen zur Laufzeit prüfen."
+        },
+        {
+          "name": "set_config",
+          "level": "Warning",
+          "message": "Änderung von Laufzeitparametern über set_config (z.B. search_path).",
+          "recommendation": "Prüfen, welche Parameter gesetzt werden; das Manipulieren von search_path kann Sicherheitsmechanismen umgehen.",
+          "context_lines": 0
+        },
+        {
+          "name": "pg_authid",
+          "level": "Warning",
+          "message": "Zugriff auf den Katalog pg_authid (enthält Passwort-Hashes der Rollen).",
+          "recommendation": "Lesezugriff auf pg_authid prüfen - klassischer Indikator für Credential-Access."
+        },
+        {
+          "name": "utl_http",
+          "level": "High",
+          "message": "Ausgehende HTTP-Verbindung über UTL_HTTP (EPAS) - mögliche SSRF / Datenexfiltration.",
+          "recommendation": "Zieladressen und Notwendigkeit der Netzwerkverbindung prüfen."
+        },
+        {
+          "name": "utl_smtp",
+          "level": "High",
+          "message": "E-Mail-Versand über UTL_SMTP (EPAS) - mögliche Datenexfiltration.",
+          "recommendation": "Empfänger und Inhalt prüfen; Mailversand aus der Datenbank einschränken."
+        },
+        {
+          "name": "utl_mail",
+          "level": "High",
+          "message": "E-Mail-Versand über UTL_MAIL (EPAS) - mögliche Datenexfiltration.",
+          "recommendation": "Mailversand aus der Datenbank einschränken; Empfänger und Inhalt prüfen."
+        },
+        {
+          "name": "utl_url",
+          "level": "Warning",
+          "message": "URL-Verarbeitung über UTL_URL (EPAS) - häufig Baustein für Netzwerkzugriffe/SSRF.",
+          "recommendation": "Im Zusammenhang mit UTL_HTTP prüfen; Zieladressen validieren."
+        },
+        {
+          "name": "utl_encode",
+          "level": "Warning",
+          "message": "Kodierung über UTL_ENCODE (EPAS) - Base64/Hex kann zur Verschleierung dienen.",
+          "recommendation": "Prüfen, ob hier Inhalte verschleiert oder Daten exfiltriert werden."
+        },
+        {
+          "name": "utl_file",
+          "level": "High",
+          "message": "Dateisystemzugriff über UTL_FILE (EPAS).",
+          "recommendation": "Verzeichnis und Pfade prüfen; Dateizugriff aus der Datenbank minimieren."
+        },
+        {
+          "name": "dbms_scheduler",
+          "level": "High",
+          "message": "Job-/Programmausführung über DBMS_SCHEDULER (EPAS) - kann externe Betriebssystembefehle starten.",
+          "recommendation": "Job-Typ prüfen; EXTERNAL-Jobs können Betriebssystembefehle ausführen."
+        },
+        {
+          "name": "dbms_job",
+          "level": "Warning",
+          "message": "Verzögerte Codeausführung über DBMS_JOB (EPAS).",
+          "recommendation": "Prüfen, ob hier eine versteckte/verzögerte Ausführung eingerichtet wird."
+        },
+        {
+          "name": "dbms_sql",
+          "level": "Warning",
+          "message": "Dynamisches SQL über DBMS_SQL (EPAS).",
+          "recommendation": "Prüfen, ob das SQL mit Bindevariablen aufgebaut wird."
+        },
+        {
+          "name": "dbms_lob",
+          "level": "Warning",
+          "message": "LOB-Zugriff über DBMS_LOB (EPAS) - kann u.a. mit serverseitigen Dateien/BFILEs interagieren.",
+          "recommendation": "Verwendung prüfen, insbesondere Datei-/BFILE-Operationen."
+        },
+        {
+          "name": "dbms_pipe",
+          "level": "Warning",
+          "message": "Sitzungsübergreifende Kommunikation über DBMS_PIPE (EPAS).",
+          "recommendation": "Verwendung prüfen."
+        },
+        {
+          "name": "dbms_crypto",
+          "level": "High",
+          "message": "Verwendung des kryptografischen Pakets DBMS_CRYPTO (EPAS).",
+          "recommendation": "Schlüsselverwaltung, Algorithmus und Betriebsmodus kontrollieren."
+        },
+        {
+          "name": "dbms_rls",
+          "level": "High",
+          "message": "Row-Level-Security-Policies über DBMS_RLS (EPAS) - die Zugriffskontrolle wird verändert.",
+          "recommendation": "Änderungen an RLS-Policies streng prüfen."
+        },
+        {
+          "name": "dbms_redact",
+          "level": "High",
+          "message": "Daten-Redaction über DBMS_REDACT (EPAS) - die Maskierung sensibler Daten wird verändert.",
+          "recommendation": "Änderungen an Redaction-Policies streng prüfen."
+        }
+      ]
+    },
+    "obfuscation": {
+      "id": "ACI-OBF",
+      "name": "Verschlüsselter / Obfuskierter Code",
+      "enabled": true,
+      "detect_wrapped": false,
+      "wrapped_level": "High",
+      "detect_chr_chain": true,
+      "chr_chain_min": 4,
+      "chr_chain_level": "High",
+      "patterns": [
+        {
+          "id": "base64-blob",
+          "regex": "(?!([A-Za-z0-9+/])\\1{59,})[A-Za-z0-9+/]{60,}={0,2}",
+          "target": "string",
+          "level": "Warning",
+          "skip_in_insert": true,
+          "message": "Langer Base64-ähnlicher Block in einem String-Literal - möglicherweise kodierter/verschleierter Inhalt.",
+          "recommendation": "Inhalt dekodieren und prüfen."
+        },
+        {
+          "id": "hex-blob",
+          "regex": "(?:\\\\x)?(?!([0-9A-Fa-f])\\1{99,})[0-9A-Fa-f]{100,}",
+          "target": "string",
+          "level": "Warning",
+          "skip_in_insert": true,
+          "message": "Langer Hex-Block in einem String-Literal - möglicherweise kodierter/verschleierter Inhalt.",
+          "recommendation": "Inhalt dekodieren und prüfen."
+        },
+        {
+          "id": "base64-decode-call",
+          "regex": "\\b(decode\\s*\\([^;)]*,\\s*'base64'\\s*\\)|convert_from\\s*\\()",
+          "target": "code",
+          "level": "Warning",
+          "message": "Aufruf einer Dekodierfunktion (decode/convert_from) - häufig zur Code-/Datenverschleierung.",
+          "recommendation": "Prüfen, was dekodiert wird; Base64 wird oft genutzt, um Nutzlasten zu verbergen."
+        },
+        {
+          "id": "dynamic-decode-exec",
+          "regex": "\\bexecute\\b[^;]*\\b(decode|convert_from|pgp_sym_decrypt|pgp_pub_decrypt)\\b",
+          "target": "code",
+          "level": "Critical",
+          "message": "Dynamisches SQL wird aus dekodiertem/entschlüsseltem Inhalt ausgeführt.",
+          "recommendation": "Sehr kritisch: zur Laufzeit dekodierter Code, der direkt ausgeführt wird. Herkunft und Zweck zwingend klären."
+        }
+      ]
+    },
+    "sql_injection": {
+      "id": "ACI-SQLI",
+      "name": "SQL Injection",
+      "enabled": true,
+      "tainted_level": "Critical",
+      "plsql_injection_level": "Critical",
+      "literal_only_level": "Warning",
+      "sanitized_level": "Warning",
+      "unknown_dynamic_level": "High",
+      "sanitizers": [
+        "quote_ident(", "quote_literal(", "quote_nullable(", "format(",
+        "quote_ident (", "quote_literal (", "quote_nullable (", "format ("
+      ],
+      "session_taint_patterns": [
+        "\\bcurrent_setting\\s*\\(",
+        "\\bset_config\\s*\\("
+      ],
+      "interprocedural": true,
+      "interprocedural_level": "Critical"
+    },
+    "ddl_in_code": {
+      "id": "ACI-DDL",
+      "name": "DDL im Code",
+      "enabled": true,
+      "detect_in_dynamic_sql": true,
+      "detect_standalone": true,
+      "skip_object_definitions": true,
+      "harmless_object_privileges": ["SELECT", "READ", "INSERT", "UPDATE", "DELETE"],
+      "keywords": [
+        {
+          "keyword": "GRANT",
+          "level": "Critical",
+          "message": "Vergabe von Rechten (GRANT).",
+          "recommendation": "GRANT im Code kann zu Rechteausweitung führen. Prüfen, welche Rechte an welche Rolle vergeben werden."
+        },
+        {
+          "keyword": "REVOKE",
+          "level": "High",
+          "message": "Entzug von Rechten (REVOKE).",
+          "recommendation": "Prüfen, ob der Rechteentzug beabsichtigt ist."
+        },
+        {
+          "keyword": "CREATE",
+          "level": "High",
+          "message": "Erzeugung eines Datenbankobjekts (CREATE).",
+          "recommendation": "Prüfen, ob das Objekt zur Laufzeit erzeugt werden soll (z.B. CREATE ROLE, CREATE EXTENSION)."
+        },
+        {
+          "keyword": "ALTER",
+          "level": "High",
+          "message": "Änderung eines Datenbankobjekts oder der Rolle/des Systems (ALTER).",
+          "recommendation": "Prüfen, ob die Änderung beabsichtigt ist (ALTER ROLE/SYSTEM besonders sensibel)."
+        },
+        {
+          "keyword": "DROP",
+          "level": "High",
+          "message": "Löschen eines Datenbankobjekts (DROP).",
+          "recommendation": "Prüfen, ob das Löschen beabsichtigt ist."
+        },
+        {
+          "keyword": "TRUNCATE",
+          "level": "High",
+          "message": "Leeren einer Tabelle (TRUNCATE).",
+          "recommendation": "Prüfen, ob beabsichtigt."
+        },
+        {
+          "keyword": "RENAME",
+          "level": "Warning",
+          "message": "Umbenennung eines Objekts (RENAME).",
+          "recommendation": "Prüfen, ob die Umbenennung beabsichtigt ist."
+        }
+      ],
+      "allowed_statements": [
+        "COMMIT",
+        "CREATE TABLE",
+        "CREATE VIEW",
+        "CREATE SEQUENCE",
+        "CREATE INDEX",
+        "CREATE FUNCTION",
+        "CREATE PROCEDURE",
+        "CREATE SCHEMA",
+        "ALTER TABLE",
+        "ALTER VIEW",
+        "ALTER SEQUENCE",
+        "ALTER INDEX",
+        "ALTER FUNCTION",
+        "ALTER PROCEDURE",
+        "DROP TABLE",
+        "DROP VIEW",
+        "DROP SEQUENCE",
+        "DROP INDEX",
+        "DROP FUNCTION",
+        "DROP PROCEDURE"
+      ]
+    }
+  }
+}

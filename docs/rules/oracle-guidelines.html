@@ -1,0 +1,457 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ACI-Regeln &amp;ndash; Oracle Coding Guidelines</title>
+<style>
+:root{--blocker:#7f1d1d;--critical:#b91c1c;--high:#c2410c;--major:#b45309;
+--warning:#a16207;--minor:#0e7490;--info:#6b7280;--bg:#f4f5f7;--card:#fff;
+--ink:#1f2933;--muted:#6b7280;--border:#e3e6ea;--accent:#2563eb;}
+*{box-sizing:border-box;}html{scroll-behavior:smooth;}
+body{margin:0;background:var(--bg);color:var(--ink);font-size:15px;
+line-height:1.6;font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,
+sans-serif;}
+header{background:#111827;color:#fff;padding:30px 40px;}
+header h1{margin:0 0 6px;font-size:23px;}
+header .sub{color:#9ca3af;font-size:13.5px;}
+header a{color:#9ca3af;}
+.wrap{max-width:1100px;margin:0 auto;padding:28px 40px 80px;}
+section{background:var(--card);border:1px solid var(--border);
+border-radius:12px;padding:22px 28px;margin-bottom:20px;}
+h2{font-size:19px;margin:2px 0 6px;padding-bottom:8px;
+border-bottom:2px solid var(--border);}
+h3{font-size:15px;margin:0;}
+p{margin:7px 0;}
+p.lead{color:var(--muted);}
+code{background:#eef2f7;color:#b91c5b;padding:1px 5px;border-radius:4px;
+font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:12.5px;
+word-break:break-word;}
+table{width:100%;border-collapse:collapse;margin:10px 0;font-size:13.5px;}
+th{text-align:left;background:#f9fafb;padding:8px 11px;
+border-bottom:2px solid var(--border);font-size:11px;text-transform:uppercase;
+letter-spacing:.04em;color:var(--muted);}
+td{padding:8px 11px;border-bottom:1px solid var(--border);
+vertical-align:top;}
+.badge{display:inline-block;padding:2px 9px;border-radius:999px;color:#fff;
+font-size:10.5px;font-weight:700;text-transform:uppercase;}
+.badge.blocker{background:var(--blocker);}.badge.critical{background:var(--critical);}
+.badge.high{background:var(--high);}.badge.major{background:var(--major);}
+.badge.warning{background:var(--warning);}.badge.minor{background:var(--minor);}
+.badge.info{background:var(--info);}
+.rule{border:1px solid var(--border);border-radius:10px;padding:14px 18px;
+margin:12px 0;}
+.rule.off{opacity:.6;}
+.rule-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.rid{font-family:ui-monospace,Menlo,monospace;font-size:12px;font-weight:700;
+background:#1f2933;color:#fff;padding:2px 8px;border-radius:5px;}
+.tag{font-size:10.5px;border:1px solid var(--border);border-radius:999px;
+padding:1px 8px;color:var(--muted);}
+.rule .msg{margin:8px 0;}
+.meta{font-size:13px;color:var(--muted);margin:4px 0;}
+.meta b{color:var(--ink);}
+.chips{display:flex;flex-wrap:wrap;gap:5px;margin:6px 0;}
+.chip{background:#eef2f7;border-radius:5px;padding:2px 7px;font-size:12px;
+font-family:ui-monospace,Menlo,monospace;}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+gap:14px;}
+.cards a{display:block;text-decoration:none;color:inherit;border:1px solid
+var(--border);border-radius:10px;padding:16px 18px;background:#fff;}
+.cards a:hover{border-color:var(--accent);}
+.cards h3{color:var(--accent);margin-bottom:4px;}
+.toc{font-size:13.5px;}
+.toc a{color:var(--accent);text-decoration:none;margin-right:14px;}
+.examples{margin-top:14px;}
+.ex{border-top:1px dashed var(--border);margin-top:14px;padding-top:12px;}
+.ex.first{border-top:none;margin-top:8px;}
+.exname{font-weight:700;margin:0 0 2px;font-size:13.5px;}
+.exname code{background:#1f2933;color:#fff;}
+.exnote{color:var(--muted);font-size:12.5px;margin:2px 0 6px;}
+.exlabel{font-size:10.5px;font-weight:700;text-transform:uppercase;
+letter-spacing:.04em;margin:9px 0 3px;}
+.exlabel.bad{color:var(--critical);}
+.exlabel.bad::before{content:"\2718  ";}
+.exlabel.good{color:#15803d;}
+.exlabel.good::before{content:"\2714  ";}
+pre.code{margin:0;padding:10px 13px;border-radius:7px;overflow-x:auto;
+font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:12px;
+line-height:1.55;white-space:pre;}
+pre.code.bad{background:#fef2f2;border:1px solid #fecaca;color:#7f1d1d;}
+pre.code.good{background:#f0fdf4;border:1px solid #bbf7d0;color:#14532d;}
+footer{max-width:1100px;margin:0 auto;padding:0 40px 50px;color:var(--muted);
+font-size:12.5px;}
+</style>
+</head>
+<body>
+<header>
+<h1>ACI-Regeln &amp;ndash; Oracle Coding Guidelines</h1>
+<div class="sub">Detaillierte Beschreibung der Prüfregeln &middot; <a href="index.html">Übersicht</a></div>
+</header>
+<div class="wrap">
+<section><h2>Coding Guidelines &amp;ndash; Oracle</h2><p class="lead">PL/SQL- und SQL-Coding-Guidelines (Trivadis v4.4), nach Kategorien gegliedert.</p>
+<p class="meta">10 Gruppen &middot; 116 Regeln</p><p class="toc"><a href="#g1_general">Allgemein</a> <a href="#g2_variables_and_types">Variablen &amp; Typen</a> <a href="#g3_dml_and_sql">DML &amp; SQL</a> <a href="#g4_control_structures">Kontrollstrukturen</a> <a href="#g5_exception_handling">Exception Handling</a> <a href="#g6_dynamic_sql">Dynamic SQL</a> <a href="#g7_stored_objects">Stored Objects</a> <a href="#g8_patterns">Patterns</a> <a href="#g9_function_usage">Funktionsnutzung</a> <a href="#naming">Namenskonventionen</a></p></section>
+<section id="g1_general"><h2>Allgemein <span class="rid">Allgemein</span></h2>
+<p class="lead">Trivadis Coding Guidelines, Kategorie 1 - General. Quelle: Trivadis PL/SQL &amp; SQL Coding Guidelines v4.4 (Apache-2.0).</p>
+<p class="meta">8 Regeln</p>
+<div class="rule" id="G-1070"><div class="rule-head"><span class="rid">G-1070</span><h3>Verschachtelte Kommentarblöcke vermeiden</h3><span class="badge minor">Minor</span></div><p class="msg">Verschachtelter Blockkommentar (/* ... /* ... */ ...): das innere /* wird ignoriert, das äußere */ beendet den Kommentar vorzeitig.</p><table><tr><td><b>Merkmal</b></td><td>Maintainability</td></tr><tr><td><b>Detektor</b></td><td>Typ <code>builtin</code> &middot; Detektor <code>nested_comments</code></td></tr><tr><td><b>Empfehlung</b></td><td>Blockkommentare nicht verschachteln; zum Auskommentieren von Code Zeilenkommentare (--) verwenden.</td></tr><tr><td><b>Quelle</b></td><td><a href="https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/1-general/g-1070/">https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/1-general/g-1070/</a></td></tr></table><div class="examples"><div class="ex first"><div class="exlabel bad">Verstoß</div><pre class="code bad">/* Aeusserer Kommentar
+   /* innerer Block */   -- das aeussere */ beendet hier vorzeitig
+   l_x := 1;
+*/</pre><div class="exlabel good">Konform</div><pre class="code good">-- Zum Auskommentieren Zeilenkommentare verwenden
+-- l_x := 1;
+-- l_y := 2;</pre></div></div></div>
+<div class="rule" id="G-1080"><div class="rule-head"><span class="rid">G-1080</span><h3>Gleichen Ausdruck nicht auf beiden Seiten eines Vergleichs verwenden</h3><span class="badge minor">Minor</span></div><p class="msg">Auf beiden Seiten des Operators steht derselbe Ausdruck - das Ergebnis ist konstant und vermutlich ein Fehler.</p><table><tr><td><b>Merkmal</b></td><td>Maintainability, Reliability</td></tr><tr><td><b>Detektor</b></td><td>Typ <code>regex</code> &middot; Muster <code>\b([A-Za-z_][\w$#]*)\s*(?:=|&lt;&gt;|!=|&lt;=|&gt;=|&lt;|&gt;)\s*\1\b</code> &middot; Ziel <code>masked</code></td></tr><tr><td><b>Empfehlung</b></td><td>Vergleich prüfen und korrigieren.</td></tr><tr><td><b>Quelle</b></td><td><a href="https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/1-general/g-1080/">https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/1-general/g-1080/</a></td></tr></table><div class="examples"><div class="ex first"><div class="exlabel bad">Verstoß</div><pre class="code bad">IF l_count = l_count THEN   -- immer wahr - vermutlich Tippfehler
+  process_rows;
+END IF;</pre><div class="exlabel good">Konform</div><pre class="code good">IF l_count = l_expected THEN
+  process_rows;
+END IF;</pre></div></div></div>
+<div class="rule off" id="G-1010"><div class="rule-head"><span class="rid">G-1010</span><h3>Sub-Blöcke mit Labels versehen</h3><span class="badge minor">Minor</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-1020"><div class="rule-head"><span class="rid">G-1020</span><h3>Passendes Loop-/Block-Label verwenden</h3><span class="badge minor">Minor</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-1030"><div class="rule-head"><span class="rid">G-1030</span><h3>Keine unbenutzten Variablen definieren</h3><span class="badge minor">Minor</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-1040"><div class="rule-head"><span class="rid">G-1040</span><h3>Toten Code vermeiden</h3><span class="badge minor">Minor</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-1050"><div class="rule-head"><span class="rid">G-1050</span><h3>Literale im Code vermeiden</h3><span class="badge minor">Minor</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-1060"><div class="rule-head"><span class="rid">G-1060</span><h3>Keine ROWIDs/UROWIDs in Tabellen speichern</h3><span class="badge minor">Minor</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+</section>
+<section id="g2_variables_and_types"><h2>Variablen &amp; Typen <span class="rid">Variablen &amp; Typen</span></h2>
+<p class="lead">Trivadis Coding Guidelines, Kategorie 2 - Variables &amp; Types. Quelle: Trivadis PL/SQL &amp; SQL Coding Guidelines v4.4 (Apache-2.0).</p>
+<p class="meta">22 Regeln</p>
+<div class="rule" id="G-2180"><div class="rule-head"><span class="rid">G-2180</span><h3>Keine gequoteten Bezeichner verwenden</h3><span class="badge major">Major</span></div><p class="msg">Gequoteter Bezeichner (&quot;...&quot;) gefunden. Gequotete Bezeichner erzwingen Groß-/Kleinschreibung und erschweren die Wartung.</p><table><tr><td><b>Merkmal</b></td><td>Maintainability</td></tr><tr><td><b>Detektor</b></td><td>Typ <code>regex</code> &middot; Muster <code>&quot;[A-Za-z_][^&quot;\n]*&quot;</code> &middot; Ziel <code>code</code></td></tr><tr><td><b>Empfehlung</b></td><td>Bezeichner ohne doppelte Anführungszeichen und in Kleinschreibung verwenden.</td></tr><tr><td><b>Quelle</b></td><td><a href="https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/2-variables-and-types/1-general/g-2180/">https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/2-variables-and-types/1-general/g-2180/</a></td></tr></table><div class="examples"><div class="ex first"><div class="exlabel bad">Verstoß</div><pre class="code bad">DECLARE
+  "Total Amount"  NUMBER(12,2);
+BEGIN
+  "Total Amount" := 0;
+END;</pre><div class="exlabel good">Konform</div><pre class="code good">DECLARE
+  l_total_amount  NUMBER(12,2);
+BEGIN
+  l_total_amount := 0;
+END;</pre></div></div></div>
+<div class="rule" id="G-2185"><div class="rule-head"><span class="rid">G-2185</span><h3>Keine zu kurzen Bezeichner verwenden</h3><span class="badge minor">Minor</span></div><p class="msg">Sehr kurzer Bezeichner.</p><table><tr><td><b>Merkmal</b></td><td>Maintainability</td></tr><tr><td><b>Detektor</b></td><td>Typ <code>builtin</code> &middot; Detektor <code>short_identifier</code></td></tr><tr><td><b>Empfehlung</b></td><td>Aussagekräftige, ausreichend lange Bezeichner verwenden.</td></tr><tr><td><b>Quelle</b></td><td><a href="https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/2-variables-and-types/1-general/g-2185/">https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/2-variables-and-types/1-general/g-2185/</a></td></tr></table><div class="examples"><div class="ex first"><div class="exlabel bad">Verstoß</div><pre class="code bad">DECLARE
+  n  PLS_INTEGER;
+  x  VARCHAR2(100);
+BEGIN
+  n := 0;
+END;</pre><div class="exlabel good">Konform</div><pre class="code good">DECLARE
+  l_row_count  PLS_INTEGER;
+  l_user_name  VARCHAR2(100);
+BEGIN
+  l_row_count := 0;
+END;</pre></div></div></div>
+<div class="rule" id="G-2190"><div class="rule-head"><span class="rid">G-2190</span><h3>ROWID / UROWID vermeiden</h3><span class="badge minor">Minor</span></div><p class="msg">Verwendung von ROWID oder UROWID.</p><table><tr><td><b>Merkmal</b></td><td>Portability, Reliability</td></tr><tr><td><b>Detektor</b></td><td>Typ <code>regex</code> &middot; Muster <code>\b(?:UROWID|ROWID)\b</code> &middot; Ziel <code>masked</code></td></tr><tr><td><b>Empfehlung</b></td><td>ROWID/UROWID vermeiden; sie sind nicht stabil und nicht portabel.</td></tr><tr><td><b>Quelle</b></td><td><a href="https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/2-variables-and-types/1-general/g-2190/">https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/2-variables-and-types/1-general/g-2190/</a></td></tr></table><div class="examples"><div class="ex first"><div class="exlabel bad">Verstoß</div><pre class="code bad">DECLARE
+  l_rid  ROWID;
+BEGIN
+  SELECT ROWID INTO l_rid FROM employees WHERE id = p_id;
+END;</pre><div class="exlabel good">Konform</div><pre class="code good">DECLARE
+  l_emp_id  employees.id%TYPE;
+BEGIN
+  SELECT id INTO l_emp_id FROM employees WHERE id = p_id;
+END;</pre></div></div></div>
+<div class="rule" id="G-2210"><div class="rule-head"><span class="rid">G-2210</span><h3>NUMBER nicht ohne Genauigkeit deklarieren</h3><span class="badge minor">Minor</span></div><p class="msg">NUMBER ohne Angabe von Genauigkeit/Skalierung.</p><table><tr><td><b>Merkmal</b></td><td>Reliability</td></tr><tr><td><b>Detektor</b></td><td>Typ <code>regex</code> &middot; Muster <code>\bNUMBER\b(?!\s*[(%])</code> &middot; Ziel <code>masked</code></td></tr><tr><td><b>Empfehlung</b></td><td>NUMBER mit Precision/Scale deklarieren oder einen passenden Subtyp (z.B. INTEGER, PLS_INTEGER) verwenden.</td></tr><tr><td><b>Quelle</b></td><td><a href="https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/2-variables-and-types/2-numeric-data-types/g-2210/">https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/2-variables-and-types/2-numeric-data-types/g-2210/</a></td></tr></table><div class="examples"><div class="ex first"><div class="exlabel bad">Verstoß</div><pre class="code bad">DECLARE
+  l_amount  NUMBER;
+BEGIN
+  l_amount := 0;
+END;</pre><div class="exlabel good">Konform</div><pre class="code good">DECLARE
+  l_amount   NUMBER(12,2);
+  l_counter  PLS_INTEGER;
+BEGIN
+  l_amount := 0;
+END;</pre></div></div></div>
+<div class="rule" id="G-2310"><div class="rule-head"><span class="rid">G-2310</span><h3>Datentyp CHAR vermeiden</h3><span class="badge minor">Minor</span></div><p class="msg">Verwendung des Datentyps CHAR.</p><table><tr><td><b>Merkmal</b></td><td>Reliability</td></tr><tr><td><b>Detektor</b></td><td>Typ <code>regex</code> &middot; Muster <code>(?&lt;![A-Za-z0-9_#$])CHAR\s*\(</code> &middot; Ziel <code>masked</code></td></tr><tr><td><b>Empfehlung</b></td><td>VARCHAR2 statt CHAR verwenden; CHAR füllt Werte mit Leerzeichen auf.</td></tr><tr><td><b>Quelle</b></td><td><a href="https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/2-variables-and-types/3-character-data-types/g-2310/">https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/2-variables-and-types/3-character-data-types/g-2310/</a></td></tr></table><div class="examples"><div class="ex first"><div class="exlabel bad">Verstoß</div><pre class="code bad">DECLARE
+  l_code  CHAR(10);   -- wird mit Leerzeichen aufgefuellt
+BEGIN
+  l_code := 'AB';
+END;</pre><div class="exlabel good">Konform</div><pre class="code good">DECLARE
+  l_code  VARCHAR2(10);
+BEGIN
+  l_code := 'AB';
+END;</pre></div></div></div>
+<div class="rule" id="G-2320"><div class="rule-head"><span class="rid">G-2320</span><h3>Datentyp VARCHAR niemals verwenden</h3><span class="badge major">Major</span></div><p class="msg">Verwendung des Datentyps VARCHAR.</p><table><tr><td><b>Merkmal</b></td><td>Reliability</td></tr><tr><td><b>Detektor</b></td><td>Typ <code>regex</code> &middot; Muster <code>\bVARCHAR\b(?!2)</code> &middot; Ziel <code>masked</code></td></tr><tr><td><b>Empfehlung</b></td><td>Immer VARCHAR2 verwenden; die Semantik von VARCHAR kann sich künftig ändern.</td></tr><tr><td><b>Quelle</b></td><td><a href="https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/2-variables-and-types/3-character-data-types/g-2320/">https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/2-variables-and-types/3-character-data-types/g-2320/</a></td></tr></table><div class="examples"><div class="ex first"><div class="exlabel bad">Verstoß</div><pre class="code bad">DECLARE
+  l_name  VARCHAR(100);
+BEGIN
+  l_name := 'Test';
+END;</pre><div class="exlabel good">Konform</div><pre class="code good">DECLARE
+  l_name  VARCHAR2(100);
+BEGIN
+  l_name := 'Test';
+END;</pre></div></div></div>
+<div class="rule" id="G-2330"><div class="rule-head"><span class="rid">G-2330</span><h3>Leere Zeichenkette nicht als NULL-Ersatz verwenden</h3><span class="badge minor">Minor</span></div><p class="msg">Leere Zeichenkette (&#x27;&#x27;) als Wert oder im Vergleich verwendet.</p><table><tr><td><b>Merkmal</b></td><td>Reliability</td></tr><tr><td><b>Detektor</b></td><td>Typ <code>regex</code> &middot; Muster <code>(?:=|&lt;&gt;|!=|:=)\s*&#x27;&#x27;</code> &middot; Ziel <code>masked</code></td></tr><tr><td><b>Empfehlung</b></td><td>Statt &#x27;&#x27; explizit NULL verwenden bzw. mit IS [NOT] NULL prüfen.</td></tr><tr><td><b>Quelle</b></td><td><a href="https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/2-variables-and-types/3-character-data-types/g-2330/">https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/2-variables-and-types/3-character-data-types/g-2330/</a></td></tr></table><div class="examples"><div class="ex first"><div class="exlabel bad">Verstoß</div><pre class="code bad">-- '' ist in Oracle NULL - der Vergleich wird nie wahr
+IF l_name = '' THEN
+  l_name := '';
+END IF;</pre><div class="exlabel good">Konform</div><pre class="code good">IF l_name IS NULL THEN
+  l_name := NULL;
+END IF;</pre></div></div></div>
+<div class="rule" id="G-2510"><div class="rule-head"><span class="rid">G-2510</span><h3>Datentypen LONG und LONG RAW vermeiden</h3><span class="badge major">Major</span></div><p class="msg">Verwendung des veralteten Datentyps LONG bzw. LONG RAW.</p><table><tr><td><b>Merkmal</b></td><td>Portability, Reliability</td></tr><tr><td><b>Detektor</b></td><td>Typ <code>regex</code> &middot; Muster <code>\bLONG(?:\s+RAW)?\b</code> &middot; Ziel <code>masked</code></td></tr><tr><td><b>Empfehlung</b></td><td>CLOB/BLOB statt LONG/LONG RAW verwenden.</td></tr><tr><td><b>Quelle</b></td><td><a href="https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/2-variables-and-types/5-large-objects/g-2510/">https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/2-variables-and-types/5-large-objects/g-2510/</a></td></tr></table><div class="examples"><div class="ex first"><div class="exlabel bad">Verstoß</div><pre class="code bad">DECLARE
+  l_text  LONG;
+BEGIN
+  NULL;
+END;</pre><div class="exlabel good">Konform</div><pre class="code good">DECLARE
+  l_text  CLOB;
+BEGIN
+  NULL;
+END;</pre></div></div></div>
+<div class="rule off" id="G-2110"><div class="rule-head"><span class="rid">G-2110</span><h3>Anchored Declarations verwenden</h3><span class="badge minor">Minor</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-2120"><div class="rule-head"><span class="rid">G-2120</span><h3>Typen an einer Stelle definieren</h3><span class="badge minor">Minor</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-2130"><div class="rule-head"><span class="rid">G-2130</span><h3>Subtypes für häufige Konstrukte verwenden</h3><span class="badge minor">Minor</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-2135"><div class="rule-head"><span class="rid">G-2135</span><h3>Keine zugewiesenen, aber ungenutzten Werte</h3><span class="badge minor">Minor</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-2140"><div class="rule-head"><span class="rid">G-2140</span><h3>Variablen nicht mit NULL initialisieren</h3><span class="badge minor">Minor</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-2145"><div class="rule-head"><span class="rid">G-2145</span><h3>Keine Selbstzuweisung von Variablen</h3><span class="badge minor">Minor</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-2150"><div class="rule-head"><span class="rid">G-2150</span><h3>Vergleiche mit NULL vermeiden (IS [NOT] NULL)</h3><span class="badge minor">Minor</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-2160"><div class="rule-head"><span class="rid">G-2160</span><h3>Variablen nicht im Deklarationsteil per Funktion initialisieren</h3><span class="badge minor">Minor</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-2170"><div class="rule-head"><span class="rid">G-2170</span><h3>Variablen nicht überladen</h3><span class="badge minor">Minor</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-2220"><div class="rule-head"><span class="rid">G-2220</span><h3>PLS_INTEGER statt NUMBER für Ganzzahl-Arithmetik</h3><span class="badge minor">Minor</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-2230"><div class="rule-head"><span class="rid">G-2230</span><h3>SIMPLE_INTEGER nutzen, wo passend</h3><span class="badge minor">Minor</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-2340"><div class="rule-head"><span class="rid">G-2340</span><h3>VARCHAR2 mit CHAR-Semantik definieren</h3><span class="badge minor">Minor</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-2410"><div class="rule-head"><span class="rid">G-2410</span><h3>BOOLEAN für Werte mit zwei Bedeutungen</h3><span class="badge minor">Minor</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-2610"><div class="rule-head"><span class="rid">G-2610</span><h3>Keine selbstdefinierten Weak-Ref-Cursor-Typen</h3><span class="badge minor">Minor</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+</section>
+<section id="g3_dml_and_sql"><h2>DML &amp; SQL <span class="rid">DML &amp; SQL</span></h2>
+<p class="lead">Trivadis Coding Guidelines, Kategorie 3 - DML &amp; SQL. Quelle: Trivadis PL/SQL &amp; SQL Coding Guidelines v4.4 (Apache-2.0).</p>
+<p class="meta">20 Regeln</p>
+<div class="rule" id="G-3110"><div class="rule-head"><span class="rid">G-3110</span><h3>Zielspalten bei INSERT immer angeben</h3><span class="badge major">Major</span></div><p class="msg">INSERT ohne explizite Spaltenliste (INSERT INTO tabelle VALUES ...).</p><table><tr><td><b>Merkmal</b></td><td>Maintainability, Reliability</td></tr><tr><td><b>Detektor</b></td><td>Typ <code>regex</code> &middot; Muster <code>\bINSERT\s+INTO\s+(?:&quot;[^&quot;]+&quot;|[A-Za-z_][\w$#.]*)\s+VALUES\b</code> &middot; Ziel <code>code</code></td></tr><tr><td><b>Empfehlung</b></td><td>Zielspalten explizit angeben; sonst bricht der INSERT bei Strukturänderungen der Tabelle.</td></tr><tr><td><b>Quelle</b></td><td><a href="https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/3-dml-and-sql/1-general/g-3110/">https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/3-dml-and-sql/1-general/g-3110/</a></td></tr></table><div class="examples"><div class="ex first"><div class="exlabel bad">Verstoß</div><pre class="code bad">-- bricht bei Strukturaenderung der Tabelle
+INSERT INTO employees VALUES (p_id, p_name, p_dept);</pre><div class="exlabel good">Konform</div><pre class="code good">INSERT INTO employees (id, name, dept_id)
+VALUES (p_id, p_name, p_dept);</pre></div></div></div>
+<div class="rule" id="G-3145"><div class="rule-head"><span class="rid">G-3145</span><h3>Kein SELECT * aus Tabelle oder View</h3><span class="badge major">Major</span></div><p class="msg">Verwendung von SELECT * .</p><table><tr><td><b>Merkmal</b></td><td>Maintainability, Reliability</td></tr><tr><td><b>Detektor</b></td><td>Typ <code>regex</code> &middot; Muster <code>\bSELECT\s+\*</code> &middot; Ziel <code>code</code></td></tr><tr><td><b>Empfehlung</b></td><td>Benötigte Spalten explizit aufzählen.</td></tr><tr><td><b>Quelle</b></td><td><a href="https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/3-dml-and-sql/1-general/g-3145/">https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/3-dml-and-sql/1-general/g-3145/</a></td></tr></table><div class="examples"><div class="ex first"><div class="exlabel bad">Verstoß</div><pre class="code bad">SELECT * INTO l_emp FROM employees WHERE id = p_id;</pre><div class="exlabel good">Konform</div><pre class="code good">SELECT id, name, dept_id
+  INTO l_id, l_name, l_dept
+  FROM employees WHERE id = p_id;</pre></div></div></div>
+<div class="rule" id="G-3185"><div class="rule-head"><span class="rid">G-3185</span><h3>ROWNUM nicht auf derselben Ebene wie ORDER BY verwenden</h3><span class="badge major">Major</span></div><p class="msg">ROWNUM und ORDER BY in derselben Abfrage - ROWNUM wird vor der Sortierung vergeben.</p><table><tr><td><b>Merkmal</b></td><td>Reliability</td></tr><tr><td><b>Detektor</b></td><td>Typ <code>builtin</code> &middot; Detektor <code>rownum_order_by</code></td></tr><tr><td><b>Empfehlung</b></td><td>Für Top-N-Abfragen eine Inline-View mit ORDER BY oder FETCH FIRST n ROWS verwenden.</td></tr><tr><td><b>Quelle</b></td><td><a href="https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/3-dml-and-sql/1-general/g-3185/">https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/3-dml-and-sql/1-general/g-3185/</a></td></tr></table><div class="examples"><div class="ex first"><div class="exlabel bad">Verstoß</div><pre class="code bad">-- ROWNUM wird VOR der Sortierung vergeben -&gt; falsches Ergebnis
+SELECT name INTO l_name FROM employees
+ WHERE ROWNUM = 1 ORDER BY salary DESC;</pre><div class="exlabel good">Konform</div><pre class="code good">-- Sortierung in einer Inline-View, danach begrenzen
+SELECT name INTO l_name FROM (
+  SELECT name FROM employees ORDER BY salary DESC
+) WHERE ROWNUM = 1;</pre></div></div></div>
+<div class="rule" id="G-3190"><div class="rule-head"><span class="rid">G-3190</span><h3>NATURAL JOIN vermeiden</h3><span class="badge major">Major</span></div><p class="msg">Verwendung von NATURAL JOIN.</p><table><tr><td><b>Merkmal</b></td><td>Maintainability, Reliability</td></tr><tr><td><b>Detektor</b></td><td>Typ <code>regex</code> &middot; Muster <code>\bNATURAL\s+JOIN\b</code> &middot; Ziel <code>code</code></td></tr><tr><td><b>Empfehlung</b></td><td>Join-Bedingungen explizit angeben (ON ...); NATURAL JOIN reagiert unkontrolliert auf Spaltenänderungen.</td></tr><tr><td><b>Quelle</b></td><td><a href="https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/3-dml-and-sql/1-general/g-3190/">https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/3-dml-and-sql/1-general/g-3190/</a></td></tr></table><div class="examples"><div class="ex first"><div class="exlabel bad">Verstoß</div><pre class="code bad">SELECT e.name, d.name FROM employees e
+  NATURAL JOIN departments d;</pre><div class="exlabel good">Konform</div><pre class="code good">SELECT e.name, d.name FROM employees e
+  JOIN departments d ON d.id = e.dept_id;</pre></div></div></div>
+<div class="rule" id="G-3310"><div class="rule-head"><span class="rid">G-3310</span><h3>Kein COMMIT innerhalb einer Schleife</h3><span class="badge critical">Critical</span></div><p class="msg">COMMIT bzw. ROLLBACK innerhalb einer Schleife.</p><table><tr><td><b>Merkmal</b></td><td>Efficiency, Reliability</td></tr><tr><td><b>Detektor</b></td><td>Typ <code>builtin</code> &middot; Detektor <code>commit_in_loop</code></td></tr><tr><td><b>Empfehlung</b></td><td>Transaktionssteuerung aus der Schleife herausziehen; häufige COMMITs sind langsam und können Cursor invalidieren.</td></tr><tr><td><b>Quelle</b></td><td><a href="https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/3-dml-and-sql/3-transaction-control/g-3310/">https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/3-dml-and-sql/3-transaction-control/g-3310/</a></td></tr></table><div class="examples"><div class="ex first"><div class="exlabel bad">Verstoß</div><pre class="code bad">FOR r IN (SELECT id FROM staging) LOOP
+  process(r.id);
+  COMMIT;              -- COMMIT je Iteration
+END LOOP;</pre><div class="exlabel good">Konform</div><pre class="code good">FOR r IN (SELECT id FROM staging) LOOP
+  process(r.id);
+END LOOP;
+COMMIT;                -- ein COMMIT nach der Schleife</pre></div></div></div>
+<div class="rule" id="G-3330"><div class="rule-head"><span class="rid">G-3330</span><h3>Autonome Transaktionen vermeiden</h3><span class="badge major">Major</span></div><p class="msg">Verwendung von PRAGMA AUTONOMOUS_TRANSACTION.</p><table><tr><td><b>Merkmal</b></td><td>Reliability</td></tr><tr><td><b>Detektor</b></td><td>Typ <code>regex</code> &middot; Muster <code>\bPRAGMA\s+AUTONOMOUS_TRANSACTION\b</code> &middot; Ziel <code>code</code></td></tr><tr><td><b>Empfehlung</b></td><td>Autonome Transaktionen nur sehr gezielt einsetzen (z.B. Logging); sie umgehen die Transaktionsklammer des Aufrufers.</td></tr><tr><td><b>Quelle</b></td><td><a href="https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/3-dml-and-sql/3-transaction-control/g-3330/">https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/3-dml-and-sql/3-transaction-control/g-3330/</a></td></tr></table><div class="examples"><div class="ex first"><div class="exlabel bad">Verstoß</div><pre class="code bad">CREATE OR REPLACE PROCEDURE deactivate_all AS
+  PRAGMA AUTONOMOUS_TRANSACTION;   -- umgeht die Aufrufer-Transaktion
+BEGIN
+  UPDATE employees SET active = 'N';
+  COMMIT;
+END deactivate_all;</pre><div class="exlabel good">Konform</div><pre class="code good">-- Fachliches DML in der Transaktion des Aufrufers belassen
+CREATE OR REPLACE PROCEDURE deactivate_all AS
+BEGIN
+  UPDATE employees SET active = 'N';
+END deactivate_all;</pre></div></div></div>
+<div class="rule off" id="G-3115"><div class="rule-head"><span class="rid">G-3115</span><h3>Keine Selbstzuweisung einer Spalte</h3><span class="badge minor">Minor</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-3120"><div class="rule-head"><span class="rid">G-3120</span><h3>Tabellen-Aliase bei mehreren Quellen verwenden</h3><span class="badge major">Major</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-3130"><div class="rule-head"><span class="rid">G-3130</span><h3>ANSI-SQL-92-Join-Syntax verwenden</h3><span class="badge minor">Minor</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-3140"><div class="rule-head"><span class="rid">G-3140</span><h3>Anchored Records als Cursor-Ziel verwenden</h3><span class="badge minor">Minor</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-3150"><div class="rule-head"><span class="rid">G-3150</span><h3>Identity Columns für Surrogatschlüssel</h3><span class="badge minor">Minor</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-3160"><div class="rule-head"><span class="rid">G-3160</span><h3>Keine sichtbaren virtuellen Spalten</h3><span class="badge minor">Minor</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-3170"><div class="rule-head"><span class="rid">G-3170</span><h3>DEFAULT ON NULL für Spalten-Defaults</h3><span class="badge minor">Minor</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-3180"><div class="rule-head"><span class="rid">G-3180</span><h3>Spaltennamen statt Positionen in ORDER BY</h3><span class="badge major">Major</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-3182"><div class="rule-head"><span class="rid">G-3182</span><h3>Spaltennamen statt Positionen in GROUP BY</h3><span class="badge major">Major</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-3183"><div class="rule-head"><span class="rid">G-3183</span><h3>Spalten-Aliase statt Ausdrücke in GROUP BY</h3><span class="badge major">Major</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-3195"><div class="rule-head"><span class="rid">G-3195</span><h3>Wildcards in LIKE-Klausel verwenden</h3><span class="badge minor">Minor</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-3210"><div class="rule-head"><span class="rid">G-3210</span><h3>BULK-Operationen statt wiederholter DML</h3><span class="badge minor">Minor</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-3220"><div class="rule-head"><span class="rid">G-3220</span><h3>Gespeicherte Exceptions aus FORALL verarbeiten</h3><span class="badge major">Major</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-3320"><div class="rule-head"><span class="rid">G-3320</span><h3>Transaktionen in Nicht-Cursor-Schleifen in Prozeduren</h3><span class="badge minor">Minor</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+</section>
+<section id="g4_control_structures"><h2>Kontrollstrukturen <span class="rid">Kontrollstrukturen</span></h2>
+<p class="lead">Trivadis Coding Guidelines, Kategorie 4 - Control Structures. Quelle: Trivadis PL/SQL &amp; SQL Coding Guidelines v4.4 (Apache-2.0).</p>
+<p class="meta">21 Regeln</p>
+<div class="rule" id="G-4210"><div class="rule-head"><span class="rid">G-4210</span><h3>CASE statt IF mit mehreren ELSIF verwenden</h3><span class="badge minor">Minor</span></div><p class="msg">IF-Anweisung mit mehreren ELSIF-Zweigen.</p><table><tr><td><b>Merkmal</b></td><td>Maintainability</td></tr><tr><td><b>Detektor</b></td><td>Typ <code>builtin</code> &middot; Detektor <code>case_for_elsif</code></td></tr><tr><td><b>Empfehlung</b></td><td>Bei mehreren Zweigen eine CASE-Anweisung verwenden - sie ist besser lesbar.</td></tr><tr><td><b>Quelle</b></td><td><a href="https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/4-control-structures/2-case-if-decode-nvl-nvl2-coalesce/g-4210/">https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/4-control-structures/2-case-if-decode-nvl-nvl2-coalesce/g-4210/</a></td></tr></table><div class="examples"><div class="ex first"><div class="exlabel bad">Verstoß</div><pre class="code bad">IF l_grade = 'A' THEN l_bonus := 100;
+ELSIF l_grade = 'B' THEN l_bonus := 50;
+ELSIF l_grade = 'C' THEN l_bonus := 20;
+ELSE l_bonus := 0;
+END IF;</pre><div class="exlabel good">Konform</div><pre class="code good">l_bonus := CASE l_grade
+             WHEN 'A' THEN 100
+             WHEN 'B' THEN 50
+             WHEN 'C' THEN 20
+             ELSE 0
+           END;</pre></div></div></div>
+<div class="rule" id="G-4220"><div class="rule-head"><span class="rid">G-4220</span><h3>CASE statt DECODE verwenden</h3><span class="badge minor">Minor</span></div><p class="msg">Verwendung der Funktion DECODE.</p><table><tr><td><b>Merkmal</b></td><td>Maintainability</td></tr><tr><td><b>Detektor</b></td><td>Typ <code>regex</code> &middot; Muster <code>\bDECODE\s*\(</code> &middot; Ziel <code>code</code></td></tr><tr><td><b>Empfehlung</b></td><td>CASE statt DECODE verwenden - CASE ist lesbarer und typsicher.</td></tr><tr><td><b>Quelle</b></td><td><a href="https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/4-control-structures/2-case-if-decode-nvl-nvl2-coalesce/g-4220/">https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/4-control-structures/2-case-if-decode-nvl-nvl2-coalesce/g-4220/</a></td></tr></table><div class="examples"><div class="ex first"><div class="exlabel bad">Verstoß</div><pre class="code bad">l_label := DECODE(l_status, 1, 'aktiv', 0, 'inaktiv', 'unbekannt');</pre><div class="exlabel good">Konform</div><pre class="code good">l_label := CASE l_status
+             WHEN 1 THEN 'aktiv'
+             WHEN 0 THEN 'inaktiv'
+             ELSE 'unbekannt'
+           END;</pre></div></div></div>
+<div class="rule" id="G-4270"><div class="rule-head"><span class="rid">G-4270</span><h3>Boolean-Werte nicht mit Boolean-Literalen vergleichen</h3><span class="badge minor">Minor</span></div><p class="msg">Vergleich eines Boolean-Werts mit TRUE oder FALSE.</p><table><tr><td><b>Merkmal</b></td><td>Maintainability</td></tr><tr><td><b>Detektor</b></td><td>Typ <code>regex</code> &middot; Muster <code>(?:=|&lt;&gt;|!=)\s*(?:TRUE|FALSE)\b|\b(?:TRUE|FALSE)\s*(?:=|&lt;&gt;|!=)</code> &middot; Ziel <code>masked</code></td></tr><tr><td><b>Empfehlung</b></td><td>Boolean-Variable direkt verwenden (IF l_flag THEN ...) statt sie mit TRUE/FALSE zu vergleichen.</td></tr><tr><td><b>Quelle</b></td><td><a href="https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/4-control-structures/2-case-if-decode-nvl-nvl2-coalesce/g-4270/">https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/4-control-structures/2-case-if-decode-nvl-nvl2-coalesce/g-4270/</a></td></tr></table><div class="examples"><div class="ex first"><div class="exlabel bad">Verstoß</div><pre class="code bad">IF l_is_valid = TRUE THEN
+  process;
+END IF;</pre><div class="exlabel good">Konform</div><pre class="code good">IF l_is_valid THEN
+  process;
+END IF;</pre></div></div></div>
+<div class="rule" id="G-4310"><div class="rule-head"><span class="rid">G-4310</span><h3>Keine GOTO-Anweisungen verwenden</h3><span class="badge major">Major</span></div><p class="msg">Verwendung einer GOTO-Anweisung.</p><table><tr><td><b>Merkmal</b></td><td>Maintainability</td></tr><tr><td><b>Detektor</b></td><td>Typ <code>regex</code> &middot; Muster <code>\bGOTO\b</code> &middot; Ziel <code>masked</code></td></tr><tr><td><b>Empfehlung</b></td><td>GOTO vermeiden; mit strukturierten Konstrukten (Schleifen, Blöcke, Exceptions) ersetzen.</td></tr><tr><td><b>Quelle</b></td><td><a href="https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/4-control-structures/3-flow-control/g-4310/">https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/4-control-structures/3-flow-control/g-4310/</a></td></tr></table><div class="examples"><div class="ex first"><div class="exlabel bad">Verstoß</div><pre class="code bad">  IF l_error THEN GOTO cleanup; END IF;
+  process;
+  &lt;&lt;cleanup&gt;&gt;
+  free_resources;</pre><div class="exlabel good">Konform</div><pre class="code good">  IF NOT l_error THEN
+    process;
+  END IF;
+  free_resources;</pre></div></div></div>
+<div class="rule off" id="G-4110"><div class="rule-head"><span class="rid">G-4110</span><h3>%NOTFOUND statt NOT %FOUND verwenden</h3><span class="badge minor">Minor</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-4120"><div class="rule-head"><span class="rid">G-4120</span><h3>%NOTFOUND bei BULK/LIMIT nicht direkt nach FETCH</h3><span class="badge major">Major</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-4130"><div class="rule-head"><span class="rid">G-4130</span><h3>Lokal geöffnete Cursor immer schließen</h3><span class="badge major">Major</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-4140"><div class="rule-head"><span class="rid">G-4140</span><h3>Keine Anweisungen zwischen SQL und impliziter Cursor-Eigenschaft</h3><span class="badge major">Major</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-4230"><div class="rule-head"><span class="rid">G-4230</span><h3>COALESCE statt NVL bei Funktionsaufrufen</h3><span class="badge minor">Minor</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-4240"><div class="rule-head"><span class="rid">G-4240</span><h3>CASE statt NVL2 bei Funktionsaufrufen</h3><span class="badge minor">Minor</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-4250"><div class="rule-head"><span class="rid">G-4250</span><h3>Keine identischen Bedingungen in IF/CASE-Zweigen</h3><span class="badge major">Major</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-4260"><div class="rule-head"><span class="rid">G-4260</span><h3>Boolean-Bedingungen nicht mit NOT invertieren</h3><span class="badge minor">Minor</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-4320"><div class="rule-head"><span class="rid">G-4320</span><h3>Schleifen mit Labels versehen</h3><span class="badge minor">Minor</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-4325"><div class="rule-head"><span class="rid">G-4325</span><h3>Labels in inneren Scopes nicht wiederverwenden</h3><span class="badge major">Major</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-4330"><div class="rule-head"><span class="rid">G-4330</span><h3>CURSOR FOR LOOP zum vollständigen Durchlauf</h3><span class="badge minor">Minor</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-4340"><div class="rule-head"><span class="rid">G-4340</span><h3>NUMERIC FOR LOOP für dichte Arrays</h3><span class="badge minor">Minor</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-4365"><div class="rule-head"><span class="rid">G-4365</span><h3>Kein unbedingtes CONTINUE/EXIT in Schleifen</h3><span class="badge major">Major</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-4375"><div class="rule-head"><span class="rid">G-4375</span><h3>EXIT WHEN statt IF zum Schleifenabbruch</h3><span class="badge minor">Minor</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-4385"><div class="rule-head"><span class="rid">G-4385</span><h3>Kein CURSOR FOR LOOP zur reinen Existenzprüfung</h3><span class="badge major">Major</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-4390"><div class="rule-head"><span class="rid">G-4390</span><h3>Keine unreferenzierten FOR-Loop-Indizes</h3><span class="badge minor">Minor</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-4395"><div class="rule-head"><span class="rid">G-4395</span><h3>Keine hartkodierten Grenzen bei FOR-Schleifen</h3><span class="badge minor">Minor</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+</section>
+<section id="g5_exception_handling"><h2>Exception Handling <span class="rid">Exception Handling</span></h2>
+<p class="lead">Trivadis Coding Guidelines, Kategorie 5 - Exception Handling. Quelle: Trivadis PL/SQL &amp; SQL Coding Guidelines v4.4 (Apache-2.0).</p>
+<p class="meta">8 Regeln</p>
+<div class="rule" id="G-5040"><div class="rule-head"><span class="rid">G-5040</span><h3>WHEN OTHERS nicht ohne spezifische Handler verwenden</h3><span class="badge major">Major</span></div><p class="msg">WHEN OTHERS in einer Exception-Sektion. Prüfen, ob spezifische Handler fehlen oder die Exception verschluckt wird.</p><table><tr><td><b>Merkmal</b></td><td>Reliability</td></tr><tr><td><b>Detektor</b></td><td>Typ <code>regex</code> &middot; Muster <code>\bWHEN\s+OTHERS\b</code> &middot; Ziel <code>masked</code></td></tr><tr><td><b>Empfehlung</b></td><td>Spezifische Exceptions gezielt behandeln; in WHEN OTHERS die Exception protokollieren und erneut auslösen (RAISE), nicht stillschweigend verschlucken.</td></tr><tr><td><b>Quelle</b></td><td><a href="https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/5-exception-handling/g-5040/">https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/5-exception-handling/g-5040/</a></td></tr></table><div class="examples"><div class="ex first"><div class="exlabel bad">Verstoß</div><pre class="code bad">BEGIN
+  process;
+EXCEPTION
+  WHEN OTHERS THEN NULL;   -- Exception wird verschluckt
+END;</pre><div class="exlabel good">Konform</div><pre class="code good">BEGIN
+  process;
+EXCEPTION
+  WHEN no_data_found THEN
+    handle_missing;
+  WHEN OTHERS THEN
+    log_error(SQLCODE, SQLERRM);
+    RAISE;
+END;</pre></div></div></div>
+<div class="rule" id="G-5050"><div class="rule-head"><span class="rid">G-5050</span><h3>RAISE_APPLICATION_ERROR nicht mit hartkodierter Fehlernummer/-meldung</h3><span class="badge minor">Minor</span></div><p class="msg">RAISE_APPLICATION_ERROR mit hartkodierter Fehlernummer (-20nnn).</p><table><tr><td><b>Merkmal</b></td><td>Maintainability</td></tr><tr><td><b>Detektor</b></td><td>Typ <code>regex</code> &middot; Muster <code>\bRAISE_APPLICATION_ERROR\s*\(\s*-20\d{3}</code> &middot; Ziel <code>code</code></td></tr><tr><td><b>Empfehlung</b></td><td>Fehlernummern und -meldungen zentral (z.B. in einem Konstanten-Package) verwalten.</td></tr><tr><td><b>Quelle</b></td><td><a href="https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/5-exception-handling/g-5050/">https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/5-exception-handling/g-5050/</a></td></tr></table><div class="examples"><div class="ex first"><div class="exlabel bad">Verstoß</div><pre class="code bad">RAISE_APPLICATION_ERROR(-20015, 'Kunde nicht gefunden');</pre><div class="exlabel good">Konform</div><pre class="code good">-- Nummer und Text zentral im Konstanten-Package pflegen
+RAISE_APPLICATION_ERROR(err_pkg.co_customer_not_found,
+                        err_pkg.co_customer_not_found_msg);</pre></div></div></div>
+<div class="rule" id="G-5080"><div class="rule-head"><span class="rid">G-5080</span><h3>FORMAT_ERROR_BACKTRACE zusammen mit SQLERRM verwenden</h3><span class="badge minor">Minor</span></div><p class="msg">SQLERRM bzw. FORMAT_ERROR_STACK wird verwendet, aber kein FORMAT_ERROR_BACKTRACE.</p><table><tr><td><b>Merkmal</b></td><td>Maintainability</td></tr><tr><td><b>Detektor</b></td><td>Typ <code>builtin</code> &middot; Detektor <code>error_backtrace</code></td></tr><tr><td><b>Empfehlung</b></td><td>DBMS_UTILITY.FORMAT_ERROR_BACKTRACE bzw. UTL_CALL_STACK ergänzen, um die Fehlerstelle zu protokollieren.</td></tr><tr><td><b>Quelle</b></td><td><a href="https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/5-exception-handling/g-5080/">https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/5-exception-handling/g-5080/</a></td></tr></table><div class="examples"><div class="ex first"><div class="exlabel bad">Verstoß</div><pre class="code bad">EXCEPTION
+  WHEN OTHERS THEN
+    log_error(SQLERRM);          -- ohne Fehlerstelle
+END;</pre><div class="exlabel good">Konform</div><pre class="code good">EXCEPTION
+  WHEN OTHERS THEN
+    log_error(SQLERRM || ' - '
+              || DBMS_UTILITY.FORMAT_ERROR_BACKTRACE);
+    RAISE;
+END;</pre></div></div></div>
+<div class="rule off" id="G-5010"><div class="rule-head"><span class="rid">G-5010</span><h3>Fehler-/Logging-Framework verwenden</h3><span class="badge minor">Minor</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-5020"><div class="rule-head"><span class="rid">G-5020</span><h3>Unbenannte Exceptions nicht über Fehlernummer behandeln</h3><span class="badge major">Major</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-5030"><div class="rule-head"><span class="rid">G-5030</span><h3>Keine vordefinierten Exception-Namen für eigene Exceptions</h3><span class="badge major">Major</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-5060"><div class="rule-head"><span class="rid">G-5060</span><h3>Unbehandelte Exceptions vermeiden</h3><span class="badge major">Major</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-5070"><div class="rule-head"><span class="rid">G-5070</span><h3>Oracle-vordefinierte Exceptions nicht selbst auswerten</h3><span class="badge minor">Minor</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+</section>
+<section id="g6_dynamic_sql"><h2>Dynamic SQL <span class="rid">Dynamic SQL</span></h2>
+<p class="lead">Trivadis Coding Guidelines, Kategorie 6 - Dynamic SQL. Quelle: Trivadis PL/SQL &amp; SQL Coding Guidelines v4.4 (Apache-2.0).</p>
+<p class="meta">2 Regeln</p>
+<div class="rule" id="G-6010"><div class="rule-head"><span class="rid">G-6010</span><h3>Dynamisches SQL über eine Zeichenketten-Variable ausführen</h3><span class="badge major">Major</span></div><p class="msg">EXECUTE IMMEDIATE wird direkt mit einem String-Literal aufgerufen statt mit einer Variablen.</p><table><tr><td><b>Merkmal</b></td><td>Maintainability, Testability</td></tr><tr><td><b>Detektor</b></td><td>Typ <code>regex</code> &middot; Muster <code>\bEXECUTE\s+IMMEDIATE\s+(?:N?&#x27;|Q&#x27;)</code> &middot; Ziel <code>code</code></td></tr><tr><td><b>Empfehlung</b></td><td>Das dynamische Statement zunächst einer (Konstanten-)Variablen zuweisen - das erleichtert Debugging und Logging des ausgeführten SQL.</td></tr><tr><td><b>Quelle</b></td><td><a href="https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/6-dynamic-sql/g-6010/">https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/6-dynamic-sql/g-6010/</a></td></tr></table><div class="examples"><div class="ex first"><div class="exlabel bad">Verstoß</div><pre class="code bad">EXECUTE IMMEDIATE 'UPDATE employees SET active = ''N''';</pre><div class="exlabel good">Konform</div><pre class="code good">-- Statement erst einer Variablen zuweisen (Debugging/Logging)
+l_sql := 'UPDATE employees SET active = :a';
+EXECUTE IMMEDIATE l_sql USING 'N';</pre></div></div></div>
+<div class="rule off" id="G-6020"><div class="rule-head"><span class="rid">G-6020</span><h3>Output-Bind-Argumente in RETURNING INTO statt USING</h3><span class="badge minor">Minor</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+</section>
+<section id="g7_stored_objects"><h2>Stored Objects <span class="rid">Stored Objects</span></h2>
+<p class="lead">Trivadis Coding Guidelines, Kategorie 7 - Stored Objects. Quelle: Trivadis PL/SQL &amp; SQL Coding Guidelines v4.4 (Apache-2.0).</p>
+<p class="meta">24 Regeln</p>
+<div class="rule" id="G-7120"><div class="rule-head"><span class="rid">G-7120</span><h3>Namen der Programmeinheit an das END anfügen</h3><span class="badge minor">Minor</span></div><p class="msg">Das abschließende END einer Programmeinheit trägt nicht deren Namen.</p><table><tr><td><b>Merkmal</b></td><td>Maintainability</td></tr><tr><td><b>Detektor</b></td><td>Typ <code>builtin</code> &middot; Detektor <code>end_label</code></td></tr><tr><td><b>Empfehlung</b></td><td>END mit dem Namen der Einheit abschließen (z.B. END my_procedure;).</td></tr><tr><td><b>Quelle</b></td><td><a href="https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/7-stored-objects/1-general/g-7120/">https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/7-stored-objects/1-general/g-7120/</a></td></tr></table><div class="examples"><div class="ex first"><div class="exlabel bad">Verstoß</div><pre class="code bad">CREATE OR REPLACE PROCEDURE calc_total AS
+BEGIN
+  NULL;
+END;</pre><div class="exlabel good">Konform</div><pre class="code good">CREATE OR REPLACE PROCEDURE calc_total AS
+BEGIN
+  NULL;
+END calc_total;</pre></div></div></div>
+<div class="rule" id="G-7125"><div class="rule-head"><span class="rid">G-7125</span><h3>CREATE OR REPLACE statt CREATE allein verwenden</h3><span class="badge major">Major</span></div><p class="msg">Programmeinheit wird mit CREATE (ohne OR REPLACE) angelegt.</p><table><tr><td><b>Merkmal</b></td><td>Maintainability</td></tr><tr><td><b>Detektor</b></td><td>Typ <code>regex</code> &middot; Muster <code>\bCREATE\s+(?!OR\s+REPLACE\b)(?:EDITIONABLE\s+|NONEDITIONABLE\s+)?(?:PACKAGE\s+BODY|PACKAGE|PROCEDURE|FUNCTION|TRIGGER|TYPE\s+BODY|TYPE|VIEW)\b</code> &middot; Ziel <code>code</code></td></tr><tr><td><b>Empfehlung</b></td><td>CREATE OR REPLACE verwenden, damit ein erneutes Deployment Rechte und Abhängigkeiten erhält.</td></tr><tr><td><b>Quelle</b></td><td><a href="https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/7-stored-objects/1-general/g-7125/">https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/7-stored-objects/1-general/g-7125/</a></td></tr></table><div class="examples"><div class="ex first"><div class="exlabel bad">Verstoß</div><pre class="code bad">CREATE PROCEDURE calc_total AS
+BEGIN
+  NULL;
+END calc_total;</pre><div class="exlabel good">Konform</div><pre class="code good">CREATE OR REPLACE PROCEDURE calc_total AS
+BEGIN
+  NULL;
+END calc_total;</pre></div></div></div>
+<div class="rule" id="G-7160"><div class="rule-head"><span class="rid">G-7160</span><h3>Parametermodus immer explizit angeben</h3><span class="badge minor">Minor</span></div><p class="msg">Parameter ohne expliziten Modus (IN/OUT/IN OUT).</p><table><tr><td><b>Merkmal</b></td><td>Maintainability</td></tr><tr><td><b>Detektor</b></td><td>Typ <code>builtin</code> &middot; Detektor <code>parameter_mode</code></td></tr><tr><td><b>Empfehlung</b></td><td>Parametermodus immer angeben; ohne Angabe gilt implizit IN.</td></tr><tr><td><b>Quelle</b></td><td><a href="https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/7-stored-objects/1-general/g-7160/">https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/7-stored-objects/1-general/g-7160/</a></td></tr></table><div class="examples"><div class="ex first"><div class="exlabel bad">Verstoß</div><pre class="code bad">CREATE OR REPLACE PROCEDURE set_name(p_id NUMBER, p_name VARCHAR2)
+AS
+BEGIN
+  NULL;
+END set_name;</pre><div class="exlabel good">Konform</div><pre class="code good">CREATE OR REPLACE PROCEDURE set_name(
+  p_id   IN NUMBER,
+  p_name IN VARCHAR2)
+AS
+BEGIN
+  NULL;
+END set_name;</pre></div></div></div>
+<div class="rule" id="G-7310"><div class="rule-head"><span class="rid">G-7310</span><h3>Standalone-Prozeduren vermeiden</h3><span class="badge minor">Minor</span></div><p class="msg">Standalone-Prozedur (CREATE PROCEDURE) - nicht in einem Package gekapselt.</p><table><tr><td><b>Merkmal</b></td><td>Maintainability</td></tr><tr><td><b>Detektor</b></td><td>Typ <code>regex</code> &middot; Muster <code>\bCREATE\s+(?:OR\s+REPLACE\s+)?(?:EDITIONABLE\s+|NONEDITIONABLE\s+)?PROCEDURE\b</code> &middot; Ziel <code>code</code></td></tr><tr><td><b>Empfehlung</b></td><td>Prozeduren in Packages bündeln; das verbessert Struktur, Abhängigkeitsverwaltung und Rechtevergabe.</td></tr><tr><td><b>Quelle</b></td><td><a href="https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/7-stored-objects/3-procedures/g-7310/">https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/7-stored-objects/3-procedures/g-7310/</a></td></tr></table><div class="examples"><div class="ex first"><div class="exlabel bad">Verstoß</div><pre class="code bad">-- Prozedur ausserhalb eines Package
+CREATE OR REPLACE PROCEDURE calc_total AS
+BEGIN
+  NULL;
+END calc_total;</pre><div class="exlabel good">Konform</div><pre class="code good">-- Prozedur im Package gekapselt
+CREATE OR REPLACE PACKAGE BODY math_pkg AS
+  PROCEDURE calc_total AS
+  BEGIN
+    NULL;
+  END calc_total;
+END math_pkg;</pre></div></div></div>
+<div class="rule" id="G-7410"><div class="rule-head"><span class="rid">G-7410</span><h3>Standalone-Funktionen vermeiden</h3><span class="badge minor">Minor</span></div><p class="msg">Standalone-Funktion (CREATE FUNCTION) - nicht in einem Package gekapselt.</p><table><tr><td><b>Merkmal</b></td><td>Maintainability</td></tr><tr><td><b>Detektor</b></td><td>Typ <code>regex</code> &middot; Muster <code>\bCREATE\s+(?:OR\s+REPLACE\s+)?(?:EDITIONABLE\s+|NONEDITIONABLE\s+)?FUNCTION\b</code> &middot; Ziel <code>code</code></td></tr><tr><td><b>Empfehlung</b></td><td>Funktionen in Packages bündeln.</td></tr><tr><td><b>Quelle</b></td><td><a href="https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/7-stored-objects/4-functions/g-7410/">https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/7-stored-objects/4-functions/g-7410/</a></td></tr></table><div class="examples"><div class="ex first"><div class="exlabel bad">Verstoß</div><pre class="code bad">CREATE OR REPLACE FUNCTION get_total RETURN NUMBER AS
+BEGIN
+  RETURN 0;
+END get_total;</pre><div class="exlabel good">Konform</div><pre class="code good">CREATE OR REPLACE PACKAGE BODY math_pkg AS
+  FUNCTION get_total RETURN NUMBER AS
+  BEGIN
+    RETURN 0;
+  END get_total;
+END math_pkg;</pre></div></div></div>
+<div class="rule" id="G-7510"><div class="rule-head"><span class="rid">G-7510</span><h3>Oracle-Pakete mit Schema-Präfix des Eigentümers ansprechen</h3><span class="badge minor">Minor</span></div><p class="msg">Oracle-mitgeliefertes Paket (DBMS_*/UTL_*) ohne Schema-Präfix aufgerufen.</p><table><tr><td><b>Merkmal</b></td><td>Reliability, Security</td></tr><tr><td><b>Detektor</b></td><td>Typ <code>regex</code> &middot; Muster <code>(?&lt;![\w.])(?:DBMS_[A-Z0-9_]+|UTL_[A-Z0-9_]+)\b</code> &middot; Ziel <code>code</code></td></tr><tr><td><b>Empfehlung</b></td><td>Oracle-Pakete mit dem Schema des Eigentümers (in der Regel SYS) qualifizieren, um das Risiko durch untergeschobene Synonyme/Objekte zu verringern.</td></tr><tr><td><b>Quelle</b></td><td><a href="https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/7-stored-objects/5-oracle-supplied-packages/g-7510/">https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/7-stored-objects/5-oracle-supplied-packages/g-7510/</a></td></tr></table><div class="examples"><div class="ex first"><div class="exlabel bad">Verstoß</div><pre class="code bad">DBMS_OUTPUT.PUT_LINE('Start');</pre><div class="exlabel good">Konform</div><pre class="code good">-- Mit dem Eigentuemer-Schema (in der Regel SYS) qualifiziert
+SYS.DBMS_OUTPUT.PUT_LINE('Start');</pre></div></div></div>
+<div class="rule off" id="G-7110"><div class="rule-head"><span class="rid">G-7110</span><h3>Named Notation beim Aufruf von Programmeinheiten</h3><span class="badge minor">Minor</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-7130"><div class="rule-head"><span class="rid">G-7130</span><h3>Parameter statt externer Variablen in lokalen Einheiten</h3><span class="badge major">Major</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-7140"><div class="rule-head"><span class="rid">G-7140</span><h3>Lokal definierte Prozeduren/Funktionen referenzieren</h3><span class="badge major">Major</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-7150"><div class="rule-head"><span class="rid">G-7150</span><h3>Unbenutzte Parameter entfernen</h3><span class="badge minor">Minor</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-7170"><div class="rule-head"><span class="rid">G-7170</span><h3>IN OUT-Parameter nicht nur als IN oder OUT nutzen</h3><span class="badge minor">Minor</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-7210"><div class="rule-head"><span class="rid">G-7210</span><h3>Packages klein halten</h3><span class="badge minor">Minor</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-7220"><div class="rule-head"><span class="rid">G-7220</span><h3>Forward Declaration für private Programmeinheiten</h3><span class="badge minor">Minor</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-7230"><div class="rule-head"><span class="rid">G-7230</span><h3>Globale Variablen nicht public deklarieren</h3><span class="badge major">Major</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-7250"><div class="rule-head"><span class="rid">G-7250</span><h3>Kein RETURN im Package-Initialisierungsblock</h3><span class="badge major">Major</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-7320"><div class="rule-head"><span class="rid">G-7320</span><h3>Keine RETURN-Anweisungen in einer Prozedur</h3><span class="badge minor">Minor</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-7330"><div class="rule-head"><span class="rid">G-7330</span><h3>OUT-Parametern immer Werte zuweisen</h3><span class="badge major">Major</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-7420"><div class="rule-head"><span class="rid">G-7420</span><h3>RETURN als letzte Anweisung einer Funktion</h3><span class="badge major">Major</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-7430"><div class="rule-head"><span class="rid">G-7430</span><h3>Möglichst nur ein RETURN je Funktion</h3><span class="badge minor">Minor</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-7440"><div class="rule-head"><span class="rid">G-7440</span><h3>Keine OUT-Parameter zur Rückgabe aus Funktionen</h3><span class="badge major">Major</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-7450"><div class="rule-head"><span class="rid">G-7450</span><h3>Kein NULL aus einer BOOLEAN-Funktion zurückgeben</h3><span class="badge major">Major</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-7710"><div class="rule-head"><span class="rid">G-7710</span><h3>Kaskadierende Trigger vermeiden</h3><span class="badge minor">Minor</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-7740"><div class="rule-head"><span class="rid">G-7740</span><h3>Keine mehreren DML-Events je Trigger bei PK-Zuweisung</h3><span class="badge major">Major</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-7810"><div class="rule-head"><span class="rid">G-7810</span><h3>Sequenzen/SYSDATE nicht per SQL in PL/SQL lesen</h3><span class="badge minor">Minor</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+</section>
+<section id="g8_patterns"><h2>Patterns <span class="rid">Patterns</span></h2>
+<p class="lead">Trivadis Coding Guidelines, Kategorie 8 - Patterns. Quelle: Trivadis PL/SQL &amp; SQL Coding Guidelines v4.4 (Apache-2.0).</p>
+<p class="meta">6 Regeln</p>
+<div class="rule" id="G-8110"><div class="rule-head"><span class="rid">G-8110</span><h3>Kein SELECT COUNT(*) zur reinen Existenzprüfung</h3><span class="badge major">Major</span></div><p class="msg">SELECT COUNT(*) gefunden. Wird nur die Existenz einer Zeile geprüft, ist COUNT(*) unnötig teuer.</p><table><tr><td><b>Merkmal</b></td><td>Efficiency</td></tr><tr><td><b>Detektor</b></td><td>Typ <code>regex</code> &middot; Muster <code>\bSELECT\s+COUNT\s*\(\s*\*\s*\)</code> &middot; Ziel <code>code</code></td></tr><tr><td><b>Empfehlung</b></td><td>Zur Existenzprüfung COUNT(*) vermeiden - stattdessen z.B. eine Abfrage mit FETCH FIRST 1 ROW oder ein EXISTS-Prädikat verwenden.</td></tr><tr><td><b>Quelle</b></td><td><a href="https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/8-patterns/1-checking-the-number-of-rows/g-8110/">https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/8-patterns/1-checking-the-number-of-rows/g-8110/</a></td></tr></table><div class="examples"><div class="ex first"><div class="exlabel bad">Verstoß</div><pre class="code bad">SELECT COUNT(*) INTO l_cnt
+  FROM orders WHERE customer_id = p_id;
+IF l_cnt &gt; 0 THEN
+  mark_existing;
+END IF;</pre><div class="exlabel good">Konform</div><pre class="code good">-- Existenz mit EXISTS pruefen - bricht beim ersten Treffer ab
+SELECT CASE WHEN EXISTS (
+         SELECT 1 FROM orders WHERE customer_id = p_id)
+       THEN 1 ELSE 0 END
+  INTO l_exists FROM dual;</pre></div></div></div>
+<div class="rule off" id="G-8120"><div class="rule-head"><span class="rid">G-8120</span><h3>Existenz nicht prüfen, um danach zu erzeugen</h3><span class="badge major">Major</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-8210"><div class="rule-head"><span class="rid">G-8210</span><h3>Synonyme für Objekte fremder Schemata verwenden</h3><span class="badge major">Major</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-8310"><div class="rule-head"><span class="rid">G-8310</span><h3>Größe von Eingabeparametern validieren</h3><span class="badge minor">Minor</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-8410"><div class="rule-head"><span class="rid">G-8410</span><h3>Application Locks für einmalige Ausführung verwenden</h3><span class="badge minor">Minor</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-8510"><div class="rule-head"><span class="rid">G-8510</span><h3>DBMS_APPLICATION_INFO zum Fortschritts-Tracking nutzen</h3><span class="badge minor">Minor</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+</section>
+<section id="g9_function_usage"><h2>Funktionsnutzung <span class="rid">Funktionsnutzung</span></h2>
+<p class="lead">Trivadis Coding Guidelines, Kategorie 9 - Function Usage. Quelle: Trivadis PL/SQL &amp; SQL Coding Guidelines v4.4 (Apache-2.0).</p>
+<p class="meta">4 Regeln</p>
+<div class="rule" id="G-9010"><div class="rule-head"><span class="rid">G-9010</span><h3>Formatmaske bei String-zu-Datum-Konvertierung verwenden</h3><span class="badge major">Major</span></div><p class="msg">TO_DATE ohne explizite Formatmaske aufgerufen.</p><table><tr><td><b>Merkmal</b></td><td>Reliability</td></tr><tr><td><b>Detektor</b></td><td>Typ <code>regex</code> &middot; Muster <code>\bTO_DATE\s*\(\s*[^,()]+\)</code> &middot; Ziel <code>code</code></td></tr><tr><td><b>Empfehlung</b></td><td>TO_DATE immer mit Formatmaske aufrufen; ohne Maske hängt das Ergebnis von NLS-Einstellungen ab.</td></tr><tr><td><b>Quelle</b></td><td><a href="https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/9-function-usage/g-9010/">https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/9-function-usage/g-9010/</a></td></tr></table><div class="examples"><div class="ex first"><div class="exlabel bad">Verstoß</div><pre class="code bad">l_date := TO_DATE(p_text);</pre><div class="exlabel good">Konform</div><pre class="code good">l_date := TO_DATE(p_text, 'YYYY-MM-DD');</pre></div></div></div>
+<div class="rule" id="G-9020"><div class="rule-head"><span class="rid">G-9020</span><h3>Formatmaske bei String-zu-Zahl-Konvertierung verwenden</h3><span class="badge minor">Minor</span></div><p class="msg">TO_NUMBER ohne explizite Formatmaske aufgerufen.</p><table><tr><td><b>Merkmal</b></td><td>Reliability</td></tr><tr><td><b>Detektor</b></td><td>Typ <code>regex</code> &middot; Muster <code>\bTO_NUMBER\s*\(\s*[^,()]+\)</code> &middot; Ziel <code>code</code></td></tr><tr><td><b>Empfehlung</b></td><td>TO_NUMBER mit Formatmaske und NLS_NUMERIC_CHARACTERS aufrufen, um NLS-Abhängigkeiten zu vermeiden.</td></tr><tr><td><b>Quelle</b></td><td><a href="https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/9-function-usage/g-9020/">https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/4-language-usage/9-function-usage/g-9020/</a></td></tr></table><div class="examples"><div class="ex first"><div class="exlabel bad">Verstoß</div><pre class="code bad">l_amount := TO_NUMBER(p_text);</pre><div class="exlabel good">Konform</div><pre class="code good">l_amount := TO_NUMBER(p_text, '999999.99');</pre></div></div></div>
+<div class="rule off" id="G-9030"><div class="rule-head"><span class="rid">G-9030</span><h3>Standardwert bei Konvertierungsfehlern definieren</h3><span class="badge minor">Minor</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+<div class="rule off" id="G-9040"><div class="rule-head"><span class="rid">G-9040</span><h3>FX in Datums-Formatmaske zur exakten Konvertierung</h3><span class="badge minor">Minor</span><span class="tag">inaktiv</span></div><p class="msg"></p></div>
+</section>
+<section id="naming"><h2>Namenskonventionen <span class="rid">Namenskonventionen</span></h2>
+<p class="lead">Trivadis-Namenskonventionen für PL/SQL-Bezeichner. Quelle: Trivadis PL/SQL &amp; SQL Coding Guidelines v4.4 (Apache-2.0).</p>
+<p class="meta">1 Regeln</p>
+<div class="rule" id="G-NC-1010"><div class="rule-head"><span class="rid">G-NC-1010</span><h3>Bezeichner-Präfixe gemäß Namenskonvention verwenden</h3><span class="badge minor">Minor</span></div><p class="msg">Bezeichner folgt nicht der Trivadis-Namenskonvention.</p><table><tr><td><b>Merkmal</b></td><td>Maintainability</td></tr><tr><td><b>Detektor</b></td><td>Typ <code>builtin</code> &middot; Detektor <code>naming_prefix</code></td></tr><tr><td><b>Empfehlung</b></td><td>Lokale Variablen mit &#x27;l_&#x27;, Konstanten mit &#x27;co_&#x27; und Parameter mit &#x27;in_&#x27;/&#x27;out_&#x27;/&#x27;io_&#x27;/&#x27;p_&#x27; präfixieren. Die Präfixe sind in dieser Regeldatei anpassbar.</td></tr><tr><td><b>Quelle</b></td><td><a href="https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/2-naming-conventions/naming-conventions/">https://trivadis.github.io/plsql-and-sql-coding-guidelines/v4.4/2-naming-conventions/naming-conventions/</a></td></tr></table><div class="examples"><div class="ex first"><div class="exlabel bad">Verstoß</div><pre class="code bad">DECLARE
+  total    NUMBER(12,2);            -- lokale Variable ohne 'l_'
+  maxrows  CONSTANT PLS_INTEGER := 100;  -- Konstante ohne 'co_'
+BEGIN
+  total := 0;
+END;</pre><div class="exlabel good">Konform</div><pre class="code good">DECLARE
+  l_total    NUMBER(12,2);
+  co_maxrows CONSTANT PLS_INTEGER := 100;
+BEGIN
+  l_total := 0;
+END;</pre></div></div></div>
+</section>
+</div>
+<footer>ACI &ndash; Automated Code Inspection &middot; Regeldokumentation &middot; generiert am 2026-07-03 von <code>docs/generate_rule_docs.py</code></footer>
+</body>
+</html>
