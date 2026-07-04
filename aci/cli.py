@@ -40,7 +40,7 @@ from aci.finding import (Severity, GROUP_SECURITY, GROUP_GUIDELINES,
 from aci.rules import (RuleError, find_ruleset, load_ruleset,
                        find_guidelines_dir, load_guideline_rules,
                        has_guidelines, find_mitre_dir, load_mitre_rules,
-                       has_mitre, _RULE_CONTENT_CACHE)
+                       has_mitre, rule_content_cache)
 from aci.reporting import (ScanReport, render_codeclimate, render_console,
                            render_html, render_json, render_sarif)
 from aci.parser import parse_ir
@@ -49,6 +49,19 @@ from aci.waivers import load_waivers, apply_waivers
 from aci.baseline import (write_baseline, load_baseline, apply_baseline,
                           BaselineError)
 from aci.integrity import compute_ruleset_integrity
+from aci._io import atomic_write_text
+
+
+def _normalize_dialect(dialect: "str | None") -> str:
+    """Normalisiert den Dialekt-Alias zentral (S5).
+
+    ``postgres``/``pg`` -> ``postgresql``. So gehen ins Rule-Lookup, in
+    Report-Metadaten, Ruleset-Hash, Baselines und Fingerprints ueberall
+    exakt dieselbe Dialekt-Bezeichnung ein - ein Alias kann keine
+    Inkonsistenz zwischen Komponenten erzeugen.
+    """
+    d = (dialect or "").strip().lower()
+    return "postgresql" if d in ("postgres", "pg") else d
 
 # Die Regeldateien werden mit dem Paket ausgeliefert (aci/rules/).
 _PKG_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -78,13 +91,23 @@ _PROFILES = {
         "group": "security", "fail_on": "high",
         "format": "console,json,sarif", "safe_report": True,
         "strict_internal_errors": True,
+        # M2/S11: nicht lesbare Pfade lassen den Gate fehlschlagen; Konsolen-
+        # Hinweise werden ebenfalls pfadmaskiert.
+        "fail_on_access_error": True, "safe_console": True,
     },
-    # Strengster Gate: ci plus strenge Waiver- und Regelintegritätsprüfung.
+    # Strengster Gate: ci plus strenge Waiver-/Regelintegritäts- und
+    # Vollständigkeitsprüfung sowie verpflichtende Regelsatz-Bindung.
     "strict": {
         "group": "security", "fail_on": "high",
         "format": "console,json,sarif", "safe_report": True,
         "strict_internal_errors": True, "strict_waivers": True,
         "require_trusted_rules": True,
+        # M6: feste Regelsatz-Bindung verpflichtend (Pin/Lock).
+        "require_ruleset_pin": True,
+        # M2: jede Zieldatei muss geprueft worden sein (sonst Exit 2).
+        "scan_completeness": "strict",
+        "fail_on_access_error": True, "fail_on_skipped_file": True,
+        "safe_console": True,
     },
     # Vollständige Prüfung (Sicherheit + Coding Guidelines) für ein
     # manuelles Review - mit Quelltext-Kontext, ohne Build-Blockade.
@@ -179,20 +202,29 @@ _REDACT_RULES = [
      lambda _m: "<redacted>"),
 ]
 
-_SIZE_UNITS = {"B": 1, "KB": 1024, "MB": 1024 ** 2, "GB": 1024 ** 3}
+_SIZE_UNITS = {
+    "B": 1,
+    "KB": 1024, "MB": 1024 ** 2, "GB": 1024 ** 3,
+    # Binaerpraefixe als ausdrueckliche Synonyme - ACI interpretiert KB/MB/GB
+    # ohnehin binaer (1 KB = 1024 Byte). Wer die IEC-Schreibweise bevorzugt,
+    # kann KiB/MiB/GiB verwenden; das Ergebnis ist identisch.
+    "KIB": 1024, "MIB": 1024 ** 2, "GIB": 1024 ** 3,
+}
 
 
 def _parse_size(text: str) -> int:
     """Wandelt eine Größenangabe (``5MB``, ``500KB``, ``1048576``) in Bytes.
 
-    Unterstützt die Einheiten B, KB, MB, GB. Ohne Einheit gelten Bytes.
+    Unterstützt B, KB, MB, GB sowie die IEC-Synonyme KiB, MiB, GiB. **Die
+    Einheiten sind binär** (1 KB = 1024 Byte, 1 MB = 1.048.576 Byte). Ohne
+    Einheit gelten Bytes.
     """
     t = str(text).strip().upper().replace(" ", "")
-    m = re.match(r"^(\d+(?:\.\d+)?)([KMG]?B)?$", t)
+    m = re.match(r"^(\d+(?:\.\d+)?)([KMG]I?B)?$", t)
     if not m:
         raise ValueError(
             f"ungültige Größenangabe: {text!r} "
-            f"(erlaubt z.B. 1048576, 500KB, 5MB, 1GB)")
+            f"(erlaubt z.B. 1048576, 500KB, 5MB, 1GiB)")
     return int(float(m.group(1)) * _SIZE_UNITS[m.group(2) or "B"])
 
 
@@ -362,6 +394,66 @@ def _build_parser(defaults: dict) -> argparse.ArgumentParser:
                         help="symbolischen Verknüpfungen folgen "
                              "(Default aus aci.ini; Gegenschalter "
                              "--no-follow-symlinks)")
+    parser.add_argument("--force-file", action="store_true",
+                        help="Größenlimit, Exclude-Muster und Symlink-Schutz "
+                             "NICHT auf eine explizit angegebene Einzeldatei "
+                             "anwenden (sicherer Default: sie gelten überall)")
+    parser.add_argument("--encoding", default=(defaults["encoding"] or None),
+                        metavar="KODIERUNG",
+                        help="Quelltext-Kodierung erzwingen (z.B. utf-8, "
+                             "utf-16, cp1252); Default: Auto-Erkennung (BOM, "
+                             "sonst utf-8)")
+    parser.add_argument("--encoding-errors", default=defaults["encoding_errors"],
+                        choices=["replace", "strict"],
+                        help="Umgang mit nicht dekodierbaren Bytes: replace "
+                             "(Ersatzzeichen) oder strict (Datei gilt als "
+                             "ungeprüft); Default aus aci.ini")
+    parser.add_argument("--scan-completeness", dest="scan_completeness",
+                        default=defaults["scan_completeness"],
+                        choices=["advisory", "strict"],
+                        help="advisory: unvollständiger Scan (übersprungene/"
+                             "nicht lesbare/nicht dekodierbare Dateien) ist nur "
+                             "ein Hinweis; strict: Exit-Code 2, wenn nicht jede "
+                             "Zieldatei geprüft wurde (Default aus aci.ini)")
+    parser.add_argument("--fail-on-access-error",
+                        action=argparse.BooleanOptionalAction,
+                        default=defaults["fail_on_access_error"],
+                        help="Exit-Code 2, wenn Pfade nicht gelesen werden "
+                             "konnten (Rechte/I/O); Default aus aci.ini")
+    parser.add_argument("--fail-on-skipped-file",
+                        action=argparse.BooleanOptionalAction,
+                        default=defaults["fail_on_skipped_file"],
+                        help="Exit-Code 2, wenn Dateien wegen Größenlimit/"
+                             "Exclude übersprungen wurden; Default aus aci.ini")
+    parser.add_argument("--reproducible-report",
+                        action=argparse.BooleanOptionalAction,
+                        default=defaults["reproducible_report"],
+                        help="reproduzierbarer Report: nicht-deterministische "
+                             "Felder (Zeitstempel, Dauer, Plattform, absolute "
+                             "Pfade) weglassen, sodass der Report byte-identisch "
+                             "bleibt (Default aus aci.ini)")
+    parser.add_argument("--safe-console",
+                        action=argparse.BooleanOptionalAction,
+                        default=defaults["safe_console"],
+                        help="Safe-Modus auch auf Konsolen-/stderr-Hinweise "
+                             "anwenden (Pfade maskieren); Default aus aci.ini")
+    parser.add_argument("--report-name", metavar="NAME",
+                        help="Basisname der Report-Dateien statt aus dem "
+                             "Scan-Ziel abgeleitet (verhindert Namenskollisionen "
+                             "bei gleichem Verzeichnisnamen)")
+    parser.add_argument("--require-ruleset-pin",
+                        action=argparse.BooleanOptionalAction,
+                        default=defaults["require_ruleset_pin"],
+                        help="verlangt eine feste Regelsatz-Bindung "
+                             "(--expected-ruleset-sha256 oder --ruleset-lock); "
+                             "fehlt sie, Exit-Code 2 (Default aus aci.ini)")
+    parser.add_argument("--strict-suppressions",
+                        action=argparse.BooleanOptionalAction,
+                        default=defaults["strict_suppressions"],
+                        help="Inline-Suppressions (-- aci:ignore) müssen "
+                             "Governance-Metadaten tragen (ticket=, reason=) "
+                             "und dürfen nicht abgelaufen/ungültig sein; sonst "
+                             "Exit-Code 2 (Default aus aci.ini)")
     cfg_grp = parser.add_mutually_exclusive_group()
     cfg_grp.add_argument("--config", metavar="PFAD",
                          help="ausschließlich diese aci.ini laden (fehlt sie "
@@ -503,11 +595,46 @@ def _redact_results(results: dict) -> None:
                 f.snippet = _redact_text(f.snippet)
             if f.context:
                 f.context = _redact_text_context(f.context)
+            # M3: auch die Freitextfelder maskieren - message/recommendation
+            # koennen Teile des Inputs (z.B. das beanstandete SQL) enthalten.
+            if f.message:
+                f.message = _redact_text(f.message)
+            if f.recommendation:
+                f.recommendation = _redact_text(f.recommendation)
             for rel in f.related:
                 if rel.snippet:
                     rel.snippet = _redact_text(rel.snippet)
                 if rel.context:
                     rel.context = _redact_text_context(rel.context)
+                if rel.label:
+                    rel.label = _redact_text(rel.label)
+
+
+def _sanitize_internal_messages(results: dict) -> None:
+    """M3: Interne Fehler-Findings (``ACI-INTERNAL``) im Safe-Modus auf eine
+    standardisierte, informationsarme Form bringen.
+
+    Der ausfuehrliche Exception-Text kann absolute Pfade, Dateinamen, Teile
+    des Inputs oder Konfigurationswerte enthalten. Im Safe-Report wird er auf
+    ``Interner Fehler im Check <ID>: <ExceptionTyp>`` reduziert; der volle
+    Text bleibt nur ueber ``--debug`` auf stderr sichtbar.
+    """
+    for findings in results.values():
+        for f in findings:
+            if getattr(f, "check_id", "") != "ACI-INTERNAL":
+                continue
+            cid = (f.rule_ref or f.check_id or "?")
+            exc_type = _INTERNAL_EXC_RE.search(f.message or "")
+            kind = exc_type.group(1) if exc_type else "Fehler"
+            f.message = f"Interner Fehler im Check {cid}: {kind}"
+            f.recommendation = ("Werkzeugfehler - bitte als ACI-Fehler melden "
+                                "(Details mit --debug).")
+
+
+# Extrahiert den Exception-Typnamen aus der internen Fehlermeldung
+# (``... : ValueError: ...``) fuer die standardisierte Safe-Form.
+_INTERNAL_EXC_RE = re.compile(r":\s*([A-Za-z_][A-Za-z0-9_]*(?:Error|Exception|"
+                              r"Warning|Interrupt))\b")
 
 
 _ABS_WIN_RE = re.compile(r"^[A-Za-z]:[\\/]")
@@ -604,9 +731,11 @@ def _print_checks(ruleset, guideline_rules, mitre_rules, active_groups) -> None:
 _CONFIG_KEYS = (
     "profile", "dialect", "group", "format", "min_level", "fail_on",
     "context_lines", "no_context", "redact_secrets", "redact_paths",
-    "safe_report", "taint_sources", "follow_symlinks", "max_file_size",
-    "html_group_by", "strict_internal_errors", "strict_waivers",
-    "require_trusted_rules",
+    "safe_report", "safe_console", "taint_sources", "follow_symlinks",
+    "max_file_size", "html_group_by", "strict_internal_errors",
+    "strict_waivers", "require_trusted_rules", "require_ruleset_pin",
+    "scan_completeness", "fail_on_access_error", "fail_on_skipped_file",
+    "encoding", "encoding_errors", "reproducible_report", "strict_suppressions",
 )
 
 
@@ -642,6 +771,13 @@ def _parse_formats(args) -> list:
     Wirft :class:`_CliExit` (Code 2) bei einem unbekannten Format.
     """
     formats = [f.strip().lower() for f in args.format.split(",") if f.strip()]
+    # K3: eine leere Formatliste (z.B. ``--format ","`` oder ``--format ""``)
+    # ist ein Konfigurationsfehler - nicht stillschweigend Konsole verwenden.
+    if not formats:
+        print("FEHLER: leere Formatliste (--format). Mindestens ein Format "
+              "angeben: console, json, html, sarif, codeclimate.",
+              file=sys.stderr)
+        raise _CliExit(2)
     unknown = [f for f in formats
                if f not in ("console", "json", "html", "sarif",
                             "codeclimate")]
@@ -760,9 +896,20 @@ def _verify_rule_integrity(args, ruleset, guideline_rules, mitre_rules,
     # Den beim Laden gefuellten Inhalts-Cache mitgeben, damit der Hash ueber
     # exakt die geladenen Bytes gebildet wird (hash what you load, kein
     # TOCTOU-Zweitzugriff auf die Platte).
+    # M6: verpflichtende Regelsatz-Bindung. "Gebündelt" (--require-trusted-
+    # rules) heisst nur "aus dem Paketpfad", nicht "unveraendert" - ein
+    # ueberschriebenes site-packages/aci/rules bliebe unbemerkt. Deshalb
+    # verlangt das strict-Profil zusaetzlich einen erwarteten Hash gegen den
+    # tatsaechlich geladenen Inhalt (Pin/Lock). Fehlt er, fail-closed.
+    if getattr(args, "require_ruleset_pin", False) and expected_hash is None:
+        print("FEHLER: --require-ruleset-pin ist gesetzt (z.B. via --profile "
+              "strict), aber kein erwarteter Regelsatz-Hash angegeben. Bitte "
+              "--expected-ruleset-sha256 <hash> oder --ruleset-lock <datei> "
+              "setzen.", file=sys.stderr)
+        raise _CliExit(2)
     integrity = compute_ruleset_integrity(
         _collect_rule_files(args, ruleset, guideline_rules, mitre_rules),
-        content_by_realpath=_RULE_CONTENT_CACHE)
+        content_by_realpath=rule_content_cache())
     actual = integrity.ruleset_hash.lower()
     verified = False
     if expected_hash is not None:
@@ -848,6 +995,7 @@ def _scanner_config(args, no_context: bool, want_redact: bool) -> dict:
         "redact_secrets": want_redact,
         "redact_paths": args.redact_paths or args.safe_report,
         "safe_report": args.safe_report,
+        "safe_console": args.safe_console,
         "taint_sources": args.taint_sources,
         "follow_symlinks": args.follow_symlinks,
         "max_file_size": args.max_file_size or "",
@@ -855,13 +1003,47 @@ def _scanner_config(args, no_context: bool, want_redact: bool) -> dict:
         "strict_internal_errors": args.strict_internal_errors,
         "strict_waivers": args.strict_waivers,
         "require_trusted_rules": args.require_trusted_rules,
+        "require_ruleset_pin": args.require_ruleset_pin,
+        "scan_completeness": args.scan_completeness,
+        "fail_on_access_error": args.fail_on_access_error,
+        "fail_on_skipped_file": args.fail_on_skipped_file,
+        "encoding": args.encoding or "",
+        "encoding_errors": args.encoding_errors,
+        "reproducible_report": args.reproducible_report,
+        "strict_suppressions": args.strict_suppressions,
     }
     return {key: values[key] for key in _CONFIG_KEYS}
 
 
+_REPORT_NAME_RE = re.compile(r"[^A-Za-z0-9._-]+")
+
+
+def _report_base(args) -> str:
+    """Basisname der Report-Dateien.
+
+    Standardmaessig aus dem Scan-Ziel abgeleitet (Rueckwaertskompatibel).
+    Mit ``--report-name`` (S10) laesst sich ein fester Name vergeben, um
+    Kollisionen zu vermeiden, wenn verschiedene Scan-Ziele denselben
+    Verzeichnis-/Dateinamen tragen (z.B. ``a/src`` und ``b/src`` erzeugten
+    sonst beide ``aci_report_src.json``). Der Name wird auf sichere
+    Datei-Namenszeichen reduziert.
+    """
+    if getattr(args, "report_name", None):
+        safe = _REPORT_NAME_RE.sub("_", args.report_name).strip("_")
+        return safe or "aci"
+    return (os.path.splitext(os.path.basename(args.path.rstrip("/\\")))[0]
+            or "aci")
+
+
 def _write_reports(report, formats, args, base: str) -> None:
-    """Gibt den Konsolen-Report aus und schreibt die Datei-Reports."""
-    if "console" in formats or not formats:
+    """Gibt den Konsolen-Report aus und schreibt die Datei-Reports.
+
+    Die Datei-Reports werden **atomar** geschrieben (M5): ein Prozessabbruch
+    oder Dateisystemfehler hinterlaesst keine halb geschriebene, ungueltige
+    Datei, die ein nachgelagerter Job (SARIF-Upload, ``jq``, GitLab-Artefakt)
+    faelschlich fuer gueltig haelt.
+    """
+    if "console" in formats:
         print(render_console(report, use_color=not args.no_color))
     file_renderers = (("json", render_json), ("html", render_html),
                       ("sarif", render_sarif),
@@ -871,22 +1053,46 @@ def _write_reports(report, formats, args, base: str) -> None:
     for fmt, render in file_renderers:
         if fmt not in formats:
             continue
-        os.makedirs(args.output_dir, exist_ok=True)
         ext = extensions.get(fmt, fmt)
         out = os.path.join(args.output_dir, f"aci_report_{base}.{ext}")
-        with open(out, "w", encoding="utf-8") as fh:
-            fh.write(render(report))
+        atomic_write_text(out, render(report))
         print(f"{fmt.upper()}-Report geschrieben: {out}")
 
 
-def _print_runtime_hints(scanner, waiver_report, internal) -> None:
+def _print_runtime_hints(scanner, waiver_report, internal,
+                         safe_console: bool = False) -> None:
     """Meldet übersprungene Dateien, interne Fehler und wirksame Waiver
-    auf der Standard-Fehlerausgabe (rein informativ, kein Exit-Code)."""
+    auf der Standard-Fehlerausgabe (rein informativ, kein Exit-Code).
+
+    Unter ``safe_console`` (S11) werden die ausgegebenen Pfade maskiert -
+    CI-Konsolenlogs werden oft länger aufbewahrt als die Artefakte.
+    """
+    def _p(path: str) -> str:
+        return _redact_path(path) if safe_console else path
+
     if scanner.skipped_files:
         print(f"Hinweis: {len(scanner.skipped_files)} Datei(en) wegen "
               f"Größenlimit übersprungen.", file=sys.stderr)
         for path, size in scanner.skipped_files[:10]:
-            print(f"  übersprungen ({size} Bytes): {path}", file=sys.stderr)
+            print(f"  übersprungen ({size} Bytes): {_p(path)}", file=sys.stderr)
+    if getattr(scanner, "rejected_files", None):
+        print(f"Hinweis: {len(scanner.rejected_files)} explizite Datei(en) "
+              f"durch Schutzgrenzen abgelehnt.", file=sys.stderr)
+        for path, reason in scanner.rejected_files[:10]:
+            print(f"  abgelehnt ({reason}): {_p(path)}", file=sys.stderr)
+    if getattr(scanner, "decode_errors", None):
+        print(f"WARNUNG: {len(scanner.decode_errors)} Datei(en) mit "
+              f"Dekodierproblemen - Analyse ggf. unvollständig.",
+              file=sys.stderr)
+        for path, enc, msg in scanner.decode_errors[:10]:
+            print(f"  Dekodierproblem ({enc}): {_p(path)} ({msg})",
+                  file=sys.stderr)
+    if getattr(scanner, "suppression_problems", None):
+        print(f"WARNUNG: {len(scanner.suppression_problems)} Inline-"
+              f"Suppression(en) ohne gültige Governance-Metadaten.",
+              file=sys.stderr)
+        for path, line, kind, detail in scanner.suppression_problems[:10]:
+            print(f"  {kind} ({_p(path)}:{line}): {detail}", file=sys.stderr)
     # Nicht lesbare Dateien/Verzeichnisse sichtbar machen - ein CI-Gate soll
     # nicht stumm ueber ungeprueften Code "bestanden" melden.
     access_errors = getattr(scanner, "access_errors", None)
@@ -894,7 +1100,7 @@ def _print_runtime_hints(scanner, waiver_report, internal) -> None:
         print(f"WARNUNG: {len(access_errors)} Pfad(e) konnten nicht gelesen "
               f"werden und wurden NICHT geprüft.", file=sys.stderr)
         for path, msg in access_errors[:10]:
-            print(f"  nicht geprüft: {path} ({msg})", file=sys.stderr)
+            print(f"  nicht geprüft: {_p(path)} ({msg})", file=sys.stderr)
     if getattr(scanner, "suppressed_count", 0):
         print(f"Hinweis: {scanner.suppressed_count} Finding(s) durch Inline-"
               f"Direktiven (-- aci:ignore) unterdrückt.", file=sys.stderr)
@@ -907,7 +1113,36 @@ def _print_runtime_hints(scanner, waiver_report, internal) -> None:
               f"--fail-on.", file=sys.stderr)
 
 
-def _compute_exit_code(args, all_findings, internal, waiver_report) -> int:
+def _completeness_failure(args, scanner) -> "str | None":
+    """Prüft die Scan-Vollständigkeit gegen die Gate-Optionen (M2).
+
+    Liefert eine Begründung (String), wenn der Lauf unter den gewählten
+    Optionen als unvollständig gilt und deshalb mit Exit-Code 2 abbrechen
+    soll - oder ``None``, wenn er als vollständig genug durchgeht.
+    """
+    strict = getattr(args, "scan_completeness", "advisory") == "strict"
+    if strict and not scanner.scan_complete():
+        return ("Scan unvollständig (--scan-completeness strict): "
+                f"{len(scanner.access_errors)} nicht lesbar, "
+                f"{len(scanner.skipped_files)} zu groß, "
+                f"{len(scanner.rejected_files)} abgelehnt, "
+                f"{len(scanner.decode_errors)} Dekodierfehler.")
+    if getattr(args, "fail_on_access_error", False) and scanner.access_errors:
+        return (f"{len(scanner.access_errors)} Pfad(e) nicht lesbar "
+                "(--fail-on-access-error).")
+    if getattr(args, "fail_on_skipped_file", False) and (
+            scanner.skipped_files or scanner.rejected_files):
+        return (f"{len(scanner.skipped_files) + len(scanner.rejected_files)} "
+                "Datei(en) übersprungen/abgelehnt (--fail-on-skipped-file).")
+    if getattr(args, "strict_suppressions", False) and \
+            getattr(scanner, "suppression_problems", None):
+        return (f"{len(scanner.suppression_problems)} Inline-Suppression(en) "
+                "ohne gültige Governance-Metadaten (--strict-suppressions).")
+    return None
+
+
+def _compute_exit_code(args, all_findings, internal, waiver_report,
+                       scanner=None) -> int:
     """Bestimmt den Exit-Code aus der Findings-Liste (vor dem Report-Aufbau).
 
     Strenge Modi (Exit-Code 2) haben Vorrang vor dem ``--fail-on``-Gate
@@ -920,6 +1155,12 @@ def _compute_exit_code(args, all_findings, internal, waiver_report) -> int:
         print("FEHLER: --strict-waivers ist gesetzt und die Waiver-Datei "
               "ist fehlerhaft.", file=sys.stderr)
         return 2
+    if scanner is not None:
+        reason = _completeness_failure(args, scanner)
+        if reason:
+            print(f"FEHLER: {reason} Ein CI-Gate darf nicht über ungeprüften "
+                  "Code hinweg 'bestanden' melden.", file=sys.stderr)
+            return 2
     if args.fail_on != "none":
         threshold = Severity.parse(args.fail_on).weight
         if any(f.severity.weight >= threshold
@@ -928,14 +1169,30 @@ def _compute_exit_code(args, all_findings, internal, waiver_report) -> int:
     return 0
 
 
-def _build_runtime(started_at, duration_seconds, want_redact) -> dict:
-    """Laufzeit-Metadaten fuer den Report (Audit/CI). Unter ``want_redact``
-    (safe-report/redact-secrets) werden umgebungsverratende Pfade (cwd,
-    executable) maskiert."""
+def _build_runtime(started_at, duration_seconds, want_redact,
+                   reproducible: bool = False) -> dict:
+    """Laufzeit-Metadaten fuer den Report (Audit/CI).
+
+    Unter ``want_redact`` (safe-report/redact-secrets) werden umgebungs-
+    verratende Pfade (cwd, executable) maskiert und ``platform`` auf die
+    grobe OS-Bezeichnung reduziert (M3: das volle ``platform.platform()``
+    verraet Kernel-Release und Host-Details). Unter ``reproducible`` (S3)
+    entfallen zusaetzlich alle nicht-deterministischen Felder (Zeitstempel,
+    Dauer, Plattform), damit der Report byte-identisch bleibt.
+    """
+    if reproducible:
+        return {
+            "aci_version": __version__,
+            "python": ".".join(platform.python_version_tuple()[:2]),
+            "reproducible": True,
+        }
+    reduced_platform = (want_redact and True)
     return {
         "aci_version": __version__,
         "python": platform.python_version(),
-        "platform": platform.platform(),
+        # M3: unter Safe-Modus nur die grobe OS-Familie, nicht Kernel/Host.
+        "platform": (platform.system() or "unknown") if reduced_platform
+                    else platform.platform(),
         "executable": "<redacted>" if want_redact else sys.executable,
         "cwd": "<redacted>" if want_redact else os.getcwd(),
         "started_at_utc": started_at.isoformat(timespec="seconds"),
@@ -968,11 +1225,16 @@ def _run(args, defaults, config_info) -> int:
     die aus der Config geladenen Vorgabewerte; ``config_info`` beschreibt
     deren Herkunft (Modus/Datei).
     """
+    # S5: Dialekt-Alias EINMAL zentral normalisieren, bevor er in Rule-Lookup,
+    # Report-Metadaten, Ruleset-Hash, Baseline und Fingerprints einfliesst.
+    args.dialect = _normalize_dialect(args.dialect)
+
     # Effektive Konfiguration für Report und --print-effective-config.
     config_info = {**config_info, "effective": _effective_config(args)}
     if args.print_effective_config:
-        print(json.dumps({"config": config_info}, indent=2,
-                         ensure_ascii=False, default=str))
+        detail = _effective_config_detail(args, defaults, args.profile)
+        print(json.dumps({"config": {**config_info, "resolution": detail}},
+                         indent=2, ensure_ascii=False, default=str))
         return 0
 
     active_groups = set(_GROUP_SETS[args.group])
@@ -1022,7 +1284,11 @@ def _run(args, defaults, config_info) -> int:
         report_context=not no_context, context_lines=context_lines,
         show_taint_sources=args.taint_sources,
         exclude=args.exclude, max_file_size=max_file_size,
-        follow_symlinks=args.follow_symlinks)
+        follow_symlinks=args.follow_symlinks,
+        limits_apply_to_explicit_files=not args.force_file,
+        encoding=args.encoding or None,
+        encoding_errors=args.encoding_errors,
+        strict_suppressions=args.strict_suppressions)
 
     started_at = datetime.datetime.now(datetime.timezone.utc)
     scan_start = time.monotonic()
@@ -1070,6 +1336,9 @@ def _run(args, defaults, config_info) -> int:
         print(f"Warnung: {line}", file=sys.stderr)
 
     if want_redact:
+        # Interne Fehlermeldungen zuerst standardisieren, dann Secrets in
+        # allen (Rest-)Freitextfeldern maskieren.
+        _sanitize_internal_messages(results)
         _redact_results(results)
     if want_redact_paths:
         results = _redact_result_paths(results)
@@ -1078,10 +1347,15 @@ def _run(args, defaults, config_info) -> int:
     # damit gate.passed/exit_code in den Report einfliessen koennen.
     all_findings = [f for fs in results.values() for f in fs]
     internal = [f for f in all_findings if f.group == GROUP_INTERNAL]
-    exit_code = _compute_exit_code(args, all_findings, internal, waiver_report)
+    exit_code = _compute_exit_code(args, all_findings, internal, waiver_report,
+                                   scanner=scanner)
+    reproducible = bool(getattr(args, "reproducible_report", False))
     runtime = _build_runtime(started_at, scan_duration,
-                             want_redact or want_redact_paths)
+                             want_redact or want_redact_paths,
+                             reproducible=reproducible)
     gate = _build_gate(args, ruleset_verification, exit_code)
+    # S12: Scan-Vollständigkeit strukturiert in den Report aufnehmen.
+    completeness = scanner.completeness()
 
     # Report-Zielpfad und Config-Dateipfad anonymisieren (nur Ausgabe).
     report_target = os.path.abspath(args.path)
@@ -1118,23 +1392,26 @@ def _run(args, defaults, config_info) -> int:
                                           for k in _CONFIG_KEYS},
                         scanned_bytes=scanner.scanned_bytes,
                         scanned_loc=scanner.scanned_loc,
-                        duration=scan_duration,
+                        duration=(None if reproducible else scan_duration),
                         html_group_by=args.html_group_by,
                         waiver_report=waiver_report,
                         integrity=integrity,
                         ruleset_verification=ruleset_verification,
                         config_info=config_info,
                         runtime=runtime, gate=gate,
+                        scan_completeness=completeness,
+                        reproducible=reproducible,
                         command_line=(
                             _redact_command_line(_invocation_command_line())
                             if want_redact_paths
                             else _invocation_command_line()))
 
-    base = (os.path.splitext(os.path.basename(args.path.rstrip("/\\")))[0]
-            or "aci")
+    base = _report_base(args)
     _write_reports(report, formats, args, base)
 
-    _print_runtime_hints(scanner, waiver_report, internal)
+    _print_runtime_hints(scanner, waiver_report, internal,
+                         safe_console=bool(getattr(args, "safe_console", False))
+                         or want_redact_paths)
     return exit_code
 
 
@@ -1181,9 +1458,13 @@ def _resolve_config(pre):
 _EFFECTIVE_KEYS = (
     "dialect", "group", "profile", "format", "output_dir", "html_group_by",
     "min_level", "fail_on", "context_lines", "no_context", "redact_secrets",
-    "redact_paths", "safe_report", "taint_sources", "follow_symlinks",
+    "redact_paths", "safe_report", "safe_console", "taint_sources",
+    "follow_symlinks", "force_file",
     "max_file_size", "strict_internal_errors", "strict_waivers",
-    "require_trusted_rules",
+    "require_trusted_rules", "require_ruleset_pin", "scan_completeness",
+    "fail_on_access_error", "fail_on_skipped_file", "encoding",
+    "encoding_errors", "reproducible_report", "report_name",
+    "strict_suppressions",
     "waivers", "exclude", "rules", "rules_dir", "guidelines_dir", "mitre_dir",
     "expected_ruleset_sha256", "ruleset_lock", "no_color",
 )
@@ -1204,6 +1485,8 @@ def _effective_config(args) -> dict:
     statt der rohen argparse-Schalter.
     """
     eff = {k: getattr(args, k, None) for k in _EFFECTIVE_KEYS}
+    # S5: normalisierter Dialekt (postgres -> postgresql).
+    eff["dialect"] = _normalize_dialect(eff.get("dialect"))
     safe = bool(getattr(args, "safe_report", False))
     raw_no_ctx = bool(getattr(args, "no_context", False))
     ctx_lines = getattr(args, "context_lines", 0) or 0
@@ -1211,6 +1494,44 @@ def _effective_config(args) -> dict:
     eff["redact_secrets"] = bool(getattr(args, "redact_secrets", False)) or safe
     eff["redact_paths"] = bool(getattr(args, "redact_paths", False)) or safe
     return eff
+
+
+def _effective_config_detail(args, defaults, profile_name) -> dict:
+    """Aufgeschluesselte Konfigurationsherkunft fuer ``--print-effective-config``
+    (S4).
+
+    Statt nur der finalen Werte werden die einzelnen Schichten gezeigt, sodass
+    nachvollziehbar ist, woher ein Wert stammt und wie er sich ableitet:
+
+    * ``resolved``  - die tatsaechlich wirksamen, normalisierten Werte (nach
+      Defaults/Config/Profil/CLI und nach Aufloesung von ``--safe-report``,
+      ``--context-lines 0`` und Dialekt-Alias);
+    * ``derived``   - explizit die abgeleiteten Effektivwerte
+      (``no_context``/``redact_secrets``/``redact_paths``/``dialect``);
+    * ``layers``    - je Schluessel die Werte aus ``builtin``, ``config``
+      (aci.ini), ``profile`` und ``resolved`` - so ist die Herkunft sichtbar.
+    """
+    resolved = _effective_config(args)
+    profile = _PROFILES.get(profile_name or "", {})
+    layer_keys = sorted(set(BUILTIN_DEFAULTS) | set(resolved))
+    layers: dict = {}
+    for key in layer_keys:
+        layers[key] = {
+            "builtin": BUILTIN_DEFAULTS.get(key),
+            "config": defaults.get(key),
+            "profile": profile.get(key) if key in profile else None,
+            "resolved": resolved.get(key, getattr(args, key, None)),
+        }
+    return {
+        "resolved": resolved,
+        "derived": {
+            "dialect": resolved.get("dialect"),
+            "no_context": resolved.get("no_context"),
+            "redact_secrets": resolved.get("redact_secrets"),
+            "redact_paths": resolved.get("redact_paths"),
+        },
+        "layers": layers,
+    }
 
 
 def main(argv=None) -> int:
@@ -1254,6 +1575,11 @@ def main(argv=None) -> int:
     except KeyboardInterrupt:                       # pragma: no cover
         print("Abgebrochen.", file=sys.stderr)
         return 130
+    except (MemoryError, RecursionError):           # pragma: no cover
+        # S7: systemnahe Ausnahmen NICHT als gewoehnlichen Fehler abtun -
+        # sie deuten auf pathologischen Input/Ressourcenmangel hin und
+        # sollen unveraendert nach oben propagieren.
+        raise
     except Exception as exc:                        # pragma: no cover
         if getattr(args, "debug", False):
             raise

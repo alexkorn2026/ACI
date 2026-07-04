@@ -1,0 +1,54 @@
+name: release
+
+# S1: Releases entstehen ausschliesslich aus einem SemVer-Tag `vX.Y.Z`.
+# Der bewegliche/mehrdeutige Tag `main` wird NICHT als Release verwendet.
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Versions-Konsistenz prüfen (Tag == __version__ == CHANGELOG)
+        run: |
+          python - <<'PY'
+          import os, re, sys
+          from aci._version import __version__ as v
+          tag = os.environ["GITHUB_REF_NAME"]
+          expected = f"v{v}"
+          if tag != expected:
+              sys.exit(f"Tag {tag!r} != v+__version__ {expected!r}")
+          changelog = open("CHANGELOG.md", encoding="utf-8").read()
+          if f"[{v}]" not in changelog:
+              sys.exit(f"CHANGELOG.md enthält keinen Abschnitt [{v}]")
+          print(f"OK: Tag, __version__ und CHANGELOG stimmen überein ({v}).")
+          PY
+
+      - name: Build-Toolchain installieren
+        run: python -m pip install --upgrade build
+
+      - name: Wheel + sdist bauen
+        run: python -m build
+
+      - name: sdist eigenständig testen (entspricht CI-Job sdist-test)
+        run: |
+          python -m pip install "$(ls dist/*.whl)[dev]"
+          python -m pytest -q
+
+      - name: GitHub-Release aus dem Tag erzeugen
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          generate_release_notes: true
+          fail_on_unmatched_files: true

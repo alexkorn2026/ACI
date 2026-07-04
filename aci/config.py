@@ -50,6 +50,35 @@ BUILTIN_DEFAULTS = {
     # Regelintegrität: bei true bricht ACI ab, wenn eine Regeldatei aus
     # einem benutzerdefinierten (nicht gebündelten) Pfad geladen würde.
     "require_trusted_rules": False,
+    # M6: bei true verlangt ACI eine feste Regelsatz-Bindung
+    # (--expected-ruleset-sha256 oder --ruleset-lock); fehlt sie, Exit-Code 2.
+    # Vom strict-Profil gesetzt.
+    "require_ruleset_pin": False,
+    # M2/S12: Scan-Vollstaendigkeit. "advisory" = unvollstaendiger Scan
+    # (uebersprungene/nicht lesbare/nicht dekodierbare Dateien) ist nur ein
+    # Hinweis; "strict" = Exit-Code 2, wenn nicht jede Zieldatei geprueft wurde.
+    "scan_completeness": "advisory",
+    # Feinsteuerung (unabhaengig von scan_completeness): Exit-Code 2 bei
+    # nicht lesbaren Pfaden bzw. wegen Groessenlimit/Exclude uebersprungenen
+    # Dateien.
+    "fail_on_access_error": False,
+    "fail_on_skipped_file": False,
+    # S8: erzwungene Quelltext-Kodierung (leer = Auto/BOM) und Fehlerstrategie
+    # (replace = Ersatzzeichen, strict = nicht dekodierbare Datei gilt als
+    # ungeprueft).
+    "encoding": "",
+    "encoding_errors": "replace",
+    # S3: reproduzierbarer Report - laesst nicht-deterministische Felder
+    # (Zeitstempel, Dauer, Plattform, absolute Pfade) weg, sodass der Report
+    # bei unveraendertem Code/Regeln byte-identisch ist.
+    "reproducible_report": False,
+    # S11: Safe-Modus auch auf die Konsolen-/stderr-Hinweise anwenden (Pfade
+    # maskieren) - CI-Logs werden oft laenger aufbewahrt als Artefakte.
+    "safe_console": False,
+    # S13: verlangt fuer Inline-Suppressions (-- aci:ignore) Governance-
+    # Metadaten (ticket=, reason=) und lehnt abgelaufene/ungueltige ab;
+    # Verstoesse fuehren zu Exit-Code 2.
+    "strict_suppressions": False,
 }
 
 # Erlaubte Werte für die auswahlbeschränkten Parameter. argparse prüft
@@ -63,11 +92,15 @@ _CHOICES = {
     "fail_on": ("none", "info", "minor", "warning", "major",
                 "high", "critical", "blocker"),
     "html_group_by": ("rule", "file"),
+    "scan_completeness": ("advisory", "strict"),
+    "encoding_errors": ("replace", "strict"),
 }
 
 _BOOL_KEYS = ("no_context", "redact_secrets", "redact_paths", "safe_report",
               "taint_sources", "follow_symlinks", "strict_internal_errors",
-              "strict_waivers", "require_trusted_rules")
+              "strict_waivers", "require_trusted_rules", "require_ruleset_pin",
+              "fail_on_access_error", "fail_on_skipped_file",
+              "reproducible_report", "safe_console", "strict_suppressions")
 
 CONFIG_FILENAME = "aci.ini"
 

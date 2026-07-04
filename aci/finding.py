@@ -127,7 +127,8 @@ def stable_relative_path(path: str, scan_root: "str | None" = None) -> str:
 
 
 def compute_fingerprint(check_id: str, rule_ref: str, file: str,
-                        statement: str, dialect: str = "") -> str:
+                        statement: str, dialect: str = "",
+                        routine: str = "") -> str:
     """Stabiler, inhaltsgebundener Fingerabdruck eines Findings.
 
     Grundlage des Waiver-/Ausnahmeprozesses. Bewusst **ohne**
@@ -137,17 +138,24 @@ def compute_fingerprint(check_id: str, rule_ref: str, file: str,
     dem Code, den er deckt.
 
     Es gehen Check-ID, Regelreferenz, SQL-Dialekt, der **repo-relative
-    Dateipfad** sowie der auf einfache Leerzeichen normalisierte
-    Code-Ausschnitt ein. ``file`` ist bereits der stabile, repo-relative
-    Pfad (siehe :func:`stable_relative_path`) - hier wird er nur auf
-    Forward-Slashes normalisiert. Der vollständige Pfad (statt nur des
-    Dateinamens) verhindert, dass ein Waiver für ``db/admin/install.sql``
-    versehentlich ein Finding in ``db/app/install.sql`` mitdeckt.
+    Dateipfad**, der **normalisierte Name der umgebenden Routine** sowie der
+    auf einfache Leerzeichen normalisierte Code-Ausschnitt ein. ``file`` ist
+    bereits der stabile, repo-relative Pfad (siehe
+    :func:`stable_relative_path`) - hier wird er nur auf Forward-Slashes
+    normalisiert. Der vollständige Pfad (statt nur des Dateinamens) verhindert,
+    dass ein Waiver für ``db/admin/install.sql`` versehentlich ein Finding in
+    ``db/app/install.sql`` mitdeckt.
+
+    S14: Der Routinenname (case-insensitiv normalisiert) unterscheidet zwei
+    ansonsten identische Befunde in **verschiedenen** Prozeduren/Funktionen -
+    ein Waiver/Baseline-Eintrag deckt dann nicht versehentlich beide. Ist die
+    Routine unbekannt (Top-Level-Code), bleibt das Feld leer.
     """
     norm = " ".join((statement or "").split())
     path = str(file or "").replace("\\", "/").strip()
+    routine_norm = " ".join(str(routine or "").split()).upper()
     basis = "\x00".join((check_id or "", rule_ref or "", dialect or "",
-                         path, norm))
+                         path, routine_norm, norm))
     return hashlib.sha256(basis.encode("utf-8", "replace")).hexdigest()[:16]
 
 

@@ -7,6 +7,62 @@ die Versionierung folgt [Semantic Versioning](https://semver.org/lang/de/).
 
 ## [Unveröffentlicht]
 
+## [2.23.0] - 2026-07-04
+
+Härtung der Scan-**Verlässlichkeit als Security-Gate** aus einem umfassenden
+externen Review. Behebt sechs Muss-Findings (M1–M6) und die Soll-Findings
+(S1–S15). Schwerpunkt: „Wurde wirklich jede Datei geprüft?", „Kann ein
+Repository den Scanner blockieren?", „Ist ein Safe-Report tatsächlich sicher?",
+„Sind die Regeln nachweisbar unverändert?".
+
+### Behoben (Muss)
+- **M1 – Symlink-Zyklen.** `--follow-symlinks` erkennt bereits besuchte reale
+  Verzeichnisse über (Device, Inode) und kappt Zyklen, statt in
+  `loop/loop/…`-Endlosrekursion (DoS über präpariertes Repo) zu laufen.
+- **M2 – Scan-Vollständigkeit → Gate.** Neu `--scan-completeness advisory|strict`
+  sowie `--fail-on-access-error` / `--fail-on-skipped-file`: ein CI-Lauf kann
+  nicht mehr stumm mit Exit 0 „bestehen", obwohl Dateien nicht gelesen,
+  übersprungen oder nicht dekodiert wurden. Das `strict`-Profil setzt `strict`.
+- **M3 – Safe-Report vollständig.** Redaction erfasst jetzt auch
+  `message`/`recommendation` und `related.label`; interne Fehler-Findings
+  werden im Safe-Modus auf `Interner Fehler im Check <ID>: <ExceptionTyp>`
+  standardisiert (kein Pfad-/Input-Leak); `platform` wird auf die grobe
+  OS-Familie reduziert; `--safe-console` maskiert Pfade auch auf stderr.
+- **M4 – Einzeldatei-Schutzgrenzen.** Größenlimit, Exclude-Muster und
+  Symlink-Schutz gelten jetzt auch für explizit übergebene Einzeldateien.
+  Bewusste Ausnahme: `--force-file`.
+- **M5 – Atomares Schreiben aller Reports.** JSON/HTML/SARIF/CodeClimate werden
+  wie die Baseline über eine gemeinsame `atomic_write_text`-Hilfe geschrieben
+  (Temp-Datei + `fsync` + `os.replace`) – kein halb geschriebenes Artefakt.
+- **M6 – Regelsatz-Bindung verpflichtend.** `--require-ruleset-pin` (vom
+  `strict`-Profil gesetzt) verlangt einen erwarteten Regelsatz-Hash
+  (`--expected-ruleset-sha256`/`--ruleset-lock`); „gebündelt" ≠ „unverändert".
+
+### Hinzugefügt / Geändert (Soll)
+- **S1** SemVer-Release-Workflow (`.github/workflows/release.yml`, nur bei
+  `v*`-Tags) und Versions-/Changelog-Konsistenzprüfung. **S2** Abschnitt
+  *Sicherheitsmodell & Grenzen* im README. **S3** `--reproducible-report`
+  (byte-identische Reports). **S4** `--print-effective-config` zeigt zusätzlich
+  `resolution` mit `resolved`/`derived`/`layers`. **S5** Dialekt-Alias
+  (`postgres`/`pg` → `postgresql`) zentral normalisiert. **S6** interne Fehler
+  übernehmen Positionen aus `AciParseError`. **S7** `MemoryError`/
+  `RecursionError` werden nicht mehr zu Findings degradiert. **S8** `--encoding`
+  / `--encoding-errors replace|strict`; Dekodierprobleme zählen zur
+  Vollständigkeit. **S9** TOCTOU-feste Größenprüfung (`fstat` + begrenztes
+  Lesen). **S10** `--report-name` gegen Namenskollisionen. **S11**
+  `--safe-console`. **S12** `scan_completeness`-Block in JSON/SARIF. **S13**
+  `--strict-suppressions` (Governance `ticket=`/`reason=`/`expires=`; abgelaufene
+  Direktiven unterdrücken nicht mehr). **S15** End-to-End-Wheel-/Format-Tests.
+- **K2** öffentlicher `rule_content_cache()`-Zugriff. **K3** leere
+  `--format`-Liste ist ein Fehler (Exit 2). **K4** IEC-Einheiten `KiB/MiB/GiB`.
+
+### Geändert – potenziell breaking
+- **S14 – Fingerabdruck.** Der inhaltsgebundene Fingerabdruck bezieht nun den
+  **Namen der umgebenden Routine** ein, damit ein identischer Befund in zwei
+  verschiedenen Prozeduren nicht denselben Abdruck trägt. Dadurch ändern sich
+  bestehende Fingerabdrücke: **vorhandene Baselines/Waiver mit
+  `--write-baseline` neu erzeugen bzw. neu binden.**
+
 ### Hinzugefügt
 - **CodeClimate-Report (GitLab Code Quality).** Neues Ausgabeformat
   `--format codeclimate` erzeugt `aci_report_<name>.codeclimate.json` im

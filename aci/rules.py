@@ -55,6 +55,21 @@ class RuleError(Exception):
 _RULE_CONTENT_CACHE: "dict[str, bytes]" = {}
 
 
+def rule_content_cache() -> "dict[str, bytes]":
+    """Öffentlicher Zugriff auf den Regel-Inhalts-Cache (``{realpath: bytes}``).
+
+    Kapselt das interne ``_RULE_CONTENT_CACHE`` (K2), sodass Aufrufer nicht
+    auf ein privates Symbol zugreifen müssen. Wird von der Integritätsprüfung
+    genutzt, um "hash what you load" zu garantieren.
+    """
+    return _RULE_CONTENT_CACHE
+
+
+def clear_rule_content_cache() -> None:
+    """Leert den Regel-Inhalts-Cache (Tests/lang laufende Prozesse)."""
+    _RULE_CONTENT_CACHE.clear()
+
+
 def _load_json(path: str, kind: str = "Datei"):
     """Lädt eine JSON-Datei und wandelt Lesefehler in RuleError um.
 

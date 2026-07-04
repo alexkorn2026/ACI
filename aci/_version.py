@@ -10,4 +10,4 @@ Wird ``__version__`` hier geändert, ändern sich automatisch:
 * die Ausgabe von ``aci --version``.
 """
 
-__version__ = "2.22.1"
+__version__ = "2.23.0"

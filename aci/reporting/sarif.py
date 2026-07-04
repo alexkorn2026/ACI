@@ -182,6 +182,8 @@ def render_sarif(report: ScanReport) -> str:
         props["aci_runtime"] = report.runtime
     if report.gate is not None:
         props["aci_gate"] = report.gate
+    if report.scan_completeness is not None:
+        props["aci_scan_completeness"] = report.scan_completeness
     if report.config_info is not None:
         props["aci_config"] = report.config_info
     if props:

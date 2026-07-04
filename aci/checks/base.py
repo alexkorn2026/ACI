@@ -337,8 +337,18 @@ class Check:
         # einem anderen Verzeichnis mit ab.
         rel_path = stable_relative_path(
             source.filename, getattr(source, "scan_root", None))
+        # S14: umgebende Routine in den Fingerabdruck einbeziehen, damit ein
+        # identischer Befund in zwei verschiedenen Routinen nicht denselben
+        # Fingerabdruck traegt (und ein Waiver/Baseline-Eintrag nicht beide
+        # unbeabsichtigt mitdeckt).
+        routine = None
+        routine_at = getattr(source, "routine_at", None)
+        if callable(routine_at):
+            routine = routine_at(offset)
+        routine_name = getattr(routine, "name", "") if routine else ""
         fingerprint = compute_fingerprint(self.id, rule_ref, rel_path,
-                                          fp_text, dialect=self.dialect)
+                                          fp_text, dialect=self.dialect,
+                                          routine=routine_name)
         related_locs: list = []
         statement_end_line = line
         if self.report_context:

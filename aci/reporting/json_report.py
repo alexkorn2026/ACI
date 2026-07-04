@@ -22,10 +22,13 @@ def render_json(report: ScanReport) -> str:
     data = {
         "tool": "ACI - Automated Code Inspection",
         "version": __version__,
-        "generated": report.created.isoformat(timespec="seconds"),
+        # S3: im reproduzierbaren Modus keinen Zeitstempel ausgeben.
+        "generated": (None if report.reproducible
+                      else report.created.isoformat(timespec="seconds")),
         "target": report.target,
         "dialect": report.ruleset.dialect,
         "groups": report.groups(),
+        "scan_completeness": report.scan_completeness,
         "ruleset": {
             "path": report.ruleset.path,
             "version": report.ruleset.version,

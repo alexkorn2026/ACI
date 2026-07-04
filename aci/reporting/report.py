@@ -25,10 +25,16 @@ class ScanReport:
                  html_group_by: str = "rule", waiver_report=None,
                  integrity=None, command_line: str = "",
                  ruleset_verification=None, runtime=None, gate=None,
-                 config_info=None):
+                 config_info=None, scan_completeness=None,
+                 reproducible: bool = False):
         self.results = results
         self.ruleset = ruleset
         self.target = target
+        # S12: strukturierte Scan-Vollstaendigkeit (dict) oder None.
+        self.scan_completeness = scan_completeness
+        # S3: reproduzierbarer Report - nicht-deterministische Felder
+        # (Zeitstempel) werden in den Reportern weggelassen.
+        self.reproducible = bool(reproducible)
         # Ergebnis des Waiver-/Ausnahmeprozesses (aci.waivers.WaiverReport)
         # oder None, wenn keine Waiver-Datei angegeben wurde.
         self.waiver_report = waiver_report

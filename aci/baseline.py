@@ -36,13 +36,12 @@ JSON-Liste) bleiben lesbar; dort zaehlt jedes Vorkommen als eins.
 
 from __future__ import annotations
 
-import contextlib
 import json
 import os
 import re
-import tempfile
 from collections import Counter
 
+from ._io import atomic_write_text
 from ._version import __version__
 
 # Aktuell geschriebene Version; unterstuetzte Lese-Versionen.
@@ -76,35 +75,6 @@ def collect_fingerprints(results: "dict") -> "Counter[str]":
     return counts
 
 
-def _atomic_write_text(path: str, payload: str) -> None:
-    """Schreibt ``payload`` atomar nach ``path``.
-
-    Temporaerdatei im Zielverzeichnis, ``flush``+``fsync``, dann
-    ``os.replace`` (atomar auf POSIX und Windows). Bei Fehlern wird die
-    Temporaerdatei entfernt; eine vorhandene Zieldatei bleibt bis zum
-    erfolgreichen Replace unveraendert. Bestehende Dateirechte werden
-    - soweit vorhanden - uebernommen.
-    """
-    target_dir = os.path.dirname(os.path.abspath(path)) or "."
-    os.makedirs(target_dir, exist_ok=True)
-    fd, tmp = tempfile.mkstemp(dir=target_dir, prefix=".aci-baseline-",
-                               suffix=".tmp")
-    try:
-        with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as fh:
-            fh.write(payload)
-            fh.flush()
-            os.fsync(fh.fileno())
-        # Rechte einer bereits vorhandenen Zieldatei uebernehmen.
-        if os.path.exists(path):
-            with contextlib.suppress(OSError):
-                os.chmod(tmp, os.stat(path).st_mode & 0o777)
-        os.replace(tmp, path)
-    except BaseException:
-        with contextlib.suppress(OSError):
-            os.remove(tmp)
-        raise
-
-
 def write_baseline(path: str, results: "dict") -> int:
     """Schreibt die aktuelle Baseline (Format v2) atomar.
 
@@ -119,7 +89,7 @@ def write_baseline(path: str, results: "dict") -> int:
         "findings": {fp: counts[fp] for fp in sorted(counts)},
     }
     payload = json.dumps(data, indent=2, ensure_ascii=False) + "\n"
-    _atomic_write_text(path, payload)
+    atomic_write_text(path, payload)
     return int(sum(counts.values()))
 
 

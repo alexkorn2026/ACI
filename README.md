@@ -2,7 +2,7 @@
 
 [![License: MIT AND Apache-2.0](https://img.shields.io/badge/license-MIT%20AND%20Apache--2.0-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://www.python.org/)
-[![Version](https://img.shields.io/badge/version-2.22.1-green.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-2.23.0-green.svg)](CHANGELOG.md)
 [![Dependencies](https://img.shields.io/badge/dependencies-none-brightgreen.svg)](pyproject.toml)
 
 **ACI** ist ein heuristischer, statischer Sicherheits- und Coding-Guidelines-Scanner
@@ -78,8 +78,12 @@ Wichtigste Optionen:
 | `--min-level` | nur Findings ab einem Schweregrad ausgeben |
 | `--fail-on` | Exit-Code 1, wenn Findings ≥ Schweregrad (CI/CD) |
 | `--waivers` / `--baseline` | kontrollierte Ausnahmen bzw. Adoption auf Legacy-Code |
-| `--safe-report` | Report ohne Quelltext, mit maskierten Secrets/Pfaden |
-| `--exclude` / `--max-file-size` | Dateien ausschließen bzw. Größenlimit |
+| `--safe-report` / `--safe-console` | Report bzw. Konsole ohne Quelltext, mit maskierten Secrets/Pfaden |
+| `--scan-completeness strict` | Exit-Code 2, wenn nicht jede Zieldatei geprüft wurde (mit `--fail-on-access-error`) |
+| `--require-ruleset-pin` | verlangt festen Regelsatz-Hash (`--expected-ruleset-sha256`/`--ruleset-lock`) |
+| `--strict-suppressions` | Inline-`aci:ignore` müssen `ticket=`/`reason=` tragen und dürfen nicht abgelaufen sein |
+| `--reproducible-report` | byte-identische Reports (ohne Zeitstempel/Plattform/Pfade) |
+| `--exclude` / `--max-file-size` | Dateien ausschließen bzw. Größenlimit (auch für Einzeldateien; `--force-file` hebt es auf) |
 
 Vollständige Optionsliste: `aci --help` oder [`docs/MANUAL.md`](docs/MANUAL.md).
 
@@ -119,6 +123,35 @@ tests/          pytest-Testsuite inkl. Regel-Testharness
 Ausführliche Dokumentation aller Checks, Regeln und Reportformate:
 [`docs/MANUAL.md`](docs/MANUAL.md) und `docs/ACI_Dokumentation.html`.
 Versionshistorie: [`CHANGELOG.md`](CHANGELOG.md).
+
+## Sicherheitsmodell & Grenzen
+
+ACI ist ein **heuristischer** Scanner, kein vollständiger SQL-Compiler. Für den
+Einsatz als CI/CD-Security-Gate ist wichtig, die Grenzen zu kennen:
+
+- **Kein Soundness-Versprechen.** ACI besitzt keinen vollständigen
+  PL/SQL-/PL/pgSQL-Parser und keinen Kontrollflussgraphen. **False Negatives
+  sind möglich**, insbesondere bei dynamisch generiertem SQL, Makros/Präprozessor,
+  ungewöhnlichen Body-Quotings, bedingter Kompilierung oder Editioning.
+- **Statische Analyse des übergebenen Quelltexts.** ACI führt Code nicht aus und
+  ersetzt weder eine Laufzeit- noch eine Datenbankrechte-Analyse.
+- **Scan-Vollständigkeit ist Teil des Gates.** Übersprungene, nicht lesbare oder
+  nicht dekodierbare Dateien können einen Lauf unvollständig machen. Für ein
+  belastbares Gate `--profile strict` bzw. `--scan-completeness strict`
+  zusammen mit `--fail-on-access-error` verwenden, damit ein unvollständiger
+  Scan **nicht** als „bestanden" gilt.
+- **Regelintegrität.** Regeln liegen als externe JSON-Dateien vor. Für ein
+  reproduzierbares Gate den Regelsatz binden (`--require-ruleset-pin` mit
+  `--expected-ruleset-sha256`/`--ruleset-lock`); „gebündelt" bedeutet nicht
+  automatisch „unverändert".
+- **Safe-Reports.** `--safe-report`/`--safe-console` reduzieren die Preisgabe
+  sensibler Daten (Secrets, Pfade, Exception-Details), sind aber heuristisch und
+  keine Garantie – Reports vor Veröffentlichung prüfen.
+
+Empfehlung: ACI eignet sich als **unterstützender** Security- und
+Audit-Scanner. Als alleinige, fail-closed Sicherheitskontrolle sollte es nur mit
+`--profile strict` (Vollständigkeits- und Integritätsprüfung aktiv) betrieben
+werden.
 
 ## Lizenz
 
