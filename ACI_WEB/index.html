@@ -583,7 +583,7 @@
     </div>
     <div class="version-pill">
       <span class="dot"></span>
-      Version 2.20.1 &middot; MIT-Lizenz &middot; 1057 Tests grün
+      Version 2.23.0 &middot; MIT-Lizenz &middot; 1203 Tests grün
     </div>
   </div>
 </header>
@@ -668,11 +668,12 @@
             <line x1="8" y1="17" x2="14" y2="17" />
           </svg>
         </div>
-        <h3>Vier Report-Formate</h3>
+        <h3>Fünf Report-Formate</h3>
         <p>
           Befunde als farbige Konsolenausgabe, als JSON, als eigenständiger
-          HTML-Report oder als SARIF 2.1.0 für die Integration in
-          Code-Scanning-Werkzeuge.
+          HTML-Report, als SARIF 2.1.0 für Code-Scanning-Werkzeuge oder als
+          CodeClimate-Artefakt für das GitLab-Code-Quality-Widget &ndash;
+          atomar geschrieben und optional byte-identisch reproduzierbar.
         </p>
       </div>
 
@@ -712,8 +713,28 @@
         <h3>Waiver &amp; Regelintegrität</h3>
         <p>
           Inhaltsgebundene Fingerprints erlauben dokumentierte Ausnahmen über
-          <code>--waivers</code>; mit <code>--require-trusted-rules</code>
-          werden nur signierte Regeldateien akzeptiert.
+          <code>--waivers</code>; mit <code>--require-ruleset-pin</code> und
+          einem erwarteten SHA-256 (<code>--ruleset-lock</code>) wird der
+          verwendete Regelstand nachweisbar gebunden &ndash; „gebündelt"
+          bedeutet nicht automatisch „unverändert".
+        </p>
+      </div>
+
+      <div class="card">
+        <div class="icon-box">
+          <svg viewBox="0 0 24 24" fill="none" stroke="url(#g1)"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 12l2 2 4-4" />
+            <path d="M12 3l7 4v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V7z" />
+          </svg>
+        </div>
+        <h3>Verlässliches CI-Gate</h3>
+        <p>
+          Ein unvollständiger Scan besteht nicht mehr stumm: mit
+          <code>--scan-completeness&nbsp;strict</code> zählt jede nicht
+          geprüfte Datei fürs Gate. Symlink-Zyklen werden erkannt, Reports
+          atomar geschrieben, Safe-Reports maskieren auch Meldungen und
+          Konsolenpfade &ndash; neu in <strong>ACI&nbsp;2.23.0</strong>.
         </p>
       </div>
 
@@ -1040,6 +1061,7 @@
       <div class="fmt"><strong>JSON</strong> &nbsp;<span>maschinenlesbar</span></div>
       <div class="fmt"><strong>HTML</strong> &nbsp;<span>eigenständiger Report</span></div>
       <div class="fmt"><strong>SARIF 2.1.0</strong> &nbsp;<span>Code-Scanning</span></div>
+      <div class="fmt"><strong>CodeClimate</strong> &nbsp;<span>GitLab Code Quality</span></div>
     </div>
 
     <div class="terminal">
@@ -1048,7 +1070,7 @@
       </div>
       <div class="term-body"><span class="c-prompt">$</span> <span class="c-cmd">aci scan paket_kunde.sql --profile ci --format sarif</span>
 
-ACI 2.20.1 &middot; Automated Code Inspection
+ACI 2.23.0 &middot; Automated Code Inspection
 <span class="c-dim">Prüfe paket_kunde.sql (Oracle PL/SQL) ...</span>
 
   <span class="c-bad">HIGH</span>   ACI-SQLI   Zeile 42  Dynamisches SQL aus nicht
@@ -1089,7 +1111,7 @@ ACI 2.20.1 &middot; Automated Code Inspection
       </div>
     </div>
     <div class="footer-bottom">
-      <span>&copy; 2026 ACI &ndash; Automated Code Inspection &middot; Version 2.20.1</span>
+      <span>&copy; 2026 ACI &ndash; Automated Code Inspection &middot; Version 2.23.0</span>
       <span>
         MIT-Lizenz (eigener Code) &middot; Apache-2.0 (Trivadis-Guideline-Regeln)
       </span>

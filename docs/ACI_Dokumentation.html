@@ -79,7 +79,7 @@
 <header>
   <h1>ACI &ndash; Automated Code Inspection</h1>
   <div class="sub">Sicherheits- und Coding-Guidelines-Scanner für Oracle-
-    und PostgreSQL-Code &middot; Dokumentation &middot; Version 2.20.2
+    und PostgreSQL-Code &middot; Dokumentation &middot; Version 2.23.0
 </header>
 
 <div class="layout">
@@ -266,9 +266,12 @@ python3 -m aci samples/vulnerable_oracle.sql -g security</code></pre>
     <li>Heuristische Erkennung für Client-/Deployment-Skripte (SQL*Plus,
         edbplus, psql) und Oracle APEX/ORDS (inkl. APEX-Export-Dateien)</li>
     <li>Zwei SQL-Dialekte: Oracle und PostgreSQL (EPAS-bewusst)</li>
-    <li>Vier Ausgabeformate: Konsole, JSON, HTML, SARIF</li>
-    <li>Externe, frei editierbare JSON-Regeldateien</li>
-    <li>Einbindbar in CI/CD über Exit-Codes</li>
+    <li>Fünf Ausgabeformate: Konsole, JSON, HTML, SARIF, CodeClimate
+        (atomar geschrieben, optional reproduzierbar)</li>
+    <li>Externe, frei editierbare JSON-Regeldateien mit nachweisbarer
+        Regelsatz-Bindung (Ruleset-Hash / Pin)</li>
+    <li>Einbindbar in CI/CD über Exit-Codes &ndash; mit Vollständigkeits-,
+        Symlink- und Suppression-Governance-Gates (fail-closed)</li>
     <li>Reine Python-Standardbibliothek &ndash; keine Abhängigkeiten</li>
   </ul>
 </section>
@@ -462,9 +465,14 @@ python3 aci.py samples/vulnerable_oracle.sql</code></pre>
       MITRE-Taktikdateien</td><td>gebündelt</td></tr>
     <tr><td><code>-f, --format</code></td><td>Ausgabeformate, kommagetrennt:
       <code>console</code>, <code>json</code>, <code>html</code>,
-      <code>sarif</code></td><td>console</td></tr>
+      <code>sarif</code>, <code>codeclimate</code> (GitLab Code Quality);
+      eine leere Liste ist ein Fehler</td><td>console</td></tr>
     <tr><td><code>-o, --output-dir</code></td><td>Zielverzeichnis für
-      JSON-/HTML-/SARIF-Reports</td><td>akt. Verz.</td></tr>
+      JSON-/HTML-/SARIF-/CodeClimate-Reports (atomar geschrieben)</td>
+      <td>akt. Verz.</td></tr>
+    <tr><td><code>--report-name NAME</code></td><td>fester Basisname der
+      Report-Dateien statt aus dem Scan-Ziel abgeleitet (verhindert
+      Namenskollisionen)</td><td>&ndash;</td></tr>
     <tr><td><code>--html-group-by</code></td><td>HTML-Findings nach
       <code>rule</code> oder <code>file</code> gruppieren</td><td>rule</td></tr>
     <tr><td><code>--min-level</code></td><td>nur Findings ab diesem
@@ -488,6 +496,31 @@ python3 aci.py samples/vulnerable_oracle.sql</code></pre>
     <tr><td><code>--require-trusted-rules</code></td><td>Exit-Code 2, wenn
       eine Regeldatei aus einem benutzerdefinierten (nicht gebündelten)
       Pfad geladen würde</td><td>&ndash;</td></tr>
+    <tr><td><code>--require-ruleset-pin</code></td><td>verlangt einen
+      erwarteten Regelsatz-Hash (<code>--expected-ruleset-sha256</code>/
+      <code>--ruleset-lock</code>); fehlt er, Exit-Code 2 (vom
+      <code>strict</code>-Profil gesetzt)</td><td>&ndash;</td></tr>
+    <tr><td><code>--scan-completeness</code></td><td><code>advisory</code>
+      oder <code>strict</code>: bei <code>strict</code> Exit-Code 2, wenn
+      nicht jede Zieldatei geprüft wurde</td><td>advisory</td></tr>
+    <tr><td><code>--fail-on-access-error</code> /
+      <code>--fail-on-skipped-file</code></td><td>Exit-Code 2 bei nicht
+      lesbaren bzw. wegen Limit/Exclude übersprungenen Dateien</td>
+      <td>&ndash;</td></tr>
+    <tr><td><code>--strict-suppressions</code></td><td>Inline-<code>aci:ignore</code>
+      müssen <code>ticket=</code>/<code>reason=</code> tragen und dürfen nicht
+      abgelaufen (<code>expires=</code>) sein; sonst Exit-Code 2</td>
+      <td>&ndash;</td></tr>
+    <tr><td><code>--encoding</code> /
+      <code>--encoding-errors</code></td><td>Quelltext-Kodierung erzwingen
+      (sonst Auto/BOM); <code>replace</code> oder <code>strict</code> &ndash;
+      bei <code>strict</code> gilt eine nicht dekodierbare Datei als
+      ungeprüft</td><td>auto / replace</td></tr>
+    <tr><td><code>--reproducible-report</code></td><td>byte-identischer
+      Report: Zeitstempel, Dauer, Plattform und absolute Pfade weglassen</td>
+      <td>&ndash;</td></tr>
+    <tr><td><code>--safe-console</code></td><td>Pfadmaskierung auch auf die
+      stderr-Hinweise anwenden (CI-Logs)</td><td>&ndash;</td></tr>
     <tr><td><code>--context-lines N</code></td><td>Zeilen Quelltext-Kontext
       pro Finding (<code>0</code> = kein Kontext)</td><td>3</td></tr>
     <tr><td><code>--no-context</code></td><td>keinen Quelltext-Kontext in
@@ -510,12 +543,18 @@ python3 aci.py samples/vulnerable_oracle.sql</code></pre>
       SQL-Injection- und dynamischen DDL-Findings als zusätzliche
       Fundstelle zeigen</td><td>an</td></tr>
     <tr><td><code>--exclude MUSTER</code></td><td>Datei-/Verzeichnismuster
-      vom Scan ausschließen (mehrfach möglich)</td><td>&ndash;</td></tr>
+      vom Scan ausschließen (mehrfach möglich); gilt auch für explizit
+      benannte Einzeldateien</td><td>&ndash;</td></tr>
     <tr><td><code>--max-file-size GRÖSSE</code></td><td>Dateien über dieser
-      Größe überspringen (z.B. <code>5MB</code>, <code>500KB</code>)</td>
+      Größe überspringen (<code>5MB</code>, <code>500KB</code>,
+      <code>1GiB</code>; binär); TOCTOU-fest und auch für Einzeldateien
+      wirksam</td><td>&ndash;</td></tr>
+    <tr><td><code>--force-file</code></td><td>Größenlimit/Exclude/Symlink-Schutz
+      <b>nicht</b> auf eine explizit benannte Einzeldatei anwenden</td>
       <td>&ndash;</td></tr>
     <tr><td><code>--follow-symlinks</code></td><td>symbolischen
-      Verknüpfungen folgen</td><td>&ndash;</td></tr>
+      Verknüpfungen folgen (mit Zykluserkennung gegen Endlosrekursion)</td>
+      <td>&ndash;</td></tr>
     <tr><td><code>--no-color</code></td><td>Konsolenausgabe ohne Farben</td>
       <td>&ndash;</td></tr>
     <tr><td><code>--debug</code></td><td>bei unerwarteten Fehlern den vollen
@@ -583,10 +622,13 @@ python3 aci.py --list-checks</code></pre>
 
 <section id="reports">
   <h2>7. Reportformate</h2>
-  <p>ACI kennt <strong>vier</strong> Reportformate
-  (<code>--format console,json,html,sarif</code>, kommagetrennt
+  <p>ACI kennt <strong>fünf</strong> Reportformate
+  (<code>--format console,json,html,sarif,codeclimate</code>, kommagetrennt
   kombinierbar). Alle stellen die Prüfgruppen getrennt dar &ndash;
-  jeweils mit eigener Schweregrad-Zusammenfassung.</p>
+  jeweils mit eigener Schweregrad-Zusammenfassung. Die Datei-Reports werden
+  <strong>atomar</strong> geschrieben (kein halb geschriebenes Artefakt) und
+  lassen sich mit <code>--reproducible-report</code> byte-identisch
+  reproduzieren.</p>
   <h3>Konsole</h3>
   <p>Farbiger Textreport, je Gruppe ein eigener Abschnitt. Mit
   <code>--no-color</code> ohne ANSI-Farben.</p>
@@ -605,8 +647,17 @@ python3 aci.py --list-checks</code></pre>
   <p>SARIF-2.1.0-Report (<code>aci_report_&lt;name&gt;.sarif</code>) für
   GitHub-/GitLab-/Azure-DevOps-Code-Scanning. Der Regelkatalog ist je
   <code>check_id:rule_ref</code> geführt; gewaiverte Findings erscheinen
-  als <code>suppressions</code>, der Ruleset-Hash als
+  als <code>suppressions</code>, der Ruleset-Hash sowie die
+  Scan-Vollständigkeit (<code>aci_scan_completeness</code>) als
   Run-<code>property</code>.</p>
+  <h3>CodeClimate</h3>
+  <p>CodeClimate-Subset-Report (<code>aci_report_&lt;name&gt;.codeclimate.json</code>)
+  für das GitLab-Code-Quality-Widget. Findings erscheinen im Merge-Request
+  und im Diff; Schweregrade werden über das ACI-Gewicht abgebildet, jeder
+  Befund trägt seinen inhaltsgebundenen Fingerabdruck.</p>
+  <div class="note">Der JSON- und der SARIF-Report enthalten zusätzlich einen
+  <code>scan_completeness</code>-Block (geprüft/übersprungen/nicht lesbar/
+  Dekodierfehler), damit ein Konsument erkennt, ob der Scan vollständig war.</div>
 </section>
 
 <section id="sicherheit">
@@ -820,10 +871,13 @@ python3 aci.py --list-checks</code></pre>
     <tr><td><code>1</code></td><td>mindestens ein Finding erreicht/übersteigt
       die Schwelle</td></tr>
     <tr><td><code>2</code></td><td>Werkzeug-/Eingabefehler (ungültige
-      Regeldatei, Pfad nicht gefunden, ungültige Option) oder &ndash; mit
-      <code>--strict-internal-errors</code> bzw.
-      <code>--strict-waivers</code> &ndash; ein interner Check-Fehler bzw.
-      eine fehlerhafte Waiver-Datei</td></tr>
+      Regeldatei, Pfad nicht gefunden, ungültige/leere Option) oder ein
+      strenger Gate: interner Check-Fehler (<code>--strict-internal-errors</code>),
+      fehlerhafte Waiver-Datei (<code>--strict-waivers</code>), fehlende
+      Regelsatz-Bindung (<code>--require-ruleset-pin</code>), unvollständiger
+      Scan (<code>--scan-completeness strict</code>,
+      <code>--fail-on-access-error</code>/<code>--fail-on-skipped-file</code>)
+      oder ungültige Inline-Suppressions (<code>--strict-suppressions</code>)</td></tr>
   </table>
   <pre><code># Build schlägt bei sicherheitsrelevanten Findings fehl
 python3 aci.py ./src --dialect oracle --group security \
@@ -843,12 +897,13 @@ python3 aci.py ./src --dialect oracle --group security \
       --fail-on none --format console,json,sarif --safe-report</code></td></tr>
     <tr><td><code>ci</code></td><td>empfohlener harter Gate &ndash;
       blockiert ab High</td><td><code>--group security --fail-on high
-      --format console,json,sarif --safe-report
-      --strict-internal-errors</code></td></tr>
+      --format console,json,sarif --safe-report --strict-internal-errors
+      --fail-on-access-error --safe-console</code></td></tr>
     <tr><td><code>strict</code></td><td>strengster Gate &ndash;
-      <code>ci</code> plus strenge Waiver-/Regelprüfung</td>
+      <code>ci</code> plus strenge Waiver-/Regel-/Vollständigkeitsprüfung</td>
       <td>wie <code>ci</code>, zusätzlich <code>--strict-waivers
-      --require-trusted-rules</code></td></tr>
+      --require-trusted-rules --require-ruleset-pin --scan-completeness strict
+      --fail-on-skipped-file</code></td></tr>
     <tr><td><code>audit</code></td><td>vollständige Prüfung für ein
       manuelles Review (mit Kontext, ohne Blockade)</td>
       <td><code>--group all --fail-on none --format console,html
@@ -866,7 +921,12 @@ python -m aci sql/ --profile ci --fail-on critical</code></pre>
   und <code>strict</code> setzen bereits <code>--fail-on high</code>
   (bzw. <code>none</code> bei advisory) und <code>--safe-report</code> -
   der folgende ausführliche Gate-Aufruf zeigt dieselben Schalter
-  einzeln.</div>
+  einzeln. <b>Seit ACI&nbsp;2.23.0</b> setzt <code>strict</code> zusätzlich
+  <code>--require-ruleset-pin</code> und <code>--scan-completeness strict</code>:
+  Ohne erwarteten Regelsatz-Hash (<code>--expected-ruleset-sha256</code>/
+  <code>--ruleset-lock</code>) oder bei unvollständigem Scan bricht der Lauf
+  mit Exit-Code&nbsp;2 ab &ndash; ein fail-closed-Gate soll weder ohne
+  nachweisbaren Regelstand noch über ungeprüften Code hinweg bestehen.</div>
 
   <h3>Baseline-/Diff-Modus (Legacy-Adoption)</h3>
   <p>Auf gewachsenem Code liefert der erste Scan oft zu viele Findings, um
@@ -900,6 +960,14 @@ python -m aci sql/ --profile ci --baseline aci-baseline.json</code></pre>
   Hinweis gemeldet. Werkzeugfehler (<code>ACI-INTERNAL</code>) sind bewusst
   nicht unterdrückbar.</p>
   <pre><code>EXECUTE IMMEDIATE v_sql;  -- aci:ignore[ACI-SQLI] SEC-42: geprueft</code></pre>
+  <p><b>Governance (ab ACI&nbsp;2.23.0):</b> Mit
+  <code>--strict-suppressions</code> verlangt ACI Metadaten hinter der
+  Direktive &ndash; <code>ticket=</code>, <code>reason=</code>, optional
+  <code>owner=</code> und <code>expires=YYYY-MM-DD</code> &ndash; und meldet
+  Verstöße mit Exit-Code&nbsp;2. Eine <b>abgelaufene</b> Direktive unterdrückt
+  generell nicht mehr, sodass keine Ausnahme unbegrenzt lange still ein
+  Finding deckt.</p>
+  <pre><code>EXECUTE IMMEDIATE v_sql;  -- aci:ignore[ACI-SQLI] ticket=SEC-42 reason="Whitelist" expires=2026-12-31</code></pre>
 
   <h3>Empfohlener CI/CD-Gate</h3>
   <p>Für eine Deployment-Pipeline empfiehlt sich der folgende Aufruf. Er
@@ -1536,7 +1604,7 @@ for rid, n in counts.most_common():
   </table>
 </section>
 
-<footer>ACI &ndash; Automated Code Inspection &middot; Version 2.20.2
+<footer>ACI &ndash; Automated Code Inspection &middot; Version 2.23.0
 &middot; Dokumentation</footer>
 
 </main>

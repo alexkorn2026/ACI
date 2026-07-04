@@ -600,6 +600,62 @@ Verzeichnisse werden gemeldet statt still übersprungen.
   Folgeläufen die bekannten Findings, sodass nur **neu hinzugekommene**
   gemeldet werden und fürs Gate zählen.
 
+### Härtung der Gate-Verlässlichkeit in ACI 2.23.0
+
+Schwerpunkt aus einem umfassenden externen Review: nicht einzelne Regeln,
+sondern die **Verlässlichkeit des Scans als Security-Gate**. Behoben wurden
+sechs Muss- und die Soll-Findings (M1–M6, S1–S15).
+
+- **Symlink-Zykluserkennung (M1):** `--follow-symlinks` erkennt bereits
+  besuchte reale Verzeichnisse über `(st_dev, st_ino)` und kappt Zyklen
+  (`loop/loop/…`) – ein präpariertes Repository kann den Scanner nicht mehr
+  in Endlosrekursion/Timeout treiben.
+- **Scan-Vollständigkeit als Gate (M2):** `--scan-completeness advisory|strict`
+  sowie `--fail-on-access-error` / `--fail-on-skipped-file`. Ein CI-Lauf
+  „besteht" nicht mehr stumm mit Exit 0, wenn Dateien nicht gelesen,
+  übersprungen oder nicht dekodiert wurden. Der Report enthält einen Block
+  `scan_completeness` (JSON) bzw. `aci_scan_completeness` (SARIF). Das
+  `strict`-Profil setzt `strict`; das `ci`-Profil setzt `--fail-on-access-error`.
+- **Vollständiger Safe-Report (M3):** Die Redaction erfasst nun auch
+  `message`/`recommendation` und Zusatzstellen-Labels; interne Fehler-Findings
+  werden im Safe-Modus auf `Interner Fehler im Check <ID>: <ExceptionTyp>`
+  standardisiert (kein Pfad-/Input-Leak, voller Text nur mit `--debug`);
+  `platform` wird auf die grobe OS-Familie reduziert. `--safe-console` wendet
+  die Pfadmaskierung zusätzlich auf die stderr-Hinweise an (CI-Logs).
+- **Schutzgrenzen für Einzeldateien (M4):** Größenlimit, benutzerdefinierte
+  `--exclude`-Muster und der Symlink-Schutz gelten jetzt auch für eine explizit
+  übergebene Einzeldatei. Bewusste Ausnahme: `--force-file`. (Die
+  Default-Excludes wie `dist`/`build` gelten weiterhin nur beim
+  Verzeichnis-Scan – eine ausdrücklich benannte Datei wird nicht durch sie
+  abgelehnt.)
+- **Atomares Schreiben aller Reports (M5):** JSON/HTML/SARIF/CodeClimate werden
+  – wie die Baseline – über `aci._io.atomic_write_text` geschrieben
+  (Temp-Datei + `fsync` + `os.replace`). Kein halb geschriebenes Artefakt für
+  SARIF-Upload, `jq` oder GitLab-Code-Quality.
+- **Verpflichtende Regelsatz-Bindung (M6):** `--require-ruleset-pin` (vom
+  `strict`-Profil gesetzt) verlangt einen erwarteten Hash
+  (`--expected-ruleset-sha256`/`--ruleset-lock`). „Gebündelt" (`--require-
+  trusted-rules`) bedeutet nur „aus dem Paketpfad", nicht „unverändert".
+- **Reproduzierbarer Report (S3):** `--reproducible-report` lässt Zeitstempel,
+  Dauer, Plattform und absolute Pfade weg – der Report bleibt byte-identisch.
+- **Encoding (S8):** `--encoding` erzwingt eine Kodierung, `--encoding-errors
+  replace|strict` steuert nicht dekodierbare Bytes; im `strict`-Modus gilt eine
+  solche Datei als ungeprüft und zählt für die Scan-Vollständigkeit.
+- **TOCTOU-feste Größenprüfung (S9):** Datei wird einmal geöffnet, `fstat` auf
+  demselben Deskriptor, und höchstens `Limit+1` Byte gelesen.
+- **Suppression-Governance (S13):** `--strict-suppressions` verlangt für
+  `-- aci:ignore` die Metadaten `ticket=` und `reason=` und lehnt abgelaufene
+  (`expires=YYYY-MM-DD`) oder ungültige Direktiven ab; eine **abgelaufene**
+  Direktive unterdrückt nicht mehr, der Befund wird wieder sichtbar.
+- **Routine-bewusster Fingerabdruck (S14):** Der inhaltsgebundene
+  Fingerabdruck bezieht jetzt den Namen der umgebenden Routine ein. **Achtung:
+  bestehende Baselines/Waiver müssen mit `--write-baseline` neu erzeugt bzw.
+  neu gebunden werden.**
+- **Weiteres:** zentrale Dialekt-Normalisierung `postgres`/`pg → postgresql`
+  (S5), aufgeschlüsselte `--print-effective-config` (`resolution`-Block, S4),
+  `--report-name` gegen Namenskollisionen (S10), leere `--format`-Liste ist ein
+  Fehler (K3), IEC-Einheiten `KiB/MiB/GiB` (K4), SemVer-Release-Workflow (S1).
+
 ## Grenzen & Hinweise
 
 ACI ist ein **heuristischer** statischer Review-Assistent – **kein**
@@ -762,16 +818,25 @@ Wichtigste Optionen:
 | `--baseline DATEI` | bekannte (in der Baseline enthaltene) Findings unterdrücken – es werden nur **neue** Findings gemeldet und gezählt (Adoption auf Legacy-Code) |
 | `--write-baseline DATEI` | aktuellen Stand als Baseline schreiben und ohne Gate beenden (Exit 0) |
 | `--require-trusted-rules` | Exit-Code 2, wenn eine Regeldatei aus einem benutzerdefinierten (nicht gebündelten) Pfad geladen würde |
+| `--require-ruleset-pin` | verlangt einen erwarteten Regelsatz-Hash (`--expected-ruleset-sha256`/`--ruleset-lock`); fehlt er, Exit-Code 2 (vom `strict`-Profil gesetzt) |
+| `--scan-completeness advisory\|strict` | `strict`: Exit-Code 2, wenn nicht jede Zieldatei geprüft wurde |
+| `--fail-on-access-error` / `--fail-on-skipped-file` | Exit-Code 2 bei nicht lesbaren bzw. wegen Limit/Exclude übersprungenen Dateien |
+| `--strict-suppressions` | Inline-`aci:ignore` müssen `ticket=`/`reason=` tragen und dürfen nicht abgelaufen sein; sonst Exit-Code 2 |
+| `--encoding` / `--encoding-errors replace\|strict` | Quelltext-Kodierung erzwingen; `strict` = nicht dekodierbare Datei gilt als ungeprüft |
+| `--reproducible-report` | byte-identischer Report (ohne Zeitstempel/Dauer/Plattform/absolute Pfade) |
+| `--report-name NAME` | fester Basisname der Report-Dateien (verhindert Namenskollisionen) |
 | `--context-lines N` | Zeilen Quelltext-Kontext pro Finding |
 | `--no-context` | keinen Quelltext-Kontext in den Report aufnehmen |
 | `--no-color` | Konsolenausgabe ohne ANSI-Farbcodes |
 | `--redact-secrets` | einfache Geheimnis-Muster im Kontext maskieren (inkl. PostgreSQL/EPAS `PASSWORD '…'`) |
 | `--redact-paths` | absolute Pfade im Report anonymisieren (Verzeichnis → `<PATH>`, Dateiname bleibt); Unix-/Windows-/UNC-Pfade. Relative Pfade bleiben unverändert |
 | `--safe-report` | `--no-context`, `--redact-secrets` und `--redact-paths` gemeinsam aktivieren |
+| `--safe-console` | Pfadmaskierung auch auf die stderr-Hinweise anwenden (CI-Logs) |
 | `--taint-sources` / `--no-taint-sources` | Taint-Quelle bei SQL-Injection- und dynamischen DDL-Findings als zusätzliche Fundstelle zeigen (Standard: an) |
-| `--exclude MUSTER` | Datei-/Verzeichnismuster ausschließen (mehrfach) |
-| `--max-file-size GRÖSSE` | Dateien über dieser Größe überspringen (`5MB`, `500KB`) |
-| `--follow-symlinks` | symbolischen Verknüpfungen folgen |
+| `--exclude MUSTER` | Datei-/Verzeichnismuster ausschließen (mehrfach); gilt auch für explizit benannte Einzeldateien |
+| `--max-file-size GRÖSSE` | Dateien über dieser Größe überspringen (`5MB`, `500KB`, `1GiB`; binär); gilt auch für Einzeldateien |
+| `--force-file` | Größenlimit/Exclude/Symlink-Schutz **nicht** auf eine explizit benannte Einzeldatei anwenden |
+| `--follow-symlinks` | symbolischen Verknüpfungen folgen (mit Zykluserkennung) |
 | `--rules` / `--rules-dir` | eigene Regeldateien verwenden |
 | `--debug` | bei unerwarteten Fehlern den vollen Traceback zeigen |
 
@@ -896,8 +961,8 @@ Profil.
 | Profil | Zweck | gesetzte Vorgaben |
 |--------|-------|-------------------|
 | `advisory` | beratend – scannt und berichtet, blockiert nie | `--group security --fail-on none --format console,json,sarif --safe-report` |
-| `ci` | empfohlener harter Gate – blockiert ab High | `--group security --fail-on high --format console,json,sarif --safe-report --strict-internal-errors` |
-| `strict` | strengster Gate – `ci` plus strenge Waiver-/Regelprüfung | wie `ci`, zusätzlich `--strict-waivers --require-trusted-rules` |
+| `ci` | empfohlener harter Gate – blockiert ab High | `--group security --fail-on high --format console,json,sarif --safe-report --strict-internal-errors --fail-on-access-error --safe-console` |
+| `strict` | strengster Gate – `ci` plus strenge Waiver-/Regel-/Vollständigkeitsprüfung | wie `ci`, zusätzlich `--strict-waivers --require-trusted-rules --require-ruleset-pin --scan-completeness strict --fail-on-skipped-file` |
 | `audit` | vollständige Prüfung für manuelles Review (mit Kontext, ohne Blockade) | `--group all --fail-on none --format console,html --taint-sources` |
 | `apex` | APEX-/ORDS-Review (Oracle) – Sicherheitsgruppe inkl. APEX/ORDS-Regeln, mit Kontext, ohne Blockade | `--group security --fail-on none --format console,html --taint-sources` |
 
@@ -905,8 +970,16 @@ Profil.
 aci src/sql --profile ci                       # empfohlener Gate
 aci src/sql --profile ci --waivers aci-waivers.json
 aci src/sql --profile advisory                  # nur berichten
-aci src/sql --profile strict                     # strengster Gate
+# strengster Gate: verlangt eine feste Regelsatz-Bindung (Pin/Lock)
+aci src/sql --profile strict --ruleset-lock ruleset.lock.json
 ```
+
+> **Hinweis:** `--profile strict` setzt `--require-ruleset-pin` und
+> `--scan-completeness strict`. Ohne `--expected-ruleset-sha256` bzw.
+> `--ruleset-lock` bricht der Lauf daher mit Exit-Code 2 ab; ebenso, wenn
+> nicht jede Zieldatei geprüft werden konnte. Das ist beabsichtigt: ein
+> „fail-closed"-Gate soll nicht ohne nachweisbaren Regelstand und nicht über
+> ungeprüften Code hinweg bestehen.
 
 Einzelne Vorgaben eines Profils lassen sich überschreiben, indem man den
 betreffenden Schalter zusätzlich angibt:
@@ -1051,6 +1124,25 @@ Unterdrückte Findings zählen **nicht** für `--fail-on`; ihre Anzahl wird
 als Hinweis auf stderr gemeldet. Werkzeugfehler (`ACI-INTERNAL`) sind
 bewusst **nicht** per Kommentar unterdrückbar – ein Werkzeugfehler soll
 nicht stillschweigend verschwinden.
+
+**Governance mit `--strict-suppressions` (ab ACI 2.23.0).** Eine reine
+Direktive ohne Begründung kann dauerhaft unbemerkt im Code verbleiben. Mit
+`--strict-suppressions` verlangt ACI daher Governance-Metadaten und meldet
+Verstöße mit Exit-Code 2. Unterstützte Schlüssel hinter der Direktive:
+`ticket=`, `reason=`, `owner=` und `expires=YYYY-MM-DD` (Werte optional
+gequotet):
+
+```sql
+v_sql := 'select * from t where c = ''' || p_name || '''';
+-- aci:ignore[ACI-SQLI] ticket=SEC-42 reason="Whitelist-geprüft" expires=2026-12-31
+EXECUTE IMMEDIATE v_sql;
+```
+
+Ohne `ticket=`/`reason=`, mit ungültigem oder **abgelaufenem** `expires=`
+schlägt der Lauf unter `--strict-suppressions` fehl. Eine **abgelaufene**
+Direktive unterdrückt zudem generell nicht mehr – der Befund wird wieder
+sichtbar, sodass eine Inline-Suppression nicht unbegrenzt lange still ein
+Finding deckt.
 
 ### Baseline-/Diff-Modus (Legacy-Adoption)
 
