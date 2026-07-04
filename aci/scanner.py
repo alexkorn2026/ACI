@@ -137,6 +137,12 @@ class Scanner:
         self.show_taint_sources = show_taint_sources
         # Default-Excludes plus die vom Aufrufer ergänzten Muster.
         self.exclude = list(DEFAULT_EXCLUDES) + list(exclude or [])
+        # Nur die vom Aufrufer angegebenen Exclude-Muster (ohne die
+        # Default-Excludes). Fuer eine explizit uebergebene Einzeldatei gelten
+        # ausschliesslich DIESE - wer eine Datei ausdruecklich benennt, will sie
+        # geprueft haben, auch wenn sie unter dist/ build/ o.ae. liegt. Die
+        # Default-Excludes wirken nur beim rekursiven Verzeichnis-Scan.
+        self.user_exclude = list(exclude or [])
         self.max_file_size = max_file_size
         self.follow_symlinks = follow_symlinks
         # M4: gelten Groessenlimit/Exclude/Symlink-Schutz auch fuer eine
@@ -394,8 +400,12 @@ class Scanner:
             # Sicherheitsschalter umgehen, indem man die Datei statt ihres
             # Verzeichnisses uebergibt.
             if self.limits_apply_to_explicit_files:
-                if _matches_exclude(os.path.basename(path), self.exclude) \
-                        or _matches_exclude(path, self.exclude):
+                # Nur benutzerdefinierte Exclude-Muster (nicht die Default-
+                # Excludes) auf die explizit benannte Datei anwenden.
+                if self.user_exclude and (
+                        _matches_exclude(os.path.basename(path),
+                                         self.user_exclude)
+                        or _matches_exclude(path, self.user_exclude)):
                     self.rejected_files.append((path, "exclude-Muster"))
                     return results
                 if not self.follow_symlinks and os.path.islink(path):

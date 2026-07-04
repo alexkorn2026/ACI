@@ -45,6 +45,19 @@ def test_explicit_file_respects_exclude(tmp_path):
     assert sc.rejected_files and "exclude" in sc.rejected_files[0][1]
 
 
+def test_explicit_file_under_default_exclude_dir_is_still_scanned(tmp_path):
+    # Wer eine Datei ausdruecklich benennt, will sie geprueft haben - auch
+    # wenn sie unter einem Default-Exclude-Verzeichnis (dist/) liegt. Nur
+    # benutzerdefinierte --exclude-Muster duerfen sie ablehnen.
+    d = tmp_path / "dist"
+    d.mkdir()
+    p = _f(d, "app.sql")
+    sc = _scanner()
+    results = sc.scan_path(str(p))
+    assert str(p) in results
+    assert not sc.rejected_files
+
+
 @pytest.mark.skipif(os.name == "nt", reason="POSIX-Symlinks")
 def test_explicit_symlink_respects_no_follow_symlinks(tmp_path):
     target = _f(tmp_path, "target.sql")
